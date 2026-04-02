@@ -13,6 +13,13 @@
 
 **Requirements:** CTA-01, CTA-02, CTA-03, CTA-04, CTA-05, CTA-07, FIX-01, FIX-02, FIX-03, FIX-04, NAV-01, NAV-02, NAV-03
 
+**Plans:** 3 plans
+
+Plans:
+- [ ] 01-PLAN.md — Criar constants/links.ts, corrigir index.html (title/lang), fix rAF leak no DataWave3D
+- [ ] 02-PLAN.md — Wiring dos CTAs em Hero.tsx e FinalCTA.tsx para WhatsApp e email
+- [ ] 03-PLAN.md — Navbar scroll solid + smooth nav + CTAs mobile wired + About photo fallback
+
 **Deliverables:**
 - `constants/links.ts` com WhatsApp URL, email e todos os links centralizados
 - Todos os `<button>` e `href="#"` convertidos para links reais de WhatsApp
