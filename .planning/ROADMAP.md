@@ -16,7 +16,7 @@
 **Plans:** 3 plans
 
 Plans:
-- [ ] 01-PLAN.md — Criar constants/links.ts, corrigir index.html (title/lang), fix rAF leak no DataWave3D
+- [x] 01-PLAN.md — Criar constants/links.ts, corrigir index.html (title/lang), fix rAF leak no DataWave3D
 - [ ] 02-PLAN.md — Wiring dos CTAs em Hero.tsx e FinalCTA.tsx para WhatsApp e email
 - [ ] 03-PLAN.md — Navbar scroll solid + smooth nav + CTAs mobile wired + About photo fallback
 
