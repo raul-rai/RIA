@@ -22,14 +22,21 @@ Um empresário que entra na página deve sentir urgência suficiente para clicar
 - ✓ Animações Motion por toda a página — existente
 - ✓ Stack: React 19 + TypeScript + Vite + Tailwind CSS v4 + Motion — existente
 
+### Validated in Phase 01: Funcional
+
+- ✓ CTAs conectados ao WhatsApp com mensagem pré-preenchida — Hero, FinalCTA, Navbar
+- ✓ Links sociais reais — WhatsApp, LinkedIn placeholder, Email no FinalCTA
+- ✓ Navbar com menu mobile funcional, scroll-to-solid, smooth-scroll navigation
+- ✓ Foto de perfil com fallback elegante "RP" enquanto raul-pedro.png não existe
+- ✓ Todos os CTAs centralizados em `src/constants/links.ts`
+- ✓ Logo corrigida RAI → RIA na Navbar
+- ✓ index.html: lang pt-BR, title "RIA — Revolução da Inteligência Artificial"
+- ✓ DataWave3D: requestAnimationFrame cancelado no cleanup (sem memory leak)
+
 ### Active
 
-- [ ] CTAs conectados ao WhatsApp com mensagem pré-preenchida (todos os botões "Iniciar Transformação" e "Agendar Sessão Estratégica")
-- [ ] Links sociais reais — WhatsApp, LinkedIn, Email no FinalCTA e Footer
 - [ ] SEO completo — meta title, description, OG tags para compartilhamento no LinkedIn e WhatsApp
-- [ ] Foto de perfil real (raul-pedro.png em /public) ou placeholder elegante
 - [ ] Favicon e brand identity RIA
-- [ ] Navbar com menu mobile funcional
 - [ ] Polimento visual — revisão de cores, tipografia, espaçamentos, micro-interações
 - [ ] Performance do canvas em mobile — otimização ou fallback
 
@@ -73,5 +80,10 @@ Um empresário que entra na página deve sentir urgência suficiente para clicar
 
 Este documento evolui a cada transição de fase e marco de milestone.
 
+## Current State
+
+Phase 01 Funcional complete — página converte. Todos os CTAs ligados ao WhatsApp, navegação funcional, bugs críticos corrigidos.
+Next: Phase 02 — Identidade e SEO (favicon, OG tags, SEO metadata).
+
 ---
-*Last updated: 2026-04-02 após inicialização*
+*Last updated: 2026-04-03 após Phase 01 Funcional*
