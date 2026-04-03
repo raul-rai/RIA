@@ -3,12 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: "### Phase 1: Funcional"
 status: executing
-last_updated: "2026-04-02T21:30:00Z"
+stopped_at: Completed 01-funcional-03-PLAN.md
+last_updated: "2026-04-03T13:00:33.903Z"
 progress:
   total_phases: 3
   completed_phases: 0
   total_plans: 3
-  completed_plans: 1
+  completed_plans: 2
 ---
 
 # State: RIA — Revolução da Inteligência Artificial
@@ -18,13 +19,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-02)
 
 **Core value:** Um empresário que entra na página deve sentir urgência suficiente para clicar em "Agendar" antes de sair.
-**Current focus:** Phase 01 — Funcional
+**Current focus:** Phase 01 — funcional
 
 ## Current Phase
 
 **Phase 1: Funcional**
 Status: Executing Phase 01
-Plan: 01 complete — executing Plan 02 next
+Plan: 02 and 03 complete — executing Plan 03 (all plans complete)
 
 ## Key Decisions
 
@@ -37,6 +38,8 @@ Plan: 01 complete — executing Plan 02 next
 | Foto: raul-pedro.png | Será adicionada manualmente ao /public pelo usuário | 2026-04-02 |
 | SEO tags estáticas no index.html | WhatsApp/LinkedIn parseia HTML puro antes de executar JS | 2026-04-02 |
 | constants/links.ts | Centralizar todos os URLs para facilitar manutenção | 2026-04-02 |
+| Navbar scroll-solid + smooth nav | Melhor UX: nav links sem href hash, 80px offset, transição visual ao scroll | 2026-04-03 |
+| About RP fallback | Evita imagem quebrada até raul-pedro.png ser adicionado ao /public | 2026-04-03 |
 
 ## Blockers
 
@@ -53,11 +56,12 @@ Tsunami 3D canvas (DataWave3D) é o diferencial visual central.
 | Phase | Plan | Duration | Tasks | Files |
 |-------|------|----------|-------|-------|
 | 01-funcional | 01 | 4 min | 3 | 3 |
+| 01-funcional | 03 | 8 min | 2 | 2 |
 
 ## Session
 
-Last session: 2026-04-02T21:30:00Z
-Stopped at: Completed 01-funcional-01-PLAN.md
+Last session: 2026-04-03T13:00:33.893Z
+Stopped at: Completed 01-funcional-03-PLAN.md
 
 ---
 *Initialized: 2026-04-02*

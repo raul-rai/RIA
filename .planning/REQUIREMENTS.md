@@ -7,26 +7,26 @@
 
 ### Conversão (CTAs)
 
-- [ ] **CTA-01**: Botão "Iniciar Transformação" (Hero) abre WhatsApp com mensagem pré-preenchida
-- [ ] **CTA-02**: Botão "Agendar Sessão Estratégica" (FinalCTA) abre WhatsApp com mensagem pré-preenchida
-- [ ] **CTA-03**: Ícone WhatsApp no FinalCTA linka para WhatsApp
-- [ ] **CTA-04**: Ícone Email no FinalCTA linka para email de contato
-- [ ] **CTA-05**: Botão "Nossa Metodologia" (Hero) rola a página para a seção de serviços (#servicos)
+- [x] **CTA-01**: Botão "Iniciar Transformação" (Hero) abre WhatsApp com mensagem pré-preenchida
+- [x] **CTA-02**: Botão "Agendar Sessão Estratégica" (FinalCTA) abre WhatsApp com mensagem pré-preenchida
+- [x] **CTA-03**: Ícone WhatsApp no FinalCTA linka para WhatsApp
+- [x] **CTA-04**: Ícone Email no FinalCTA linka para email de contato
+- [x] **CTA-05**: Botão "Nossa Metodologia" (Hero) rola a página para a seção de serviços (#servicos)
 - [ ] **CTA-06**: FAB flutuante do WhatsApp aparece após 30% de scroll (bottom-right, persistente)
-- [ ] **CTA-07**: Todos os links de contato centralizados em `constants/links.ts`
+- [x] **CTA-07**: Todos os links de contato centralizados em `constants/links.ts`
 
 ### Correções Críticas
 
-- [ ] **FIX-01**: `index.html` title corrigido de "RAI" para "RIA — Revolução da Inteligência Artificial"
-- [ ] **FIX-02**: `index.html` lang corrigido de `"en"` para `"pt-BR"`
-- [ ] **FIX-03**: `DataWave3D` armazena e cancela o ID do `requestAnimationFrame` no cleanup
-- [ ] **FIX-04**: Seção About exibe foto real (`raul-pedro.png`) ou fallback elegante enquanto foto não existe
+- [x] **FIX-01**: `index.html` title corrigido de "RAI" para "RIA — Revolução da Inteligência Artificial"
+- [x] **FIX-02**: `index.html` lang corrigido de `"en"` para `"pt-BR"`
+- [x] **FIX-03**: `DataWave3D` armazena e cancela o ID do `requestAnimationFrame` no cleanup
+- [x] **FIX-04**: Seção About exibe foto real (`raul-pedro.png`) ou fallback elegante enquanto foto não existe
 
 ### Navegação
 
-- [ ] **NAV-01**: Navbar tem menu mobile funcional (hamburguer / drawer)
-- [ ] **NAV-02**: Links da Navbar rolam suavemente para as seções corretas (#servicos, #sobre, #contato)
-- [ ] **NAV-03**: Navbar muda de transparente para sólida ao scrollar (legibilidade)
+- [x] **NAV-01**: Navbar tem menu mobile funcional (hamburguer / drawer)
+- [x] **NAV-02**: Links da Navbar rolam suavemente para as seções corretas (#servicos, #sobre, #contato)
+- [x] **NAV-03**: Navbar muda de transparente para sólida ao scrollar (legibilidade)
 
 ### SEO & Identidade Visual
 
@@ -80,11 +80,11 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| CTA-01 | Phase 1 | Pending |
-| CTA-02 | Phase 1 | Pending |
-| CTA-03 | Phase 1 | Pending |
-| CTA-04 | Phase 1 | Pending |
-| CTA-05 | Phase 1 | Pending |
+| CTA-01 | Phase 1 | Complete |
+| CTA-02 | Phase 1 | Complete |
+| CTA-03 | Phase 1 | Complete |
+| CTA-04 | Phase 1 | Complete |
+| CTA-05 | Phase 1 | Complete |
 | CTA-07 | Phase 1 | Pending |
 | FIX-01 | Phase 1 | Pending |
 | FIX-02 | Phase 1 | Pending |
