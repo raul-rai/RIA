@@ -30,11 +30,11 @@
 
 ### SEO & Identidade Visual
 
-- [ ] **SEO-01**: Meta description presente no `index.html`
-- [ ] **SEO-02**: Open Graph tags completos (og:title, og:description, og:image, og:url) para preview no WhatsApp e LinkedIn
-- [ ] **SEO-03**: Meta `twitter:card` para previews no Twitter/X
-- [ ] **SEO-04**: Favicon criado e referenciado no `index.html` (ícone da marca RIA)
-- [ ] **SEO-05**: `<link rel="canonical">` no `index.html`
+- [x] **SEO-01**: Meta description presente no `index.html`
+- [x] **SEO-02**: Open Graph tags completos (og:title, og:description, og:image, og:url) para preview no WhatsApp e LinkedIn
+- [x] **SEO-03**: Meta `twitter:card` para previews no Twitter/X
+- [x] **SEO-04**: Favicon criado e referenciado no `index.html` (ícone da marca RIA)
+- [x] **SEO-05**: `<link rel="canonical">` no `index.html`
 
 ### Performance & Mobile
 
@@ -44,8 +44,8 @@
 
 ### Identidade Visual
 
-- [ ] **BRAND-01**: Cor primária `#2a42ec` registrada como token Tailwind `--color-cta` no `index.css`
-- [ ] **BRAND-02**: OG image (1200×630px) criada para preview no compartilhamento
+- [x] **BRAND-01**: Cor primária `#2a42ec` registrada como token Tailwind `--color-cta` no `index.css`
+- [x] **BRAND-02**: OG image (1200×630px) criada para preview no compartilhamento
 
 ## v2 Requirements
 
@@ -93,13 +93,13 @@
 | NAV-01 | Phase 1 | Pending |
 | NAV-02 | Phase 1 | Pending |
 | NAV-03 | Phase 1 | Pending |
-| BRAND-01 | Phase 2 | Pending |
-| SEO-01 | Phase 2 | Pending |
-| SEO-02 | Phase 2 | Pending |
-| SEO-03 | Phase 2 | Pending |
-| SEO-04 | Phase 2 | Pending |
-| SEO-05 | Phase 2 | Pending |
-| BRAND-02 | Phase 2 | Pending |
+| BRAND-01 | Phase 2 | Complete |
+| SEO-01 | Phase 2 | Complete |
+| SEO-02 | Phase 2 | Complete |
+| SEO-03 | Phase 2 | Complete |
+| SEO-04 | Phase 2 | Complete |
+| SEO-05 | Phase 2 | Complete |
+| BRAND-02 | Phase 2 | Complete |
 | CTA-06 | Phase 3 | Pending |
 | PERF-01 | Phase 3 | Pending |
 | PERF-02 | Phase 3 | Pending |
