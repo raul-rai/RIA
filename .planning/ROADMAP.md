@@ -44,16 +44,26 @@ Plans:
 
 **Requirements:** SEO-01, SEO-02, SEO-03, SEO-04, SEO-05, BRAND-01, BRAND-02
 
+**Plans:** 4 plans
+
+Plans:
+- [ ] 02-01-PLAN.md — Instalar vitest + sharp; criar tests/seo.test.ts e tests/brand.test.ts em RED state (Wave 0)
+- [ ] 02-02-PLAN.md — Adicionar meta description, OG tags, Twitter Card, canonical, favicon ref e JSON-LD ao index.html
+- [ ] 02-03-PLAN.md — Adicionar token --color-cta ao @theme do index.css; criar public/favicon.svg
+- [ ] 02-04-PLAN.md — Criar scripts/generate-og.js e gerar public/og-image.png via sharp
+
 **Deliverables:**
-- `index.html`: meta description, OG tags completos, twitter:card, canonical
-- Favicon RIA em `/public` (SVG/PNG gerado programaticamente ou criado)
-- OG image 1200×630px para preview no WhatsApp/LinkedIn
-- Token `--color-cta` adicionado ao `@theme` do `index.css`
+- `index.html`: meta description, OG tags completos, twitter:card, canonical, dois blocos JSON-LD (LocalBusiness+Person / FAQPage)
+- Favicon RIA em `/public/favicon.svg` (SVG com "RIA" branco sobre #2a42ec)
+- OG image 1200×630px em `public/og-image.png` para preview no WhatsApp/LinkedIn
+- Token `--color-cta: #2a42ec` adicionado ao `@theme` do `index.css`
+- `scripts/generate-og.js` — script Node ESM reproduzível para regenerar a OG image
 
 **Success Criteria:**
 - Compartilhar a URL no WhatsApp exibe card com título, descrição e imagem
 - Compartilhar no LinkedIn exibe preview correto
 - Favicon aparece na aba do browser
+- `npx vitest run` — todos os 12 testes verdes
 
 **UI hint:** yes — geração de assets visuais e HTML estático
 
