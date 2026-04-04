@@ -44,12 +44,12 @@ Plans:
 
 **Requirements:** SEO-01, SEO-02, SEO-03, SEO-04, SEO-05, BRAND-01, BRAND-02
 
-**Plans:** 2/4 plans executed
+**Plans:** 4 plans
 
 Plans:
 - [x] 02-01-PLAN.md — Instalar vitest + sharp; criar tests/seo.test.ts e tests/brand.test.ts em RED state (Wave 0)
-- [x] 02-02-PLAN.md — Adicionar meta description, OG tags, Twitter Card, canonical, favicon ref e JSON-LD ao index.html
-- [ ] 02-03-PLAN.md — Adicionar token --color-cta ao @theme do index.css; criar public/favicon.svg
+- [ ] 02-02-PLAN.md — Adicionar meta description, OG tags, Twitter Card, canonical, favicon ref e JSON-LD ao index.html
+- [x] 02-03-PLAN.md — Adicionar token --color-cta ao @theme do index.css; criar public/favicon.svg
 - [ ] 02-04-PLAN.md — Criar scripts/generate-og.js e gerar public/og-image.png via sharp
 
 **Deliverables:**
