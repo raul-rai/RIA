@@ -4,10 +4,121 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>RIA — Revolução da Inteligência Artificial</title>
+
+    <!-- SEO (SEO-01) -->
+    <meta name="description" content="A IA está transformando empresas agora. Implemente inteligência artificial no seu negócio antes da concorrência. Consultoria gratuita com especialista." />
+
+    <!-- Canonical (SEO-05) -->
+    <!-- TODO: trocar https://ria.com.br pelo domínio real quando disponível -->
+    <link rel="canonical" href="https://ria.com.br" />
+
+    <!-- Open Graph (SEO-02) — lido por WhatsApp e LinkedIn antes de executar JS -->
+    <!-- TODO: trocar https://ria.com.br pelo domínio real quando disponível -->
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="pt_BR" />
+    <meta property="og:title" content="RIA — Revolução da Inteligência Artificial" />
+    <meta property="og:description" content="A IA está transformando empresas agora. Implemente inteligência artificial no seu negócio antes da concorrência. Consultoria gratuita com especialista." />
+    <meta property="og:image" content="https://ria.com.br/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:url" content="https://ria.com.br" />
+    <meta property="og:site_name" content="RIA — Revolução da Inteligência Artificial" />
+
+    <!-- Twitter Card (SEO-03) -->
+    <!-- TODO: trocar https://ria.com.br pelo domínio real quando disponível -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="RIA — Revolução da Inteligência Artificial" />
+    <meta name="twitter:description" content="A IA está transformando empresas agora. Implemente inteligência artificial no seu negócio antes da concorrência. Consultoria gratuita com especialista." />
+    <meta name="twitter:image" content="https://ria.com.br/og-image.png" />
+
+    <!-- Favicon (SEO-04) -->
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+
+    <!-- Structured Data: LocalBusiness + Person (GEO — per D-05, D-06, D-07) -->
+    <!-- TODO: trocar https://ria.com.br pelo domínio real quando disponível -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "LocalBusiness",
+      "name": "RIA — Revolução da Inteligência Artificial",
+      "description": "Consultoria especializada em implementação de inteligência artificial para empresas brasileiras. Automação, agentes de IA e transformação digital.",
+      "url": "https://ria.com.br",
+      "areaServed": {
+        "@type": "Country",
+        "name": "Brasil"
+      },
+      "serviceType": "Consultoria em Inteligência Artificial",
+      "employee": {
+        "@type": "Person",
+        "name": "Raul Pedro",
+        "jobTitle": "Consultor de Inteligência Artificial",
+        "knowsAbout": [
+          "inteligência artificial",
+          "automação de processos",
+          "agentes de IA",
+          "transformação digital",
+          "implementação de IA para empresas"
+        ],
+        "worksFor": {
+          "@type": "LocalBusiness",
+          "name": "RIA — Revolução da Inteligência Artificial"
+        }
+      }
+    }
+    </script>
+
+    <!-- Structured Data: FAQPage (GEO — per D-08, maximiza AI Overviews) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Como implementar inteligência artificial na minha empresa?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Implementar IA começa com um diagnóstico: identificar processos repetitivos que consomem tempo e que podem ser automatizados. A RIA oferece uma sessão estratégica gratuita de 30 minutos para mapear as oportunidades de IA no seu negócio."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "O que é consultoria de inteligência artificial para empresas?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "É um serviço especializado que ajuda empresas a identificar, planejar e implementar soluções de IA — como automação de atendimento, agentes de IA e análise de dados — sem a necessidade de contratar uma equipe técnica interna."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Quanto custa implementar IA em uma empresa?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "O custo varia conforme a complexidade. Muitas soluções de IA para pequenas e médias empresas podem ser implementadas por R$500 a R$5.000/mês. A RIA oferece diagnóstico gratuito para estimar o investimento real para o seu caso."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Quais empresas se beneficiam da inteligência artificial?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Qualquer empresa com processos repetitivos se beneficia — desde e-commerce automatizando atendimento, até escritórios de advocacia automatizando análise de contratos, ou indústrias prevendo falhas em equipamentos com IA."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "O que são agentes de IA e como funcionam nos negócios?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Agentes de IA são sistemas autônomos que percebem o contexto, tomam decisões e executam tarefas sem intervenção humana contínua. Para empresas, atuam como assistentes digitais que trabalham 24/7 — respondendo clientes, qualificando leads e automatizando fluxos de trabalho."
+          }
+        }
+      ]
+    }
+    </script>
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
-
