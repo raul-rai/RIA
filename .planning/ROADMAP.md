@@ -49,7 +49,7 @@ Plans:
 Plans:
 - [x] 02-01-PLAN.md — Instalar vitest + sharp; criar tests/seo.test.ts e tests/brand.test.ts em RED state (Wave 0)
 - [ ] 02-02-PLAN.md — Adicionar meta description, OG tags, Twitter Card, canonical, favicon ref e JSON-LD ao index.html
-- [ ] 02-03-PLAN.md — Adicionar token --color-cta ao @theme do index.css; criar public/favicon.svg
+- [x] 02-03-PLAN.md — Adicionar token --color-cta ao @theme do index.css; criar public/favicon.svg
 - [ ] 02-04-PLAN.md — Criar scripts/generate-og.js e gerar public/og-image.png via sharp
 
 **Deliverables:**
