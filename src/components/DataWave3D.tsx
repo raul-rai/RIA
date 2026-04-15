@@ -86,18 +86,18 @@ export default function DataWave3D() {
             waveHeight = Math.sqrt(Math.cos((distToTsunami / -600) * (Math.PI / 2)));
           }
 
-          const maxAmplitude = 200 + (currentScroll * 800); 
+          const maxAmplitude = 400 + (currentScroll * 1200); 
           
           // OPTIMIZATION: x * x is faster than Math.pow(x, 2)
-          const edgeRatio = Math.abs(p.x) / 2500;
+          const edgeRatio = Math.abs(p.x) / 3000;
           const edgeTaper = Math.max(0, 1 - (edgeRatio * edgeRatio));
           
           const currentAmplitude = waveHeight * maxAmplitude * edgeTaper;
           y -= currentAmplitude;
 
           if (waveHeight > 0.7) {
-            const noise = (Math.sin(p.x * 0.05 + time * 5) + Math.cos(p.z * 0.05 - time * 3)) * (20 + currentScroll * 30);
-            y -= noise * (waveHeight - 0.7) * 3;
+            const noise = (Math.sin(p.x * 0.05 + time * 5) + Math.cos(p.z * 0.05 - time * 3)) * (40 + currentScroll * 60);
+            y -= noise * (waveHeight - 0.7) * 4;
           }
         }
 
@@ -109,7 +109,7 @@ export default function DataWave3D() {
         p.py = (p.y - cameraY) * scale + halfH;
       }
 
-      ctx.lineWidth = 1;
+      ctx.lineWidth = 1.5; // Slightly thicker lines for visibility
       ctx.lineJoin = 'round';
       
       // 2. Draw phase (Painter's Algorithm)
@@ -123,27 +123,25 @@ export default function DataWave3D() {
 
           if (p.scale < 0 || p.z < cameraZ) continue;
 
-          let depthAlpha = Math.max(0, 1.2 - ((p.z - cameraZ) / (rows * spacing)));
+          let depthAlpha = Math.max(0, 1.4 - ((p.z - cameraZ) / (rows * spacing)));
           
           // Escurecer o fundo (linhas distantes) quando a onda se aproxima
-          // Isso faz com que a onda pareça emergir da escuridão total no final do scroll
           const distBehindPeak = p.z - tsunamiZ;
           if (distBehindPeak > 0) {
-            // No topo (currentScroll = 0), o fade é longo (2500), mostrando a onda inteira e a grade
-            // No final (currentScroll = 1), o fade é curto (400), escondendo a parte de trás da onda e toda a grade
-            const fadeOutDist = 2500 - (currentScroll * 2100); 
+            const fadeOutDist = 3000 - (currentScroll * 2500); 
             depthAlpha *= Math.max(0, 1 - (distBehindPeak / fadeOutDist));
           }
 
           if (depthAlpha <= 0) continue;
           
-          const heightIntensity = Math.min(1, Math.max(0, -p.y / (200 + currentScroll * 600)));
+          const heightIntensity = Math.min(1, Math.max(0, -p.y / (400 + currentScroll * 1000)));
           
-          const r = Math.floor(255 - heightIntensity * 190); 
-          const g = Math.floor(255 - heightIntensity * 150); 
-          const b = Math.floor(255 - heightIntensity * 30); 
+          // More vibrant cyan/blue colors
+          const r = Math.floor(0 + heightIntensity * 50); 
+          const g = Math.floor(180 + heightIntensity * 75); 
+          const b = Math.floor(255); 
           
-          const alpha = depthAlpha * (0.15 + heightIntensity * 0.85);
+          const alpha = depthAlpha * (0.35 + heightIntensity * 0.65);
           
           ctx.beginPath();
           ctx.moveTo(p.px, p.py);
@@ -153,7 +151,7 @@ export default function DataWave3D() {
           ctx.closePath();
 
           // Solid fill for occlusion
-          ctx.fillStyle = `rgba(3, 7, 18, ${depthAlpha})`; 
+          ctx.fillStyle = `rgba(3, 3, 3, ${depthAlpha * 0.9})`; 
           ctx.fill();
 
           // Wireframe stroke
@@ -181,11 +179,11 @@ export default function DataWave3D() {
   }, []);
 
   return (
-    <div className="fixed inset-0 z-0 pointer-events-none bg-bg-base">
-      {/* Removed mix-blend-screen so the solid black quads can actually occlude the background */}
-      <canvas ref={canvasRef} className="w-full h-full opacity-80" />
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,#000000_100%)] opacity-90" />
-      <div className="absolute inset-0 bg-gradient-to-b from-black via-transparent to-black opacity-80" />
+    <div className="fixed inset-0 z-0 pointer-events-none">
+      {/* Removed bg-bg-base to allow App-level glows to show through */}
+      <canvas ref={canvasRef} className="w-full h-full opacity-100" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,#000000_100%)] opacity-70" />
+      <div className="absolute inset-0 bg-gradient-to-b from-black via-transparent to-black opacity-60" />
     </div>
   );
 }
