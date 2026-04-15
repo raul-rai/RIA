@@ -1,4 +1,4 @@
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { Menu, X } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { WHATSAPP_URL } from '../constants/links';
@@ -8,7 +8,7 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 50);
+    const handleScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
@@ -16,7 +16,7 @@ export default function Navbar() {
   const scrollTo = (id: string) => {
     const el = document.getElementById(id);
     if (!el) return;
-    const top = el.getBoundingClientRect().top + window.scrollY - 80;
+    const top = el.getBoundingClientRect().top + window.scrollY - 100;
     window.scrollTo({ top, behavior: 'smooth' });
     setIsOpen(false);
   };
@@ -25,33 +25,31 @@ export default function Navbar() {
     <motion.nav
       initial={{ y: -100, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-      className="fixed top-0 left-0 right-0 z-50 px-6 py-4"
+      transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+      className="fixed top-0 left-0 right-0 z-50 px-4 py-6"
     >
-      <div className={`max-w-7xl mx-auto rounded-2xl px-6 py-4 flex items-center justify-between border transition-all duration-300 ${
-        scrolled
-          ? 'bg-black/90 border-white/10 backdrop-blur-xl'
-          : 'glass-card border-white/5'
+      <div className={`max-w-5xl mx-auto rounded-full px-6 py-3 flex items-center justify-between transition-all duration-500 premium-glass ${
+        scrolled ? 'py-2 px-6 scale-[0.98]' : ''
       }`}>
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center">
-            <span className="font-display font-bold text-sm text-black">RIA</span>
+        <div className="flex items-center gap-3 cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+          <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-[0_0_15px_rgba(255,255,255,0.3)]">
+            <span className="font-serif font-bold text-xs text-black">R</span>
           </div>
-          <span className="font-display font-medium text-lg tracking-tight text-white hidden sm:block">
-            Revolução da Inteligência Artificial
+          <span className="font-serif font-semibold text-lg tracking-tight text-white">
+            RIA
           </span>
         </div>
 
         {/* Desktop Menu */}
-        <div className="hidden md:flex items-center gap-8">
-          <a onClick={() => scrollTo('servicos')} className="cursor-pointer text-sm text-muted hover:text-white transition-colors">Serviços</a>
-          <a onClick={() => scrollTo('sobre')} className="cursor-pointer text-sm text-muted hover:text-white transition-colors">Sobre</a>
-          <a onClick={() => scrollTo('contato')} className="cursor-pointer text-sm text-muted hover:text-white transition-colors">Contato</a>
+        <div className="hidden md:flex items-center gap-10">
+          <button onClick={() => scrollTo('servicos')} className="text-xs uppercase tracking-widest text-muted hover:text-white transition-colors">Serviços</button>
+          <button onClick={() => scrollTo('sobre')} className="text-xs uppercase tracking-widest text-muted hover:text-white transition-colors">Sobre</button>
+          <button onClick={() => scrollTo('contato')} className="text-xs uppercase tracking-widest text-muted hover:text-white transition-colors">Contato</button>
           <a
             href={WHATSAPP_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="px-6 py-2.5 rounded-full border border-white/20 text-sm font-medium text-white hover:bg-white hover:text-black transition-all duration-500 shadow-[0_0_15px_rgba(255,255,255,0.05)] hover:shadow-[0_0_25px_rgba(255,255,255,0.1)]"
+            className="px-6 py-2 rounded-full bg-white text-black text-xs font-bold uppercase tracking-widest hover:bg-accent hover:text-black transition-all duration-300 shadow-xl"
           >
             Falar agora
           </a>
@@ -59,33 +57,37 @@ export default function Navbar() {
 
         {/* Mobile Toggle */}
         <button
-          className="md:hidden text-muted hover:text-white transition-colors"
+          className="md:hidden text-white p-1"
           onClick={() => setIsOpen(!isOpen)}
         >
-          {isOpen ? <X size={24} /> : <Menu size={24} />}
+          {isOpen ? <X size={20} /> : <Menu size={20} />}
         </button>
       </div>
 
       {/* Mobile Menu */}
-      {isOpen && (
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="absolute top-full left-6 right-6 mt-2 glass-card rounded-2xl p-6 flex flex-col gap-6 md:hidden border border-white/5"
-        >
-          <a onClick={() => scrollTo('servicos')} className="cursor-pointer text-base text-muted hover:text-white transition-colors">Serviços</a>
-          <a onClick={() => scrollTo('sobre')} className="cursor-pointer text-base text-muted hover:text-white transition-colors">Sobre</a>
-          <a onClick={() => scrollTo('contato')} className="cursor-pointer text-base text-muted hover:text-white transition-colors">Contato</a>
-          <a
-            href={WHATSAPP_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-full px-6 py-3 mt-2 rounded-full bg-white text-black text-sm font-medium transition-colors text-center block"
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: -20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: -20 }}
+            className="absolute top-24 left-4 right-4 premium-glass rounded-3xl p-8 flex flex-col gap-8 md:hidden shadow-2xl overflow-hidden"
           >
-            Falar agora
-          </a>
-        </motion.div>
-      )}
+            <div className="absolute inset-0 bg-accent/5 pointer-events-none"></div>
+            <button onClick={() => scrollTo('servicos')} className="text-2xl font-serif text-left hover:text-accent transition-colors">Serviços</button>
+            <button onClick={() => scrollTo('sobre')} className="text-2xl font-serif text-left hover:text-accent transition-colors">Sobre</button>
+            <button onClick={() => scrollTo('contato')} className="text-2xl font-serif text-left hover:text-accent transition-colors">Contato</button>
+            <a
+              href={WHATSAPP_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full px-8 py-5 mt-4 rounded-2xl bg-white text-black text-center text-sm font-bold uppercase tracking-widest border border-white transition-all active:scale-95"
+            >
+              Consultoria Gratuita
+            </a>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.nav>
   );
 }

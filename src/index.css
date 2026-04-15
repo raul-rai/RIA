@@ -1,57 +1,100 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Helvetica Neue", Helvetica, Arial, sans-serif;
-  --font-display: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-sans: "Inter", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-serif: "Playfair Display", serif;
+  --font-display: "Playfair Display", serif;
   
-  --color-bg-base: #000000;
-  --color-bg-alt: #050505;
-  --color-bg-card: #0A0A0A;
+  --color-bg-base: #030303;
+  --color-bg-alt: #080808;
+  --color-bg-card: rgba(255, 255, 255, 0.03);
   
   --color-primary: #ffffff;
   --color-accent: #00E5FF;
-  --color-muted: #888888;
-  --color-cta: #2a42ec;
+  --color-accent-dark: #00838F;
+  --color-muted: #a1a1aa;
+  --color-cta: #1d4ed8;
+  
+  --radius-xl: 1.5rem;
+  --radius-2xl: 2rem;
 }
 
 @layer base {
   body {
-    @apply bg-bg-base text-white antialiased overflow-x-hidden selection:bg-accent/30 selection:text-white;
+    @apply bg-bg-base text-white antialiased overflow-x-hidden selection:bg-accent/30 selection:text-white font-sans;
+    background-image: 
+      radial-gradient(at 0% 0%, rgba(0, 229, 255, 0.05) 0px, transparent 50%),
+      radial-gradient(at 100% 100%, rgba(29, 78, 216, 0.05) 0px, transparent 50%);
   }
   
   h1, h2, h3, h4, h5, h6 {
-    @apply font-display tracking-tight;
+    @apply font-serif tracking-tight leading-tight;
   }
 }
 
 @layer utilities {
-  .glass-card {
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(20px);
-    transition: all 0.3s ease;
+  .noise-bg {
+    position: relative;
   }
   
-  .glass-card:hover {
+  .noise-bg::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    opacity: 0.03;
+    pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3C%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  }
+
+  .premium-glass {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(24px);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.82);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .premium-glass:hover {
     background: rgba(255, 255, 255, 0.04);
     border-color: rgba(255, 255, 255, 0.15);
+    box-shadow: 0 12px 48px 0 rgba(0, 0, 0, 0.9);
+    transform: translateY(-2px);
   }
   
   .text-glow {
-    text-shadow: 0 0 30px rgba(255, 255, 255, 0.3);
+    text-shadow: 0 0 20px rgba(255, 255, 255, 0.25);
   }
   
   .text-glow-accent {
-    text-shadow: 0 0 30px rgba(0, 229, 255, 0.4);
+    text-shadow: 0 0 25px rgba(0, 229, 255, 0.4);
+  }
+
+  .bento-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .aurora-blur {
+    position: absolute;
+    width: 300px;
+    height: 300px;
+    filter: blur(100px);
+    border-radius: 50%;
+    z-index: -1;
+    opacity: 0.2;
+    pointer-events: none;
   }
 }
 
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+@keyframes aurora {
+  0% { transform: translate(0, 0) rotate(0deg); }
+  33% { transform: translate(100px, 50px) rotate(120deg); }
+  66% { transform: translate(-50px, 100px) rotate(240deg); }
+  100% { transform: translate(0, 0) rotate(360deg); }
 }
 
-.animate-float {
-  animation: float 6s ease-in-out infinite;
+.animate-aurora {
+  animation: aurora 20s linear infinite;
 }
-
