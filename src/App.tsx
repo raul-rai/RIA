@@ -11,19 +11,17 @@ import WhyNow from './components/WhyNow';
 import About from './components/About';
 import FinalCTA from './components/FinalCTA';
 import Footer from './components/Footer';
-import Tsunami3D from './components/Tsunami3D';
+import DataWave3D from './components/DataWave3D';
 
 export default function App() {
   return (
     <div className="bg-bg-base min-h-screen text-white font-sans selection:bg-primary/30 selection:text-white relative overflow-hidden">
-      {/* Background Enhancements */}
+      {/* Background Enhancements (Cleared for Beach Perspective) */}
       <div className="fixed inset-0 z-0 pointer-events-none">
-        <div className="aurora-blur bg-accent top-[-10%] left-[-10%] animate-aurora opacity-10 w-[600px] h-[600px]"></div>
-        <div className="aurora-blur bg-cta bottom-[-10%] right-[-10%] animate-aurora opacity-10 w-[600px] h-[600px]" style={{ animationDirection: 'reverse', animationDuration: '25s' }}></div>
         <div className="absolute inset-0 opacity-[0.05] pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')] brightness-125 contrast-150"></div>
       </div>
 
-      <Tsunami3D />
+      <DataWave3D />
       
       <Navbar />
       
