@@ -11,7 +11,7 @@ import WhyNow from './components/WhyNow';
 import About from './components/About';
 import FinalCTA from './components/FinalCTA';
 import Footer from './components/Footer';
-import DataWave3D from './components/DataWave3D';
+import Tsunami3D from './components/Tsunami3D';
 
 export default function App() {
   return (
@@ -23,7 +23,7 @@ export default function App() {
         <div className="absolute inset-0 opacity-[0.05] pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')] brightness-125 contrast-150"></div>
       </div>
 
-      <DataWave3D />
+      <Tsunami3D />
       
       <Navbar />
       
