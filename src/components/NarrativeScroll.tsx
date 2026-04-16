@@ -12,9 +12,9 @@ interface NarrativeScrollProps {
   onWaveProgress: (p: number) => void;
 }
 
-const TRANSITION_DURATION = 600; // ms for text to fade out
-const WAVE_HOLD_DURATION = 1000; // ms showing only the wave
-const COOLDOWN_DURATION = TRANSITION_DURATION + WAVE_HOLD_DURATION + 400;
+const TRANSITION_DURATION = 800; // ms for text to fade out (slower, more emotional)
+const WAVE_HOLD_DURATION = 2500; // ms showing ONLY the wave (dramatic silence)
+const COOLDOWN_DURATION = TRANSITION_DURATION + WAVE_HOLD_DURATION + 600;
 
 export default function NarrativeScroll({ scenes, onWaveProgress }: NarrativeScrollProps) {
   const [activeScene, setActiveScene] = useState(0);
