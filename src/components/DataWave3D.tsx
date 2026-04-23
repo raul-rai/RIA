@@ -57,12 +57,12 @@ export default function DataWave3D({ waveProgress }: DataWave3DProps) {
 
       const focalLength = 800;
       const cameraZ = -400 + (currentScroll * 200);
-      const cameraY = -150 + (currentScroll * 150);
+      const cameraY = -150 + (currentScroll * 100);
 
       const tsunamiZ = 3500 - (currentScroll * 3300);
 
       const halfW = width / 2;
-      const halfH = height / 2 + 100;
+      const halfH = height * 0.65; 
 
       // 1. Update point positions
       for (let i = 0; i < points.length; i++) {
@@ -73,7 +73,13 @@ export default function DataWave3D({ waveProgress }: DataWave3DProps) {
         const noiseZ = Math.cos(p.z * 0.005 - time * 1.2);
         let y = (noiseX + noiseZ) * 20;
 
-        const distToTsunami = p.z - tsunamiZ;
+        // ─── WAVE MODELING V3 (Curved 'V' Projection) ────────────────────────
+        // The peak is no longer a straight line. We add a parabolic delay based on X.
+        // Higher X = Higher delay (Peak stays further back).
+        const curvature = (p.x * p.x) * 0.0002; // Slightly more pointed
+        const curvedTsunamiZ = tsunamiZ + curvature;
+        
+        const distToTsunami = p.z - curvedTsunamiZ;
 
         if (distToTsunami > -600 && distToTsunami < 1500) {
           let waveHeight = 0;
@@ -83,10 +89,10 @@ export default function DataWave3D({ waveProgress }: DataWave3DProps) {
             waveHeight = Math.sqrt(Math.cos((distToTsunami / -600) * (Math.PI / 2)));
           }
 
-          const maxAmplitude = 300 + (currentScroll * 1000);
+          const maxAmplitude = 400 + (currentScroll * 1400); 
 
-          const edgeRatio = Math.abs(p.x) / 3500;
-          const edgeTaper = Math.max(0, 1 - (edgeRatio * edgeRatio));
+          const edgeRatio = Math.abs(p.x) / 3800;
+          const edgeTaper = Math.pow(Math.max(0, 1 - edgeRatio), 1.6);
 
           const currentAmplitude = waveHeight * maxAmplitude * edgeTaper;
           y -= currentAmplitude;
@@ -171,8 +177,18 @@ export default function DataWave3D({ waveProgress }: DataWave3DProps) {
   }, []);
 
   return (
-    <div className="fixed inset-0 z-[1] pointer-events-none">
-      <canvas ref={canvasRef} className="w-full h-full opacity-100" />
+    <div 
+      className="fixed inset-0 z-[1] pointer-events-none"
+      style={{
+        maskImage: 'linear-gradient(to bottom, black 80%, transparent 92%)',
+        WebkitMaskImage: 'linear-gradient(to bottom, black 80%, transparent 92%)'
+      }}
+    >
+      <canvas 
+        ref={canvasRef} 
+        className="w-full h-full" 
+        style={{ mixBlendMode: 'screen' }}
+      />
     </div>
   );
 }

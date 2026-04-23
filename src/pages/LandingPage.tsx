@@ -188,18 +188,27 @@ const SCENES = [
 
 export default function LandingPage() {
   const [waveProgress, setWaveProgress] = useState(0);
+  const [activeScene, setActiveScene] = useState(0);
 
   const handleWaveProgress = useCallback((p: number) => {
     setWaveProgress(p);
   }, []);
 
+  const handleSceneChange = useCallback((index: number) => {
+    setActiveScene(index);
+  }, []);
+
   return (
     <div className="bg-[#010408] min-h-screen text-white font-sans selection:bg-accent/30 selection:text-white overflow-hidden" style={{ height: '100vh' }}>
-      <CyberpunkScene />
+      <CyberpunkScene activeScene={activeScene} />
       <DataWave3D waveProgress={waveProgress} />
       <div className="fixed inset-0 z-20 vignette-overlay pointer-events-none" />
       
-      <NarrativeScroll scenes={SCENES} onWaveProgress={handleWaveProgress} />
+      <NarrativeScroll 
+        scenes={SCENES} 
+        onWaveProgress={handleWaveProgress} 
+        onSceneChange={handleSceneChange}
+      />
 
       <motion.div
         initial={{ opacity: 0 }}
