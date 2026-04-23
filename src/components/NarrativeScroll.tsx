@@ -10,6 +10,7 @@ interface Scene {
 interface NarrativeScrollProps {
   scenes: Scene[];
   onWaveProgress: (p: number) => void;
+  onSceneChange: (index: number) => void;
 }
 
 const TRANSITION_DURATION = 800;
@@ -17,7 +18,7 @@ const TRANSITION_DURATION = 800;
 const WAVE_HOLD_DESKTOP = 2500;
 const WAVE_HOLD_MOBILE = 1400;
 
-export default function NarrativeScroll({ scenes, onWaveProgress }: NarrativeScrollProps) {
+export default function NarrativeScroll({ scenes, onWaveProgress, onSceneChange }: NarrativeScrollProps) {
   const [activeScene, setActiveScene] = useState(0);
   const [showContent, setShowContent] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
@@ -35,7 +36,8 @@ export default function NarrativeScroll({ scenes, onWaveProgress }: NarrativeScr
 
   useEffect(() => {
     onWaveProgress(scenes[activeScene].waveProgress);
-  }, [activeScene, scenes, onWaveProgress]);
+    onSceneChange(activeScene);
+  }, [activeScene, scenes, onWaveProgress, onSceneChange]);
 
   const advanceScene = useCallback((direction: 1 | -1) => {
     if (isCoolingDown.current) return;
