@@ -26,8 +26,9 @@ export default function DataWave3D({ waveProgress }: DataWave3DProps) {
 
     let time = 0;
     const cols = 45; // Reduced from 55
-    const rows = 40; // Reduced from 50
-    const spacing = 135; // Increased spacing
+    const rows = 55; // Increased to cover more distance
+    const spacing = 150; // Adjusted for better perspective at depth
+    const totalDepth = rows * spacing; // ~8250 units
 
     // Smooth internal scroll progress (lerps toward waveProgressRef)
     let currentScroll = 0;
@@ -59,7 +60,7 @@ export default function DataWave3D({ waveProgress }: DataWave3DProps) {
       const cameraZ = -400 + (currentScroll * 200);
       const cameraY = -280 + (currentScroll * 100);
 
-      const tsunamiZ = 3500 - (currentScroll * 3300);
+      const tsunamiZ = 7000 - (currentScroll * 6800); // Starts at 7k instead of 3.5k
 
       const halfW = width / 2;
       const halfH = height * 0.51; 
