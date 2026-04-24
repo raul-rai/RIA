@@ -22,7 +22,7 @@ export default function CyberpunkScene({ activeScene }: CyberpunkSceneProps) {
           className="absolute inset-0 w-full h-full object-cover"
           style={{ 
             mixBlendMode: isLastScene ? 'screen' : 'normal',
-            objectPosition: 'center 58%'
+            objectPosition: 'center 54%'
           }}
         />
       </AnimatePresence>
