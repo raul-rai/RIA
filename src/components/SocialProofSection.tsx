@@ -10,6 +10,7 @@ const influencers = [
     quote: "A IA não é o futuro, é a sobrevivência do presente. Quem não se adaptar agora será engolido pelo mercado.",
     videoUrl: "https://www.youtube.com/embed/4ZRJCW9CSvE?autoplay=1",
     thumbnail: "https://p2.trrsf.com/image/fget/cf/940/0/images.terra.com/2023/06/13/1089201103-ricardoamorim.jpg",
+    bio: "Economista mais influente do Brasil segundo a Forbes, apresentador do Manhattan Connection e LinkedIn Top Voice. Com mais de 20 anos no mercado financeiro global, é a voz mais respeitada sobre transformações econômicas e tecnológicas no país.",
     icon: TrendingUp
   },
   {
@@ -18,6 +19,7 @@ const influencers = [
     quote: "Estamos no início da maior revolução tecnológica da nossa história. A IA é a nova eletricidade.",
     videoUrl: "https://www.youtube.com/embed/AlT8V7uV90o?autoplay=1",
     thumbnail: "https://www.adrenaline.com.br/wp-content/uploads/2024/03/jensen-huang-keynote-gtc-2024.jpg",
+    bio: "Fundador e CEO da NVIDIA. Visionário que transformou a computação gráfica em inteligência artificial acelerada, liderando a empresa que hoje sustenta toda a infraestrutura global de IA.",
     icon: Cpu
   },
   {
@@ -26,12 +28,13 @@ const influencers = [
     quote: "A inteligência artificial será o maior multiplicador de progresso da história da humanidade. O impacto é inevitável.",
     videoUrl: "https://www.youtube.com/embed/k96D3V99vR0?autoplay=1",
     thumbnail: "https://www.cnnbrasil.com.br/wp-content/uploads/sites/12/2023/11/sam-altman-e1700687784381.jpg",
+    bio: "CEO da OpenAI e criador do ChatGPT. Considerado uma das mentes mais brilhantes do Vale do Silício, está à frente da missão de garantir que a IA beneficie toda a humanidade.",
     icon: Brain
   }
 ];
 
 export default function SocialProofSection() {
-  const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
+  const [selectedInfluencer, setSelectedInfluencer] = useState<typeof influencers[0] | null>(null);
 
   return (
     <div className="w-full max-w-6xl mx-auto px-4 py-4 md:py-8 pointer-events-auto">
@@ -52,7 +55,7 @@ export default function SocialProofSection() {
           return (
             <motion.div
               key={i}
-              onClick={() => setSelectedVideo(item.videoUrl)}
+              onClick={() => setSelectedInfluencer(item)}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.1 }}
@@ -95,9 +98,11 @@ export default function SocialProofSection() {
       </div>
       
       <VideoModal 
-        isOpen={!!selectedVideo} 
-        onClose={() => setSelectedVideo(null)} 
-        videoUrl={selectedVideo || ''} 
+        isOpen={!!selectedInfluencer} 
+        onClose={() => setSelectedInfluencer(null)} 
+        videoUrl={selectedInfluencer?.videoUrl || ''} 
+        title={selectedInfluencer?.name || ''}
+        bio={selectedInfluencer?.bio}
       />
 
       <div className="mt-6 md:mt-12 text-center text-white/10 text-[6px] md:text-[8px] uppercase tracking-[0.4em] font-black">
