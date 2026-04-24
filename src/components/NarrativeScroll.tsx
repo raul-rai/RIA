@@ -110,7 +110,7 @@ export default function NarrativeScroll({ scenes, onWaveProgress, onSceneChange,
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-            className="fixed inset-0 z-10 pointer-events-none flex flex-col items-center justify-start md:justify-center p-4 md:p-12 overflow-y-auto overflow-x-hidden pt-20 md:pt-12"
+            className="fixed inset-0 z-10 pointer-events-none flex flex-col items-center justify-center p-4 md:p-12 overflow-y-auto overflow-x-hidden"
           >
             <div className="w-full flex-shrink-0 flex items-center justify-center min-h-full py-8 md:py-0">
               {scenes[activeScene].content}

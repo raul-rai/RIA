@@ -5,6 +5,14 @@ export default function EliteHUD() {
   const [coords, setCoords] = useState({ x: 0, y: 0 });
   const [threatLevel, setThreatLevel] = useState(14);
   const [logs, setLogs] = useState<string[]>([]);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -45,16 +53,16 @@ export default function EliteHUD() {
           <div className="hidden md:block text-[7px] text-white/20 ml-5 tracking-[0.4em]">RIA_CORE_v4.2.0</div>
         </div>
 
-        <div className="hidden md:flex flex-col gap-3 border-l border-accent/20 pl-4">
+        <div className="flex flex-col gap-3 border-l border-accent/20 pl-4">
           <div className="flex flex-col">
-            <span className="text-white/20 text-[7px] mb-1">Agentes em Operação</span>
+            <span className="text-white/20 text-[7px] mb-1 uppercase tracking-tighter">Agentes em Operação</span>
             <div className="flex items-baseline gap-2">
               <span className="text-white/80 text-xs font-serif italic">14</span>
               <span className="text-accent/40 text-[6px] tracking-tighter">AGENT_UPLINK</span>
             </div>
           </div>
           <div className="flex flex-col">
-            <span className="text-white/20 text-[7px] mb-1">Automações Ativas (24h)</span>
+            <span className="text-white/20 text-[7px] mb-1 uppercase tracking-tighter">Automações Ativas (24h)</span>
             <div className="flex items-baseline gap-2">
               <span className="text-white/80 text-xs font-serif italic">1.294</span>
               <span className="text-accent/40 text-[6px] tracking-tighter">SYNC_COMPLETED</span>
@@ -71,15 +79,15 @@ export default function EliteHUD() {
       {/* Top Right: AI Threat Level - Simplified on Mobile */}
       <div className="absolute top-6 right-6 md:top-8 md:right-8 flex flex-col items-end gap-1 md:gap-2 text-right">
         <span className="text-white/40 text-[7px] md:text-[9px]">Vulnerability Index</span>
-        <div className="hidden md:flex items-end gap-1 h-8">
-          {[...Array(10)].map((_, i) => (
+        <div className="flex items-end gap-1 h-6 md:h-8">
+          {[...Array(isMobile ? 5 : 10)].map((_, i) => (
             <motion.div
               key={i}
               animate={{ 
                 height: `${Math.random() * 100}%`,
-                backgroundColor: i > 7 ? 'rgba(255,0,0,0.4)' : 'rgba(0,229,255,0.2)'
+                backgroundColor: i > (isMobile ? 3 : 7) ? 'rgba(255,0,0,0.4)' : 'rgba(0,229,255,0.2)'
               }}
-              className="w-1 bg-accent/20"
+              className="w-0.5 md:w-1 bg-accent/20"
             />
           ))}
         </div>

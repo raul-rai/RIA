@@ -6,7 +6,7 @@ interface CyberpunkSceneProps {
 
 // The background scene — transitions from real to cyberpunk in the last fold.
 export default function CyberpunkScene({ activeScene }: CyberpunkSceneProps) {
-  const isLastScene = activeScene === 3;
+  const isLastScene = activeScene >= 3; // Start cyberpunk transition from Services onwards
 
   return (
     <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
@@ -22,7 +22,7 @@ export default function CyberpunkScene({ activeScene }: CyberpunkSceneProps) {
           className="absolute inset-0 w-full h-full object-cover"
           style={{ 
             mixBlendMode: isLastScene ? 'screen' : 'normal',
-            objectPosition: 'center 65%'
+            objectPosition: 'center 50%'
           }}
         />
       </AnimatePresence>

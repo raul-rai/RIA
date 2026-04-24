@@ -14,9 +14,9 @@ function SceneHero({ onStartDiagnostic }: { onStartDiagnostic: () => void }) {
   
   let headline = (
     <>
-      Faturar R$ 100k/mês é o <br className="hidden md:block" />
-      <span className="text-glow-accent italic font-normal text-white/90">nível mais perigoso</span> <br className="hidden md:block" />
-      para se estar.
+      O Tsunami da IA não é <br className="hidden md:block" />
+      um software novo. <br className="hidden md:block" />
+      <span className="text-glow-accent italic font-normal text-white/90">É o fim da ineficiência humana.</span>
     </>
   );
 
@@ -64,7 +64,7 @@ function SceneHero({ onStartDiagnostic }: { onStartDiagnostic: () => void }) {
       </h1>
 
       <p className="text-base md:text-xl text-muted max-w-2xl mb-10 font-sans font-light leading-relaxed px-2">
-        Você tem escala para ser notado, mas não tem a alavancagem para sobreviver ao que vem por aí. O Tsunami da IA não é um software novo, é o fim da ineficiência humana.
+        A ineficiência é o imposto invisível que você paga todos os dias. Seu negócio está pronto para navegar — ou será submergido?
       </p>
 
       <div className="flex flex-col items-center gap-4 w-full sm:w-auto pointer-events-auto">
@@ -156,7 +156,7 @@ function SceneServices() {
 const stats = [
   { number: '1%', text: 'É o custo de um Agente de IA comparado a um funcionário sênior com a mesma produtividade.' },
   { number: '24/7', text: 'Sua empresa operando em velocidade máxima enquanto seus concorrentes dormem.' },
-  { number: 'Hox', text: 'O timing é a única variável que você não consegue comprar depois que ela passa.' },
+  { number: 'HOJE', text: 'O timing é a única variável que você não consegue comprar depois que ela passa.' },
 ];
 
 function SceneStats() {
