@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Award, Quote } from 'lucide-react';
 
@@ -9,7 +10,78 @@ interface VideoModalProps {
   bio?: string;
 }
 
+declare global {
+  interface Window {
+    onYouTubeIframeAPIReady: () => void;
+    YT: any;
+  }
+}
+
 export default function VideoModal({ isOpen, onClose, videoUrl, title, bio }: VideoModalProps) {
+  const playerRef = useRef<any>(null);
+  const checkIntervalRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    // Load YouTube API if not already present
+    if (!window.YT) {
+      const tag = document.createElement('script');
+      tag.src = "https://www.youtube.com/iframe_api";
+      const firstScriptTag = document.getElementsByTagName('script')[0];
+      firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag);
+    }
+
+    const initPlayer = () => {
+      if (playerRef.current) return;
+      
+      const videoId = videoUrl.match(/(?:embed\/|v=)([^?&]+)/)?.[1];
+      
+      playerRef.current = new window.YT.Player('youtube-player', {
+        videoId: videoId,
+        events: {
+          onStateChange: (event: any) => {
+            // When playing, start checking for the 2:34 mark (154 seconds)
+            if (event.data === window.YT.PlayerState.PLAYING) {
+              if (checkIntervalRef.current) window.clearInterval(checkIntervalRef.current);
+              
+              checkIntervalRef.current = window.setInterval(() => {
+                const currentTime = playerRef.current?.getCurrentTime();
+                if (currentTime >= 154) {
+                  window.clearInterval(checkIntervalRef.current!);
+                  onClose();
+                }
+              }, 500); // Check every half second
+            } else {
+              if (checkIntervalRef.current) window.clearInterval(checkIntervalRef.current);
+            }
+          }
+        },
+        playerVars: {
+          autoplay: 1,
+          mute: 0,
+          enablejsapi: 1,
+          rel: 0,
+          modestbranding: 1
+        }
+      });
+    };
+
+    if (window.YT && window.YT.Player) {
+      initPlayer();
+    } else {
+      window.onYouTubeIframeAPIReady = initPlayer;
+    }
+
+    return () => {
+      if (checkIntervalRef.current) window.clearInterval(checkIntervalRef.current);
+      if (playerRef.current) {
+        playerRef.current.destroy();
+        playerRef.current = null;
+      }
+    };
+  }, [isOpen, videoUrl, onClose]);
+
   if (!isOpen) return null;
 
   return (
@@ -36,14 +108,9 @@ export default function VideoModal({ isOpen, onClose, videoUrl, title, bio }: Vi
             <X size={20} />
           </button>
 
-          {/* Video Section - 70% width on desktop */}
+          {/* Video Section with Player ID for API */}
           <div className="w-full md:w-[70%] aspect-video bg-black flex-shrink-0">
-            <iframe
-              src={videoUrl.replace('autoplay=1', 'autoplay=1&mute=0')}
-              className="w-full h-full"
-              allow="autoplay; fullscreen"
-              title={title}
-            />
+            <div id="youtube-player" className="w-full h-full" />
           </div>
 
           {/* Bio Section - 30% width on desktop */}
@@ -74,6 +141,9 @@ export default function VideoModal({ isOpen, onClose, videoUrl, title, bio }: Vi
                 <div className="flex flex-col">
                   <span className="text-[10px] text-white/20 uppercase tracking-widest font-bold">Protocolo</span>
                   <span className="text-[11px] text-accent font-mono">RIA_AUTH_VERIFIED</span>
+                </div>
+                <div className="ml-auto px-3 py-1 rounded bg-accent/10 border border-accent/20">
+                  <span className="text-[9px] text-accent font-black">AUTO-STOP: 2:34</span>
                 </div>
               </div>
             </motion.div>
