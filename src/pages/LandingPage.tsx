@@ -1,11 +1,16 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, lazy, Suspense } from 'react';
 import { motion } from 'motion/react';
-import { ArrowRight, Bot, Headset, Brain, TrendingUp, Zap, Clock, ShieldCheck, Target, Sparkles } from 'lucide-react';
+import { ArrowRight, Bot, Headset, Brain, TrendingUp, Zap, Clock, ShieldCheck, Target, Sparkles, Loader2 } from 'lucide-react';
 import CyberpunkScene from '../components/CyberpunkScene';
 import DataWave3D from '../components/DataWave3D';
 import NarrativeScroll from '../components/NarrativeScroll';
-import AIChatAgent from '../components/AIChatAgent';
 import EliteHUD from '../components/EliteHUD';
+
+// Lazy load heavy components
+const AIChatAgent = lazy(() => import('../components/AIChatAgent'));
+const PotentialDiagnostic = lazy(() => import('../components/PotentialDiagnostic'));
+const SocialProofSection = lazy(() => import('../components/SocialProofSection'));
+const ConsultantSection = lazy(() => import('../components/ConsultantSection'));
 
 // ─── Scene 0: THE HOOK ───────────────────────────────────────────────────────
 function SceneHero({ onStartDiagnostic }: { onStartDiagnostic: () => void }) {
@@ -246,12 +251,12 @@ export default function LandingPage() {
 
   const scenes = [
     { id: 0, waveProgress: 0,    content: <SceneHero onStartDiagnostic={() => setRequestedScene(6)} /> },
-    { id: 1, waveProgress: 0.15, content: <SocialProofSection /> },
-    { id: 2, waveProgress: 0.35, content: <PotentialDiagnostic /> },
+    { id: 1, waveProgress: 0.15, content: <Suspense fallback={<Loader2 className="animate-spin text-accent" />}><SocialProofSection /></Suspense> },
+    { id: 2, waveProgress: 0.35, content: <Suspense fallback={<Loader2 className="animate-spin text-accent" />}><PotentialDiagnostic /></Suspense> },
     { id: 3, waveProgress: 0.55, content: <SceneServices /> },
     { id: 4, waveProgress: 0.70, content: <SceneStats /> },
-    { id: 5, waveProgress: 0.85, content: <ConsultantSection /> },
-    { id: 6, waveProgress: 1.0,  content: <SceneCTA onFinalContact={handleFinalContact} /> },
+    { id: 5, waveProgress: 0.85, content: <Suspense fallback={<Loader2 className="animate-spin text-accent" />}><ConsultantSection /></Suspense> },
+    { id: 6, waveProgress: 1.0,  content: <Suspense fallback={<Loader2 className="animate-spin text-accent" />}><SceneCTA onFinalContact={handleFinalContact} /></Suspense> },
   ];
 
   return (

@@ -16,8 +16,8 @@ interface NarrativeScrollProps {
 
 const TRANSITION_DURATION = 800;
 // Default timings that will be adjusted per device
-const WAVE_HOLD_DESKTOP = 2500;
-const WAVE_HOLD_MOBILE = 1400;
+const WAVE_HOLD_DESKTOP = 1200; // Reduced from 2500
+const WAVE_HOLD_MOBILE = 800;   // Reduced from 1400
 
 export default function NarrativeScroll({ scenes, onWaveProgress, onSceneChange, externalActiveScene }: NarrativeScrollProps) {
   const [activeScene, setActiveScene] = useState(0);

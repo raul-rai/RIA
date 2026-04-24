@@ -25,9 +25,9 @@ export default function DataWave3D({ waveProgress }: DataWave3DProps) {
     canvas.height = height;
 
     let time = 0;
-    const cols = 55;
-    const rows = 50;
-    const spacing = 110;
+    const cols = 45; // Reduced from 55
+    const rows = 40; // Reduced from 50
+    const spacing = 135; // Increased spacing
 
     // Smooth internal scroll progress (lerps toward waveProgressRef)
     let currentScroll = 0;
