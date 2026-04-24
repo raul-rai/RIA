@@ -36,16 +36,16 @@ export default function EliteHUD() {
   return (
     <div className="fixed inset-0 pointer-events-none z-[60] font-mono uppercase text-[9px] tracking-[0.2em] text-accent/40 overflow-hidden">
       {/* Top Left: System Status */}
-      <div className="absolute top-8 left-8 flex flex-col gap-6">
+      <div className="absolute top-6 left-6 md:top-8 md:left-8 flex flex-col gap-4 md:gap-6">
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-3">
-            <div className="w-2 h-2 bg-accent animate-pulse rounded-full shadow-[0_0_10px_rgba(0,229,255,1)]" />
-            <span className="text-white/60">System Status: <span className="text-accent">Operational</span></span>
+            <div className="w-1.5 h-1.5 md:w-2 md:h-2 bg-accent animate-pulse rounded-full shadow-[0_0_10px_rgba(0,229,255,1)]" />
+            <span className="text-white/60 text-[8px] md:text-[9px]">Status: <span className="text-accent">Operational</span></span>
           </div>
-          <div className="text-[7px] text-white/20 ml-5 tracking-[0.4em]">RIA_CORE_v4.2.0</div>
+          <div className="hidden md:block text-[7px] text-white/20 ml-5 tracking-[0.4em]">RIA_CORE_v4.2.0</div>
         </div>
 
-        <div className="flex flex-col gap-3 border-l border-accent/20 pl-4">
+        <div className="hidden md:flex flex-col gap-3 border-l border-accent/20 pl-4">
           <div className="flex flex-col">
             <span className="text-white/20 text-[7px] mb-1">Agentes em Operação</span>
             <div className="flex items-baseline gap-2">
@@ -62,16 +62,16 @@ export default function EliteHUD() {
           </div>
         </div>
 
-        <div className="flex flex-col gap-1 opacity-20 pl-4">
+        <div className="hidden md:flex flex-col gap-1 opacity-20 pl-4">
           <div>COORD_X: {coords.x}</div>
           <div>COORD_Y: {coords.y}</div>
         </div>
       </div>
 
-      {/* Top Right: AI Threat Level */}
-      <div className="absolute top-8 right-8 flex flex-col items-end gap-2 text-right">
-        <span className="text-white/40">Market Vulnerability Index</span>
-        <div className="flex items-end gap-1 h-8">
+      {/* Top Right: AI Threat Level - Simplified on Mobile */}
+      <div className="absolute top-6 right-6 md:top-8 md:right-8 flex flex-col items-end gap-1 md:gap-2 text-right">
+        <span className="text-white/40 text-[7px] md:text-[9px]">Vulnerability Index</span>
+        <div className="hidden md:flex items-end gap-1 h-8">
           {[...Array(10)].map((_, i) => (
             <motion.div
               key={i}
@@ -83,11 +83,11 @@ export default function EliteHUD() {
             />
           ))}
         </div>
-        <div className="text-3xl font-serif italic text-white/80">{threatLevel}%</div>
+        <div className="text-xl md:text-3xl font-serif italic text-white/80 leading-none">{threatLevel}%</div>
       </div>
 
-      {/* Bottom Left: Live Terminal Data */}
-      <div className="absolute bottom-8 left-8 flex flex-col gap-2 max-w-[200px]">
+      {/* Bottom Left: Live Terminal Data - Desktop Only */}
+      <div className="hidden md:flex absolute bottom-8 left-8 flex flex-col gap-2 max-w-[200px]">
         <div className="flex items-center gap-2 mb-2">
           <div className="w-4 h-[1px] bg-accent" />
           <span className="text-accent/60">Live_Stream</span>
@@ -105,8 +105,8 @@ export default function EliteHUD() {
         ))}
       </div>
 
-      {/* Bottom Right: Corner Frame Decor */}
-      <div className="absolute bottom-8 right-8 w-24 h-24 border-r border-b border-white/10">
+      {/* Bottom Right: Corner Frame Decor - Hidden on Mobile */}
+      <div className="hidden md:block absolute bottom-8 right-8 w-24 h-24 border-r border-b border-white/10">
         <div className="absolute bottom-0 right-0 w-4 h-4 bg-accent/5" />
         <div className="absolute -bottom-1 -right-1 w-1 h-1 bg-accent" />
         <div className="absolute bottom-4 right-4 flex flex-col items-end opacity-20">
@@ -116,8 +116,8 @@ export default function EliteHUD() {
       </div>
 
       {/* Ambient Grid Artifacts */}
-      <div className="absolute inset-0 opacity-[0.03] pointer-events-none">
-        <div className="w-full h-full" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(0,229,255,1) 1px, transparent 0)', backgroundSize: '100px 100px' }} />
+      <div className="absolute inset-0 opacity-[0.02] md:opacity-[0.03] pointer-events-none">
+        <div className="w-full h-full" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(0,229,255,1) 1px, transparent 0)', backgroundSize: '60px 60px md:backgroundSize: 100px 100px' }} />
       </div>
     </div>
   );
