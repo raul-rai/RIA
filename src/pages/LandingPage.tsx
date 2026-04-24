@@ -86,8 +86,6 @@ function SceneHero({ onStartDiagnostic }: { onStartDiagnostic: () => void }) {
 }
 
 // ─── Scene 1: THE LEVERAGE ───────────────────────────────────────────────────
-import SocialProofSection from '../components/SocialProofSection';
-import ConsultantSection from '../components/ConsultantSection';
 
 // ─── Scene 1: THE POSSIBILITIES ──────────────────────────────────────────────
 const services = [
@@ -214,7 +212,6 @@ function SceneCTA({ onFinalContact }: { onFinalContact: (data: any) => void }) {
   );
 }
 
-import PotentialDiagnostic from '../components/PotentialDiagnostic';
 
 // ─── Component ───────────────────────────────────────────────────────────────
 export default function LandingPage() {
