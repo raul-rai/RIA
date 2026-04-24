@@ -143,8 +143,8 @@ export default function DataWave3D({ waveProgress }: DataWave3DProps) {
           ctx.lineTo(pBottom.px, pBottom.py);
           ctx.closePath();
 
-          // Dark blue ocean body fill
-          ctx.fillStyle = `rgba(0, 10, 25, ${depthAlpha * 0.98})`;
+          // Solid deep blue/black body fill to hide background
+          ctx.fillStyle = `rgba(1, 4, 8, ${Math.min(1, depthAlpha * 1.5)})`;
           ctx.fill();
 
           // Cyan tech wireframe lines
@@ -152,7 +152,7 @@ export default function DataWave3D({ waveProgress }: DataWave3DProps) {
           const r = Math.floor(0 + heightIntensity * 100);
           const g = Math.floor(180 + heightIntensity * 75);
           const b = 255;
-          const alpha = depthAlpha * (0.3 + heightIntensity * 0.7);
+          const alpha = depthAlpha * (0.4 + heightIntensity * 0.6);
 
           ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${alpha})`;
           ctx.stroke();
@@ -177,17 +177,10 @@ export default function DataWave3D({ waveProgress }: DataWave3DProps) {
   }, []);
 
   return (
-    <div 
-      className="fixed inset-0 z-[1] pointer-events-none"
-      style={{
-        maskImage: 'linear-gradient(to bottom, black 80%, transparent 92%)',
-        WebkitMaskImage: 'linear-gradient(to bottom, black 80%, transparent 92%)'
-      }}
-    >
+    <div className="fixed inset-0 z-[1] pointer-events-none">
       <canvas 
         ref={canvasRef} 
         className="w-full h-full" 
-        style={{ mixBlendMode: 'screen' }}
       />
     </div>
   );
