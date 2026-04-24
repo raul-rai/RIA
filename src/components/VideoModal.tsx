@@ -1,13 +1,15 @@
 import { motion, AnimatePresence } from 'motion/react';
-import { X } from 'lucide-react';
+import { X, Award, Quote } from 'lucide-react';
 
 interface VideoModalProps {
   isOpen: boolean;
   onClose: () => void;
   videoUrl: string;
+  title: string;
+  bio?: string;
 }
 
-export default function VideoModal({ isOpen, onClose, videoUrl }: VideoModalProps) {
+export default function VideoModal({ isOpen, onClose, videoUrl, title, bio }: VideoModalProps) {
   if (!isOpen) return null;
 
   return (
@@ -16,29 +18,66 @@ export default function VideoModal({ isOpen, onClose, videoUrl }: VideoModalProp
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8 backdrop-blur-2xl bg-black/80 pointer-events-auto"
+        className="fixed inset-0 z-[100] flex items-center justify-center p-2 md:p-8 backdrop-blur-3xl bg-black/90 pointer-events-auto"
         onClick={onClose}
       >
         <motion.div
-          initial={{ scale: 0.9, opacity: 0, y: 20 }}
+          initial={{ scale: 0.95, opacity: 0, y: 30 }}
           animate={{ scale: 1, opacity: 1, y: 0 }}
-          exit={{ scale: 0.9, opacity: 0, y: 20 }}
-          className="relative w-full max-w-5xl aspect-video bg-black rounded-2xl overflow-hidden shadow-[0_0_50px_rgba(0,229,255,0.3)] border border-white/10"
+          exit={{ scale: 0.95, opacity: 0, y: 30 }}
+          className="relative w-full max-w-7xl bg-bg-base/60 rounded-3xl overflow-hidden shadow-[0_0_80px_rgba(0,229,255,0.2)] border border-white/10 flex flex-col md:flex-row h-fit max-h-[90vh]"
           onClick={(e) => e.stopPropagation()}
         >
+          {/* Close Button - Floats over video on mobile, top right on desktop */}
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 z-20 p-2 rounded-full bg-black/50 text-white hover:bg-accent hover:text-black transition-colors"
+            className="absolute top-4 right-4 z-[110] p-3 rounded-full bg-black/50 text-white hover:bg-accent hover:text-black transition-all"
           >
             <X size={20} />
           </button>
-          
-          <iframe
-            src={videoUrl.replace('autoplay=1', 'autoplay=1&mute=0')}
-            className="w-full h-full"
-            allow="autoplay; fullscreen"
-            title="Video Player"
-          />
+
+          {/* Video Section - 70% width on desktop */}
+          <div className="w-full md:w-[70%] aspect-video bg-black flex-shrink-0">
+            <iframe
+              src={videoUrl.replace('autoplay=1', 'autoplay=1&mute=0')}
+              className="w-full h-full"
+              allow="autoplay; fullscreen"
+              title={title}
+            />
+          </div>
+
+          {/* Bio Section - 30% width on desktop */}
+          <div className="w-full md:w-[30%] p-6 md:p-10 flex flex-col justify-center bg-gradient-to-br from-white/[0.02] to-transparent overflow-y-auto">
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.3 }}
+            >
+              <div className="flex items-center gap-2 mb-4">
+                <Award size={16} className="text-accent" />
+                <span className="text-accent text-[10px] md:text-[11px] font-black uppercase tracking-[0.3em]">Speaker Profile</span>
+              </div>
+              
+              <h3 className="text-2xl md:text-3xl font-serif text-white mb-2">{title}</h3>
+              <div className="w-12 h-1 bg-accent/30 mb-6 rounded-full" />
+              
+              {bio && (
+                <div className="relative">
+                  <Quote size={32} className="absolute -top-4 -left-4 text-white/5 opacity-40" />
+                  <p className="text-white/60 text-sm md:text-base font-light leading-relaxed italic relative z-10">
+                    {bio}
+                  </p>
+                </div>
+              )}
+
+              <div className="mt-8 pt-8 border-t border-white/5 flex items-center gap-4">
+                <div className="flex flex-col">
+                  <span className="text-[10px] text-white/20 uppercase tracking-widest font-bold">Protocolo</span>
+                  <span className="text-[11px] text-accent font-mono">RIA_AUTH_VERIFIED</span>
+                </div>
+              </div>
+            </motion.div>
+          </div>
         </motion.div>
       </motion.div>
     </AnimatePresence>
