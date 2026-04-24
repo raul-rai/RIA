@@ -14,8 +14,7 @@ function SceneHero({ onStartDiagnostic }: { onStartDiagnostic: () => void }) {
   
   let headline = (
     <>
-      O Tsunami da IA não é <br className="hidden md:block" />
-      um software novo. <br className="hidden md:block" />
+      O Tsunami da IA está chegando! <br className="hidden md:block" />
       <span className="text-glow-accent italic font-normal text-white/90">É o fim da ineficiência humana.</span>
     </>
   );
