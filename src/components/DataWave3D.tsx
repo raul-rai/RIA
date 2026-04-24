@@ -62,7 +62,7 @@ export default function DataWave3D({ waveProgress }: DataWave3DProps) {
       const tsunamiZ = 3500 - (currentScroll * 3300);
 
       const halfW = width / 2;
-      const halfH = height * 0.5; 
+      const halfH = height * 0.58; 
 
       // 1. Update point positions
       for (let i = 0; i < points.length; i++) {
