@@ -4,6 +4,11 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>RIA — Revolução da Inteligência Artificial</title>
+    
+    <!-- Critical Preloads -->
+    <link rel="preload" href="/rio-real.png" as="image" />
+    <link rel="preload" href="/rio-cyberpunk.png" as="image" />
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" as="style" />
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -120,6 +125,16 @@
         }
       ]
     }
+    </script>
+
+    <script>
+      // Dynamic Title based on scroll/focus
+      window.addEventListener('blur', () => {
+        document.title = "⚠️ O Tsunami não espera...";
+      });
+      window.addEventListener('focus', () => {
+        document.title = "RIA — Revolução da Inteligência Artificial";
+      });
     </script>
   </head>
   <body>

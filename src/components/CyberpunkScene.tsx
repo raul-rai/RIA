@@ -19,8 +19,11 @@ export default function CyberpunkScene({ activeScene }: CyberpunkSceneProps) {
           animate={{ opacity: 0.7 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 1.5, ease: "easeInOut" }}
-          className="absolute inset-0 w-full h-full object-cover object-bottom"
-          style={{ mixBlendMode: isLastScene ? 'screen' : 'normal' }}
+          className="absolute inset-0 w-full h-full object-cover"
+          style={{ 
+            mixBlendMode: isLastScene ? 'screen' : 'normal',
+            objectPosition: 'center 65%'
+          }}
         />
       </AnimatePresence>
 

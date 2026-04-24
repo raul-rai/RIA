@@ -11,6 +11,7 @@ interface NarrativeScrollProps {
   scenes: Scene[];
   onWaveProgress: (p: number) => void;
   onSceneChange: (index: number) => void;
+  externalActiveScene?: number; // Prop to allow external control
 }
 
 const TRANSITION_DURATION = 800;
@@ -18,8 +19,15 @@ const TRANSITION_DURATION = 800;
 const WAVE_HOLD_DESKTOP = 2500;
 const WAVE_HOLD_MOBILE = 1400;
 
-export default function NarrativeScroll({ scenes, onWaveProgress, onSceneChange }: NarrativeScrollProps) {
+export default function NarrativeScroll({ scenes, onWaveProgress, onSceneChange, externalActiveScene }: NarrativeScrollProps) {
   const [activeScene, setActiveScene] = useState(0);
+
+  // Sync with external control if provided
+  useEffect(() => {
+    if (externalActiveScene !== undefined && externalActiveScene !== activeScene) {
+      setActiveScene(externalActiveScene);
+    }
+  }, [externalActiveScene]);
   const [showContent, setShowContent] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
   const isCoolingDown = useRef(false);

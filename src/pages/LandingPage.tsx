@@ -1,15 +1,53 @@
 import { useState, useCallback } from 'react';
 import { motion } from 'motion/react';
-import { ArrowRight, Bot, Headset, Brain, TrendingUp, Zap, Clock, ShieldCheck, Target } from 'lucide-react';
-import { WHATSAPP_URL_HERO, WHATSAPP_URL_CTA } from '../constants/links';
+import { ArrowRight, Bot, Headset, Brain, TrendingUp, Zap, Clock, ShieldCheck, Target, Sparkles } from 'lucide-react';
 import CyberpunkScene from '../components/CyberpunkScene';
 import DataWave3D from '../components/DataWave3D';
 import NarrativeScroll from '../components/NarrativeScroll';
+import AIChatAgent from '../components/AIChatAgent';
+import EliteHUD from '../components/EliteHUD';
 
 // ─── Scene 0: THE HOOK ───────────────────────────────────────────────────────
-function SceneHero() {
+function SceneHero({ onStartDiagnostic }: { onStartDiagnostic: () => void }) {
+  const searchParams = new URLSearchParams(window.location.search);
+  const ref = searchParams.get('ref')?.toLowerCase();
+  
+  let headline = (
+    <>
+      Faturar R$ 100k/mês é o <br className="hidden md:block" />
+      <span className="text-glow-accent italic font-normal text-white/90">nível mais perigoso</span> <br className="hidden md:block" />
+      para se estar.
+    </>
+  );
+
+  if (ref === 'industria') {
+    headline = (
+      <>
+        Sua <span className="text-glow-accent italic font-normal text-white/90">produção manual</span> <br className="hidden md:block" />
+        é o gargalo que vai <br className="hidden md:block" />
+        te afogar.
+      </>
+    );
+  } else if (ref === 'servicos') {
+    headline = (
+      <>
+        Vender <span className="text-glow-accent italic font-normal text-white/90">horas humanas</span> <br className="hidden md:block" />
+        é um modelo de negócio <br className="hidden md:block" />
+        com os dias contados.
+      </>
+    );
+  } else if (ref === 'varejo') {
+    headline = (
+      <>
+        O <span className="text-glow-accent italic font-normal text-white/90">estoque parado</span> <br className="hidden md:block" />
+        não é seu único custo. <br className="hidden md:block" />
+        A ineficiência é.
+      </>
+    );
+  }
+
   return (
-    <div className="w-full max-w-4xl mx-auto px-4 flex flex-col items-center text-center">
+    <div className="w-full max-w-4xl mx-auto px-4 flex flex-col items-center text-center pointer-events-auto">
       <motion.div 
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -17,14 +55,12 @@ function SceneHero() {
       >
         <Target className="text-accent animate-pulse" size={14} />
         <span className="text-white/60 font-sans tracking-[0.2em] uppercase text-[9px] md:text-[10px] font-bold">
-          Exclusivo para Empresas de R$ 100k+
+          {ref ? `Estratégia para ${ref.toUpperCase()}` : 'Exclusivo para Empresas de R$ 100k+'}
         </span>
       </motion.div>
 
       <h1 className="heading-hero mb-6 text-white tracking-tight">
-        Faturar R$ 100k/mês é o <br className="hidden md:block" />
-        <span className="text-glow-accent italic font-normal text-white/90">nível mais perigoso</span> <br className="hidden md:block" />
-        para se estar.
+        {headline}
       </h1>
 
       <p className="text-base md:text-xl text-muted max-w-2xl mb-10 font-sans font-light leading-relaxed px-2">
@@ -32,15 +68,13 @@ function SceneHero() {
       </p>
 
       <div className="flex flex-col items-center gap-4 w-full sm:w-auto pointer-events-auto">
-        <a
-          href={WHATSAPP_URL_HERO}
-          target="_blank"
-          rel="noopener noreferrer"
+        <button
+          onClick={onStartDiagnostic}
           className="w-full sm:w-auto group px-8 py-5 bg-white text-black rounded-xl font-bold text-xs uppercase tracking-widest transition-all duration-500 hover:scale-105 hover:bg-accent hover:shadow-[0_0_40px_rgba(0,229,255,0.3)] shadow-2xl flex items-center justify-center gap-3 active:scale-95"
         >
           <span>Garantir minha Alavancagem</span>
           <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform duration-300" />
-        </a>
+        </button>
         <p className="text-white/20 text-[9px] tracking-[0.3em] uppercase font-bold">Role para aceitar a verdade</p>
       </div>
     </div>
@@ -48,45 +82,54 @@ function SceneHero() {
 }
 
 // ─── Scene 1: THE LEVERAGE ───────────────────────────────────────────────────
+import SocialProofSection from '../components/SocialProofSection';
+import ConsultantSection from '../components/ConsultantSection';
+
+// ─── Scene 1: THE POSSIBILITIES ──────────────────────────────────────────────
 const services = [
   {
-    title: 'SDRs Digitais Incansáveis',
-    desc: 'Esqueça o atrito de gerenciar humanos. Agentes que prospectam e qualificam 24h sem interrupção.',
+    title: 'Concierges Inteligentes 24/7',
+    desc: 'Sites que não apenas informam, mas vendem. Agentes responsivos que qualificam e convertem leads enquanto você dorme.',
     icon: Bot,
     big: true,
   },
   {
-    title: 'Atendimento Pró-Ativo',
-    desc: 'Sistemas que aprendem sobre seu produto e fecham vendas sozinhos.',
-    icon: Headset,
+    title: 'Criativos & Campanhas IA',
+    desc: 'Produção em escala de criativos para redes sociais e vídeos de campanha usando as IAs generativas mais avançadas do mundo.',
+    icon: Sparkles,
   },
   {
-    title: 'Inteligência Executiva',
-    desc: 'Decisões baseadas em dados puros, não em palpites de gerentes.',
+    title: 'Otimização SEO & GEO',
+    desc: 'Não basta estar no Google. Sua empresa precisa ser a primeira resposta para IAs (Gemini, Perplexity, GPT).',
+    icon: Zap,
+  },
+  {
+    title: 'Automação de Processos',
+    desc: 'Elimine tarefas repetitivas e erros humanos. IA integrada ao seu workflow operacional.',
     icon: Brain,
   },
   {
-    title: 'Escala sem Headcount',
-    desc: 'Dobre seu faturamento sem precisar contratar um único funcionário novo.',
+    title: 'Estratégia Full-Stack',
+    desc: 'Implementação de ponta a ponta: do diagnóstico técnico ao agente em produção.',
     icon: TrendingUp,
   },
 ];
 
 function SceneServices() {
   return (
-    <div className="w-full max-w-5xl mx-auto px-4">
+    <div className="w-full max-w-5xl mx-auto px-4 pointer-events-auto">
       <div className="mb-8 md:mb-12 text-center">
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-accent/20 bg-accent/5 backdrop-blur-md mb-4 font-sans">
           <Zap size={12} className="text-accent" />
           <span className="text-accent text-[9px] uppercase tracking-[0.2em] font-bold">O Novo Moat Digital</span>
         </div>
         <h2 className="heading-section text-white">
-          Humanos não escalam. <br className="hidden md:block" />
-          <span className="italic font-normal text-white/50">Sistemas de Inteligência sim.</span>
+          Sua empresa alinhada <br className="hidden md:block" />
+          <span className="italic font-normal text-white/50">com a nova era.</span>
         </h2>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 max-w-4xl mx-auto relative">
         {services.map((s, i) => {
           const Icon = s.icon;
           return (
@@ -109,7 +152,7 @@ function SceneServices() {
   );
 }
 
-// ─── Scene 2: THE TIMING ─────────────────────────────────────────────────────
+// ─── Scene 3: THE TIMING ─────────────────────────────────────────────────────
 const stats = [
   { number: '1%', text: 'É o custo de um Agente de IA comparado a um funcionário sênior com a mesma produtividade.' },
   { number: '24/7', text: 'Sua empresa operando em velocidade máxima enquanto seus concorrentes dormem.' },
@@ -118,7 +161,7 @@ const stats = [
 
 function SceneStats() {
   return (
-    <div className="w-full max-w-5xl mx-auto px-4">
+    <div className="w-full max-w-5xl mx-auto px-4 pointer-events-auto">
       <h2 className="heading-section text-white mb-12 md:mb-20 text-center">
         A IA não vai te substituir.<br />
         <span className="italic font-normal text-white/40">Mas quem usa ela vai.</span>
@@ -137,58 +180,43 @@ function SceneStats() {
   );
 }
 
-// ─── Scene 3: THE OFFER ──────────────────────────────────────────────────────
-function SceneCTA() {
+// ─── Scene 6: THE OFFER ──────────────────────────────────────────────────────
+function SceneCTA({ onFinalContact }: { onFinalContact: (data: any) => void }) {
   return (
-    <div className="w-full max-w-4xl mx-auto px-4 flex flex-col items-center text-center">
-      <div className="premium-glass rounded-[2.5rem] p-8 md:p-20 border border-white/10 backdrop-blur-2xl w-full relative overflow-hidden">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-40 h-1 bg-accent/20 blur-sm rounded-full" />
-        
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-accent/20 bg-accent/5 mb-8">
+    <div className="w-full max-w-5xl mx-auto px-4 flex flex-col items-center text-center pointer-events-auto">
+      <div className="w-full mb-12">
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-accent/20 bg-accent/5 mb-6">
           <Clock size={12} className="text-accent" />
           <span className="text-accent text-[9px] uppercase tracking-widest font-bold">Vagas limitadas por mês</span>
         </div>
         
-        <h2 className="heading-section text-white mb-6">
+        <h2 className="heading-section text-white mb-4">
           Você vai surfar ou<br />
           <span className="italic font-normal text-glow-accent text-white/90">se afogar?</span>
         </h2>
         
-        <p className="text-white/50 text-base md:text-xl mb-12 max-w-xl mx-auto font-sans font-light leading-relaxed">
-          Agende sua Sessão Estratégica de 30min: Vamos desenhar seu Plano de Defesa e Ataque contra o Tsunami.
+        <p className="text-white/50 text-base md:text-lg max-w-xl mx-auto font-sans font-light leading-relaxed">
+          Inicie a conversa com nosso Agente para descobrir seu Potencial de Alavancagem.
         </p>
+      </div>
 
-        <div className="flex flex-col items-center gap-6 pointer-events-auto">
-          <a
-            href={WHATSAPP_URL_CTA}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-full sm:w-auto group px-12 py-6 bg-accent text-black rounded-xl font-bold text-xs uppercase tracking-[0.2em] transition-all duration-500 hover:scale-105 hover:shadow-[0_0_60px_rgba(0,229,255,0.4)] flex items-center justify-center gap-3 active:scale-95"
-          >
-            <span>Montar meu Plano Agora</span>
-            <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform duration-300" />
-          </a>
-          
-          <div className="flex items-center gap-2 text-white/20 text-[9px] uppercase tracking-[0.3em] font-bold">
-            <ShieldCheck size={14} className="text-accent/40" />
-            <span>Sessão gratuita para faturamento R$ 100k+</span>
-          </div>
-        </div>
+      <AIChatAgent onComplete={onFinalContact} />
+      
+      <div className="mt-12 flex items-center gap-2 text-white/20 text-[9px] uppercase tracking-[0.3em] font-bold">
+        <ShieldCheck size={14} className="text-accent/40" />
+        <span>Sessão gratuita para faturamento R$ 100k+</span>
       </div>
     </div>
   );
 }
 
-const SCENES = [
-  { id: 0, waveProgress: 0,    content: <SceneHero /> },
-  { id: 1, waveProgress: 0.35, content: <SceneServices /> },
-  { id: 2, waveProgress: 0.65, content: <SceneStats /> },
-  { id: 3, waveProgress: 1.0,  content: <SceneCTA /> },
-];
+import PotentialDiagnostic from '../components/PotentialDiagnostic';
 
+// ─── Component ───────────────────────────────────────────────────────────────
 export default function LandingPage() {
   const [waveProgress, setWaveProgress] = useState(0);
   const [activeScene, setActiveScene] = useState(0);
+  const [requestedScene, setRequestedScene] = useState<number | undefined>(undefined);
 
   const handleWaveProgress = useCallback((p: number) => {
     setWaveProgress(p);
@@ -196,7 +224,36 @@ export default function LandingPage() {
 
   const handleSceneChange = useCallback((index: number) => {
     setActiveScene(index);
+    
+    const titles = [
+      "RIA — A Ameaça Silenciosa",
+      "RIA — O Mercado está Mudando",
+      "RIA — Diagnóstico de Saúde Digital",
+      "RIA — Possibilidades Infinitas",
+      "RIA — O Momento é Agora",
+      "RIA — Seu Consultor",
+      "RIA — Estratégia de Defesa"
+    ];
+    if (titles[index]) {
+      document.title = titles[index];
+    }
+    setRequestedScene(undefined);
   }, []);
+
+  const handleFinalContact = useCallback((data: any) => {
+    const message = `Olá! Realizei o diagnóstico via chat RIA.%0A%0A👤 Nome: ${data.name}%0A💰 Faturamento: R$ ${data.revenue.toLocaleString()}/mês%0A💸 ROI Projetado: R$ ${data.roi.toLocaleString()}/ano%0A🚀 Eficiência: +${data.efficiency}%25%0A%0AQuero agendar minha sessão estratégica para escalar esses números.`;
+    window.open(`https://wa.me/5516997879837?text=${message}`, '_blank');
+  }, []);
+
+  const scenes = [
+    { id: 0, waveProgress: 0,    content: <SceneHero onStartDiagnostic={() => setRequestedScene(6)} /> },
+    { id: 1, waveProgress: 0.15, content: <SocialProofSection /> },
+    { id: 2, waveProgress: 0.35, content: <PotentialDiagnostic /> },
+    { id: 3, waveProgress: 0.55, content: <SceneServices /> },
+    { id: 4, waveProgress: 0.70, content: <SceneStats /> },
+    { id: 5, waveProgress: 0.85, content: <ConsultantSection /> },
+    { id: 6, waveProgress: 1.0,  content: <SceneCTA onFinalContact={handleFinalContact} /> },
+  ];
 
   return (
     <div className="bg-[#010408] min-h-screen text-white font-sans selection:bg-accent/30 selection:text-white overflow-hidden" style={{ height: '100vh' }}>
@@ -204,10 +261,14 @@ export default function LandingPage() {
       <DataWave3D waveProgress={waveProgress} />
       <div className="fixed inset-0 z-20 vignette-overlay pointer-events-none" />
       
+      <EliteHUD />
+      <div className="scanline" />
+      
       <NarrativeScroll 
-        scenes={SCENES} 
+        scenes={scenes} 
         onWaveProgress={handleWaveProgress} 
         onSceneChange={handleSceneChange}
+        externalActiveScene={requestedScene}
       />
 
       <motion.div
