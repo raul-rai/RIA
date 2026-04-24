@@ -30,7 +30,7 @@ export default function SocialProofSection() {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
   return (
-    <div className="w-full max-w-6xl mx-auto px-4 py-12 md:py-24 pointer-events-auto">
+    <div className="w-full max-w-6xl mx-auto px-4 py-8 md:py-24 pointer-events-auto">
       <div className="mb-10 md:mb-16 text-center">
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/10 bg-white/5 mb-4 md:mb-6">
           <Quote size={12} className="text-accent" />

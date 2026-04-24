@@ -187,7 +187,7 @@ function SceneStats() {
 // ─── Scene 6: THE OFFER ──────────────────────────────────────────────────────
 function SceneCTA({ onFinalContact }: { onFinalContact: (data: any) => void }) {
   return (
-    <div className="w-full max-w-5xl mx-auto px-4 flex flex-col items-center text-center pointer-events-auto">
+    <div className="w-full max-w-5xl mx-auto px-4 flex flex-col items-center text-center pointer-events-auto py-10 md:py-0">
       <div className="w-full mb-12">
         <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-accent/20 bg-accent/5 mb-6">
           <Clock size={12} className="text-accent" />

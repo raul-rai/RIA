@@ -3,7 +3,7 @@ import { Award, Briefcase, GraduationCap, ArrowUpRight, Linkedin } from 'lucide-
 
 export default function ConsultantSection() {
   return (
-    <div className="w-full max-w-6xl mx-auto px-4 py-12 md:py-24 pointer-events-auto">
+    <div className="w-full max-w-6xl mx-auto px-4 py-8 md:py-24 pointer-events-auto">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-12 items-center">
         {/* Profile Image with Decorative Elements */}
         <div className="relative max-w-[320px] md:max-w-none mx-auto md:mx-0 w-full">

@@ -47,8 +47,21 @@ export default function NarrativeScroll({ scenes, onWaveProgress, onSceneChange,
     onSceneChange(activeScene);
   }, [activeScene, scenes, onWaveProgress, onSceneChange]);
 
+  const containerRef = useRef<HTMLDivElement>(null);
+
   const advanceScene = useCallback((direction: 1 | -1) => {
     if (isCoolingDown.current) return;
+    
+    // Check for internal scroll before advancing
+    if (containerRef.current) {
+      const { scrollTop, scrollHeight, clientHeight } = containerRef.current;
+      const isAtBottom = scrollTop + clientHeight >= scrollHeight - 10;
+      const isAtTop = scrollTop <= 10;
+
+      if (direction === 1 && !isAtBottom) return; // Allow internal scroll down
+      if (direction === -1 && !isAtTop) return;   // Allow internal scroll up
+    }
+
     const next = activeScene + direction;
     if (next < 0 || next >= scenes.length) return;
 
@@ -60,6 +73,8 @@ export default function NarrativeScroll({ scenes, onWaveProgress, onSceneChange,
       setTimeout(() => {
         setShowContent(true);
         isCoolingDown.current = false;
+        // Reset internal scroll for new scene
+        if (containerRef.current) containerRef.current.scrollTop = 0;
       }, currentWaveHold);
     }, TRANSITION_DURATION);
   }, [activeScene, scenes.length, currentWaveHold]);
@@ -76,7 +91,18 @@ export default function NarrativeScroll({ scenes, onWaveProgress, onSceneChange,
 
   useEffect(() => {
     const onWheel = (e: WheelEvent) => {
-      if (Math.abs(e.deltaY) < 10) return; // Ignore micro-scrolls
+      // If we are scrolling internally, let the event pass through
+      if (containerRef.current) {
+        const { scrollHeight, clientHeight } = containerRef.current;
+        if (scrollHeight > clientHeight) {
+          // If moving down and not at bottom, or moving up and not at top, allow default
+          const { scrollTop } = containerRef.current;
+          if (e.deltaY > 0 && scrollTop + clientHeight < scrollHeight - 5) return;
+          if (e.deltaY < 0 && scrollTop > 5) return;
+        }
+      }
+      
+      if (Math.abs(e.deltaY) < 15) return; 
       advanceScene(e.deltaY > 0 ? 1 : -1);
     };
     window.addEventListener('wheel', onWheel, { passive: false });
@@ -90,6 +116,16 @@ export default function NarrativeScroll({ scenes, onWaveProgress, onSceneChange,
     };
     const onTouchEnd = (e: TouchEvent) => {
       const delta = touchStartY.current - e.changedTouches[0].clientY;
+      
+      // Internal scroll check for touch
+      if (containerRef.current) {
+        const { scrollTop, scrollHeight, clientHeight } = containerRef.current;
+        if (scrollHeight > clientHeight) {
+          if (delta > 0 && scrollTop + clientHeight < scrollHeight - 15) return;
+          if (delta < 0 && scrollTop > 15) return;
+        }
+      }
+
       if (Math.abs(delta) > 50) advanceScene(delta > 0 ? 1 : -1);
     };
     window.addEventListener('touchstart', onTouchStart, { passive: true });
@@ -110,10 +146,13 @@ export default function NarrativeScroll({ scenes, onWaveProgress, onSceneChange,
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-            className="fixed inset-0 z-10 pointer-events-none flex flex-col items-center justify-center p-4 md:p-12 overflow-y-auto overflow-x-hidden"
+            className="fixed inset-0 z-10 flex flex-col items-center p-4 md:p-12 overflow-y-auto overflow-x-hidden scroll-smooth"
+            ref={containerRef}
           >
-            <div className="w-full flex-shrink-0 flex items-center justify-center min-h-full py-8 md:py-0">
-              {scenes[activeScene].content}
+            <div className="w-full flex-shrink-0 flex items-center justify-center min-h-full py-20 md:py-0 pointer-events-none">
+              <div className="w-full pointer-events-auto">
+                {scenes[activeScene].content}
+              </div>
             </div>
           </motion.div>
         )}

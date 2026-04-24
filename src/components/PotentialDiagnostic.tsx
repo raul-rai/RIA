@@ -44,7 +44,7 @@ export default function PotentialDiagnostic() {
   };
 
   return (
-    <div className="w-full max-w-5xl mx-auto px-4 py-12 md:py-24 pointer-events-auto">
+    <div className="w-full max-w-5xl mx-auto px-4 py-8 md:py-24 pointer-events-auto">
       <div className="premium-glass rounded-[2rem] md:rounded-[2.5rem] border border-white/10 p-6 md:p-16 relative overflow-hidden">
         {/* Background Decorative Elements */}
         <div className="absolute -top-24 -right-24 w-64 h-64 bg-accent/5 blur-[120px]" />
