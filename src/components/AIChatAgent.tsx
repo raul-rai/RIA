@@ -116,7 +116,7 @@ export default function AIChatAgent({ webhookUrl = "https://libra-credito-n8n.us
   };
 
   return (
-    <div className="w-full max-w-2xl mx-auto flex flex-col h-[500px] premium-glass rounded-3xl border border-white/10 overflow-hidden shadow-2xl">
+    <div className="w-full max-w-2xl mx-auto flex flex-col h-full premium-glass rounded-3xl border border-white/10 overflow-hidden shadow-2xl text-left">
       {/* Chat Header */}
       <div className="px-6 py-4 border-b border-white/5 bg-white/5 flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -145,7 +145,7 @@ export default function AIChatAgent({ webhookUrl = "https://libra-credito-n8n.us
                 }`}>
                   {msg.role === 'user' ? <User size={14} className="text-white/60" /> : <Bot size={14} className="text-accent" />}
                 </div>
-                <div className={`p-4 rounded-2xl text-sm leading-relaxed ${
+                <div className={`p-4 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap ${
                   msg.role === 'user' ? 'bg-white/5 text-white/80' : 'bg-accent/5 text-accent/90 border border-accent/10'
                 }`}>
                   {msg.content}

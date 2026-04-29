@@ -185,28 +185,18 @@ function SceneStats() {
 // ─── Scene 6: THE OFFER ──────────────────────────────────────────────────────
 function SceneCTA({ onFinalContact }: { onFinalContact: (data: any) => void }) {
   return (
-    <div className="w-full max-w-5xl mx-auto px-4 flex flex-col items-center text-center pointer-events-auto py-10 md:py-0">
-      <div className="w-full mb-12">
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-accent/20 bg-accent/5 mb-6">
-          <Clock size={12} className="text-accent" />
-          <span className="text-accent text-[9px] uppercase tracking-widest font-bold">Vagas limitadas por mês</span>
-        </div>
-        
-        <h2 className="heading-section text-white mb-4">
-          Você vai surfar ou<br />
-          <span className="italic font-normal text-glow-accent text-white/90">se afogar?</span>
+    <div className="w-full h-[100dvh] max-w-5xl mx-auto px-4 flex flex-col justify-center items-center text-center pointer-events-auto">
+      <div className="w-full mb-4 md:mb-8 mt-16 md:mt-0">
+        <h2 className="text-3xl md:text-5xl font-serif text-white mb-2 md:mb-4">
+          Você vai surfar ou <span className="italic font-normal text-glow-accent text-white/90">se afogar?</span>
         </h2>
-        
-        <p className="text-white/50 text-base md:text-lg max-w-xl mx-auto font-sans font-light leading-relaxed">
+        <p className="text-white/50 text-xs md:text-base max-w-xl mx-auto font-sans font-light leading-relaxed hidden md:block">
           Inicie a conversa com nosso Agente para descobrir seu Potencial de Alavancagem.
         </p>
       </div>
 
-      <AIChatAgent onComplete={onFinalContact} />
-      
-      <div className="mt-12 flex items-center gap-2 text-white/20 text-[9px] uppercase tracking-[0.3em] font-bold">
-        <ShieldCheck size={14} className="text-accent/40" />
-        <span>Sessão gratuita para faturamento R$ 100k+</span>
+      <div className="w-full flex-1 max-h-[65vh] md:max-h-[600px] mb-8">
+        <AIChatAgent onComplete={onFinalContact} />
       </div>
     </div>
   );
