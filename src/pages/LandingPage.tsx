@@ -56,8 +56,8 @@ function SceneHero({ onStartDiagnostic }: { onStartDiagnostic: () => void }) {
         animate={{ opacity: 1, scale: 1 }}
         className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/10 bg-white/5 backdrop-blur-md mb-6 shadow-xl"
       >
-        <Target className="text-accent animate-pulse" size={14} />
-        <span className="text-white/60 font-sans tracking-[0.2em] uppercase text-[9px] md:text-[10px] font-bold">
+        <Target className="text-accent animate-pulse" size={16} />
+        <span className="text-white/80 font-sans tracking-[0.2em] uppercase text-[10px] md:text-xs font-bold">
           {ref ? `Estratégia para ${ref.toUpperCase()}` : 'Exclusivo para Empresas de R$ 100k+'}
         </span>
       </motion.div>
@@ -78,7 +78,7 @@ function SceneHero({ onStartDiagnostic }: { onStartDiagnostic: () => void }) {
           <span>Garantir minha Alavancagem</span>
           <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform duration-300" />
         </button>
-        <p className="text-white/20 text-[9px] tracking-[0.3em] uppercase font-bold">Role para aceitar a verdade</p>
+        <p className="text-white/40 text-[10px] md:text-xs tracking-[0.2em] uppercase font-bold mt-2">Role para aceitar a verdade</p>
       </div>
     </div>
   );
@@ -120,9 +120,9 @@ function SceneServices() {
   return (
     <div className="w-full max-w-5xl mx-auto px-4 pointer-events-auto">
       <div className="mb-8 md:mb-12 text-center">
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-accent/20 bg-accent/5 backdrop-blur-md mb-4 font-sans">
-          <Zap size={12} className="text-accent" />
-          <span className="text-accent text-[9px] uppercase tracking-[0.2em] font-bold">O Novo Moat Digital</span>
+        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-accent/20 bg-accent/5 backdrop-blur-md mb-4 font-sans">
+          <Zap size={14} className="text-accent" />
+          <span className="text-accent text-[10px] md:text-xs uppercase tracking-[0.2em] font-bold">O Novo Moat Digital</span>
         </div>
         <h2 className="heading-section text-white">
           Sua empresa alinhada <br className="hidden md:block" />
@@ -268,8 +268,8 @@ export default function LandingPage() {
         className="fixed top-8 left-8 z-30 pointer-events-none"
       >
         <div className="flex items-center gap-3">
-          <div className="w-8 h-[1px] bg-accent/40" />
-          <span className="text-white/40 text-[10px] tracking-[0.5em] uppercase font-black">RIA • ELITE</span>
+          <div className="w-8 h-[1px] bg-accent/60" />
+          <span className="text-white/60 text-xs tracking-[0.4em] uppercase font-black">RIA • ELITE</span>
         </div>
       </motion.div>
 

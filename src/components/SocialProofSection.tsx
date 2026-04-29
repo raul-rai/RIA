@@ -40,8 +40,8 @@ export default function SocialProofSection() {
     <div className="w-full max-w-6xl mx-auto px-4 py-4 md:py-8 pointer-events-auto">
       <div className="mb-4 md:mb-8 text-center">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/5 mb-2 md:mb-4">
-          <Quote size={10} className="text-accent" />
-          <span className="text-white/40 text-[7px] md:text-[9px] uppercase tracking-[0.3em] font-bold">Vozes do Mercado</span>
+          <Quote size={12} className="text-accent" />
+          <span className="text-white/60 text-[10px] md:text-xs uppercase tracking-[0.2em] font-bold">Vozes do Mercado</span>
         </div>
         <h2 className="text-xl md:text-4xl font-serif text-white mb-1 md:mb-2 leading-tight">
           Vozes da <span className="italic font-normal text-white/50 text-glow-accent">Evolução.</span>
@@ -59,7 +59,7 @@ export default function SocialProofSection() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.1 }}
-              className="group relative h-[340px] md:h-[420px] w-[280px] md:w-auto shrink-0 snap-center rounded-2xl overflow-hidden border border-white/5 bg-white/5 cursor-pointer hover:border-accent/30 transition-all duration-500"
+              className="group relative h-[340px] md:h-[420px] w-[85vw] md:w-auto shrink-0 snap-center rounded-2xl overflow-hidden border border-white/5 bg-white/5 cursor-pointer hover:border-accent/30 transition-all duration-500"
             >
               {/* Background Image with Overlay */}
               <div className="absolute inset-0 z-0">
@@ -84,8 +84,8 @@ export default function SocialProofSection() {
                 
                 <div className="flex items-center gap-4 border-t border-white/10 pt-4 md:pt-6">
                   <div className="flex flex-col">
-                    <span className="text-white font-bold text-[10px] md:text-sm uppercase tracking-wider">{item.name}</span>
-                    <span className="text-accent/60 text-[7px] md:text-[10px] uppercase font-medium">{item.title}</span>
+                    <span className="text-white font-bold text-xs md:text-sm uppercase tracking-wider">{item.name}</span>
+                    <span className="text-accent/80 text-[10px] md:text-xs uppercase font-medium">{item.title}</span>
                   </div>
                   <div className="ml-auto w-10 h-10 md:w-12 md:h-12 rounded-full bg-accent text-black flex items-center justify-center shadow-[0_0_20px_rgba(0,229,255,0.4)] group-hover:scale-110 transition-transform">
                     <Play size={16} fill="currentColor" />
@@ -105,8 +105,8 @@ export default function SocialProofSection() {
         bio={selectedInfluencer?.bio}
       />
 
-      <div className="mt-6 md:mt-12 text-center text-white/10 text-[6px] md:text-[8px] uppercase tracking-[0.4em] font-black">
-        CONSCIÊNCIA COLETIVA • OBSOLESCÊNCIA: <span className="text-red-500/30">CRÍTICO</span>
+      <div className="mt-6 md:mt-12 text-center text-white/40 text-[10px] md:text-xs uppercase tracking-[0.2em] font-black px-4">
+        CONSCIÊNCIA COLETIVA • OBSOLESCÊNCIA: <span className="text-red-500/80">CRÍTICO</span>
       </div>
     </div>
   );

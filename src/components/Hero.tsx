@@ -13,8 +13,8 @@ export default function Hero() {
           transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
           className="inline-flex items-center gap-3 px-5 py-2 rounded-full border border-white/10 bg-white/5 backdrop-blur-md mb-10 shadow-2xl"
         >
-          <Sparkles className="text-accent animate-pulse" size={14} />
-          <h2 className="text-muted font-sans tracking-[0.2em] uppercase text-[10px] md:text-xs font-semibold">
+          <Sparkles className="text-accent animate-pulse" size={16} />
+          <h2 className="text-white/80 font-sans tracking-[0.2em] uppercase text-xs font-semibold">
             O Próximo Salto da Evolução Empresarial
           </h2>
         </motion.div>

@@ -46,14 +46,14 @@ export default function PotentialDiagnostic() {
         <div className="absolute -top-24 -right-24 w-64 h-64 bg-accent/5 blur-[120px]" />
         
         <div className="text-center mb-4 md:mb-12">
-          <div className="inline-flex items-center gap-2 px-3 py-0.5 rounded-full bg-accent/10 border border-accent/20 mb-2 md:mb-6">
-            <Search size={10} className="text-accent" />
-            <span className="text-accent text-[7px] md:text-[9px] font-black uppercase tracking-[0.3em]">Health Check Digital</span>
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 border border-accent/20 mb-2 md:mb-6">
+            <Search size={12} className="text-accent" />
+            <span className="text-accent text-[10px] md:text-xs font-black uppercase tracking-[0.2em]">Health Check Digital</span>
           </div>
           <h2 className="text-xl md:text-5xl font-serif text-white mb-1 md:mb-4">
             Seu site sobrevive à <span className="italic font-normal text-white/50">nova era?</span>
           </h2>
-          <p className="text-white/40 text-[9px] md:text-sm max-w-xl mx-auto font-light leading-tight">
+          <p className="text-white/60 text-xs md:text-sm max-w-xl mx-auto font-light leading-tight">
             Não basta estar no Google. Seu site precisa ser legível para IAs.
           </p>
         </div>
@@ -68,22 +68,22 @@ export default function PotentialDiagnostic() {
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
                   placeholder="seu-dominio.com.br"
-                  className="w-full bg-transparent py-2 pl-10 pr-4 text-white focus:outline-none text-[12px] placeholder:text-white/20"
+                  className="w-full bg-transparent py-3 pl-10 pr-4 text-white focus:outline-none text-base md:text-sm placeholder:text-white/40"
                 />
               </div>
               <button 
                 onClick={handleAnalyze}
                 disabled={isAnalyzing || !url}
-                className="px-4 py-3 bg-accent text-black rounded-lg font-black text-[9px] uppercase tracking-widest hover:scale-105 active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                className="px-6 py-4 md:py-3 bg-accent text-black rounded-lg font-black text-xs md:text-sm uppercase tracking-widest hover:scale-105 active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
               >
-                {isAnalyzing ? <Search size={12} className="animate-spin" /> : <Zap size={12} />}
+                {isAnalyzing ? <Search size={14} className="animate-spin" /> : <Zap size={14} />}
                 <span>{isAnalyzing ? 'Analisando' : 'Varredura'}</span>
               </button>
             </div>
 
             {isAnalyzing && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-4">
-                <div className="flex justify-between text-[6px] md:text-[8px] uppercase tracking-[0.4em] text-white/40 mb-1 font-black">
+                <div className="flex justify-between text-[10px] md:text-xs uppercase tracking-[0.2em] text-white/60 mb-2 font-black">
                   <span>Varredura Técnica</span>
                   <span>{progress}%</span>
                 </div>
@@ -111,8 +111,8 @@ export default function PotentialDiagnostic() {
                     <Icon size={12} className={m.score < 50 ? "text-red-400" : "text-accent"} />
                   </div>
                   <div className="flex-1 md:text-center">
-                    <div className="text-lg md:text-3xl font-serif text-white">{m.score}%</div>
-                    <div className="text-[7px] md:text-[10px] text-white/40 uppercase tracking-wider font-bold">{m.name}</div>
+                    <div className="text-xl md:text-3xl font-serif text-white mb-1">{m.score}%</div>
+                    <div className="text-[10px] md:text-xs text-white/60 uppercase tracking-wider font-bold">{m.name}</div>
                   </div>
                   <div className="hidden md:block h-1 w-full bg-white/5 rounded-full overflow-hidden">
                     <div className={`h-full ${m.score < 50 ? "bg-red-400" : "bg-accent"}`} style={{ width: `${m.score}%` }} />
@@ -127,16 +127,16 @@ export default function PotentialDiagnostic() {
                   {result.totalScore}
                 </div>
                 <div>
-                  <h4 className="text-white font-bold text-[9px] uppercase tracking-widest leading-none mb-1">Status: <span className="text-red-400">Ineficiente</span></h4>
-                  <p className="text-white/40 text-[7px] uppercase tracking-wider">Site obsoleto para IA Search.</p>
+                  <h4 className="text-white font-bold text-xs md:text-sm uppercase tracking-widest leading-none mb-2">Status: <span className="text-red-400">Ineficiente</span></h4>
+                  <p className="text-white/60 text-[10px] md:text-xs uppercase tracking-wider">Site obsoleto para IA Search.</p>
                 </div>
               </div>
               <button 
                 onClick={() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })}
-                className="px-4 py-2 bg-white text-black rounded-lg text-[8px] font-black uppercase tracking-widest hover:bg-accent transition-all flex items-center gap-2"
+                className="px-5 py-3 bg-white text-black rounded-lg text-xs font-black uppercase tracking-widest hover:bg-accent transition-all flex items-center gap-2"
               >
                 <span>Corrigir</span>
-                <ArrowRight size={10} />
+                <ArrowRight size={14} />
               </button>
             </div>
           </motion.div>

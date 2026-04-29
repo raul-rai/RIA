@@ -24,8 +24,8 @@ export default function ConsultantSection() {
             className="absolute -right-2 md:-right-8 bottom-4 md:bottom-12 p-3 md:p-6 premium-glass rounded-xl md:rounded-2xl border border-accent/20 max-w-[120px] md:max-w-[200px] z-20"
           >
             <div className="flex items-center gap-1 md:gap-2 mb-0.5 md:mb-2">
-              <Award size={10} className="text-accent" />
-              <span className="text-[7px] md:text-[10px] font-bold uppercase tracking-widest text-white/60">Especialidade</span>
+              <Award size={12} className="text-accent" />
+              <span className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-white/80">Especialidade</span>
             </div>
             <div className="text-[9px] md:text-sm font-serif text-white leading-tight">Engenheiro & IA Strategy</div>
           </motion.div>
@@ -33,9 +33,9 @@ export default function ConsultantSection() {
 
         {/* Content Section */}
         <div className="flex flex-col text-center md:text-left">
-          <div className="inline-flex items-center gap-2 px-3 py-0.5 rounded-full bg-white/5 border border-white/10 mb-2 md:mb-6 w-fit mx-auto md:mx-0">
-            <span className="w-1 h-1 bg-accent rounded-full animate-pulse" />
-            <span className="text-white/40 text-[7px] md:text-[9px] font-black uppercase tracking-[0.3em]">Seu Consultor</span>
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 mb-2 md:mb-6 w-fit mx-auto md:mx-0">
+            <span className="w-1.5 h-1.5 bg-accent rounded-full animate-pulse" />
+            <span className="text-white/60 text-[10px] md:text-xs font-black uppercase tracking-[0.2em]">Seu Consultor</span>
           </div>
           
           <h2 className="text-2xl md:text-5xl font-serif text-white mb-2 md:mb-6">
@@ -43,7 +43,7 @@ export default function ConsultantSection() {
             <span className="italic font-normal text-white/50 text-[0.8em]">Liderando sua Transição.</span>
           </h2>
 
-          <p className="text-white/60 text-[11px] md:text-base font-light leading-relaxed mb-4 md:mb-10 max-w-md mx-auto md:mx-0">
+          <p className="text-white/80 text-[13px] md:text-base font-light leading-relaxed mb-6 md:mb-10 max-w-md mx-auto md:mx-0">
             Especialista em unir a precisão da Engenharia à vanguarda da IA para garantir escala e eficiência operacional.
           </p>
 
@@ -62,13 +62,13 @@ export default function ConsultantSection() {
           <div className="flex flex-row gap-3 justify-center md:justify-start">
             <button 
               onClick={() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })}
-              className="px-6 py-3 bg-accent text-black rounded-lg font-black text-[9px] uppercase tracking-widest hover:scale-105 transition-all flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(0,229,255,0.2)]"
+              className="px-6 py-4 bg-accent text-black rounded-lg font-black text-xs md:text-sm uppercase tracking-widest hover:scale-105 transition-all flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(0,229,255,0.2)]"
             >
               Estratégia <ArrowUpRight size={12} />
             </button>
             <a 
               href="#" 
-              className="px-6 py-3 bg-white/5 border border-white/10 text-white rounded-lg font-black text-[9px] uppercase tracking-widest hover:bg-white/10 transition-all flex items-center justify-center gap-2"
+              className="px-6 py-4 bg-white/5 border border-white/10 text-white rounded-lg font-black text-xs md:text-sm uppercase tracking-widest hover:bg-white/10 transition-all flex items-center justify-center gap-2"
             >
               <Linkedin size={12} />
               LinkedIn

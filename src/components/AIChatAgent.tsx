@@ -121,7 +121,7 @@ export default function AIChatAgent({ webhookUrl = "https://libra-credito-n8n.us
       <div className="px-6 py-4 border-b border-white/5 bg-white/5 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-2 h-2 bg-accent rounded-full animate-pulse" />
-          <span className="text-white/60 font-mono text-[10px] uppercase tracking-widest">RIA_AGENT_CONNECTED</span>
+          <span className="text-white/80 font-mono text-xs uppercase tracking-widest">RIA_AGENT_CONNECTED</span>
         </div>
         <Sparkles size={14} className="text-accent/40" />
       </div>
@@ -158,12 +158,12 @@ export default function AIChatAgent({ webhookUrl = "https://libra-credito-n8n.us
                     >
                       <div className="flex items-center gap-2 mb-2">
                         <TrendingUp size={14} className="text-accent" />
-                        <span className="text-[10px] uppercase font-bold tracking-widest text-white/40">ROI Detetado</span>
+                        <span className="text-xs uppercase font-bold tracking-widest text-white/60">ROI Detetado</span>
                       </div>
                       <div className="text-2xl font-serif text-white mb-2">R$ {msg.data.roi.toLocaleString()} /ano</div>
                       <button 
                         onClick={() => onComplete(msg.data)}
-                        className="w-full py-2 bg-accent text-black text-[10px] font-bold uppercase tracking-widest rounded-lg flex items-center justify-center gap-2"
+                        className="w-full py-3 bg-accent text-black text-xs md:text-sm font-bold uppercase tracking-widest rounded-lg flex items-center justify-center gap-2"
                       >
                         Ver Detalhes <ArrowRight size={12} />
                       </button>
@@ -196,7 +196,7 @@ export default function AIChatAgent({ webhookUrl = "https://libra-credito-n8n.us
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSend()}
             placeholder="Digite sua resposta..."
-            className="w-full bg-white/5 border border-white/10 rounded-xl py-4 pl-4 pr-12 text-sm text-white focus:outline-none focus:border-accent/40 transition-all placeholder:text-white/20"
+            className="w-full bg-white/5 border border-white/10 rounded-xl py-4 pl-4 pr-12 text-base md:text-sm text-white focus:outline-none focus:border-accent/40 transition-all placeholder:text-white/40"
           />
           <button 
             onClick={handleSend}
@@ -206,7 +206,7 @@ export default function AIChatAgent({ webhookUrl = "https://libra-credito-n8n.us
             <Send size={16} />
           </button>
         </div>
-        <p className="mt-3 text-center text-[8px] text-white/20 uppercase tracking-[0.2em]">Agente de Inteligência Conectado via n8n Protocol</p>
+        <p className="mt-3 text-center text-[10px] md:text-xs text-white/40 uppercase tracking-[0.2em]">Agente de Inteligência Conectado via n8n Protocol</p>
       </div>
     </div>
   );
