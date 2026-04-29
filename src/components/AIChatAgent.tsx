@@ -13,9 +13,9 @@ interface AIChatAgentProps {
   onComplete: (data: any) => void;
 }
 
-export default function AIChatAgent({ webhookUrl = "https://n8n.seudominio.com/webhook/qualificacao", onComplete }: AIChatAgentProps) {
+export default function AIChatAgent({ webhookUrl = "https://libra-credito-n8n.usybav.easypanel.host/webhook/n8n", onComplete }: AIChatAgentProps) {
   const [messages, setMessages] = useState<Message[]>([
-    { role: 'assistant', content: "Olá. Sou o Agente de Alavancagem da RIA. Para desenharmos seu Plano de Defesa, preciso entender alguns pontos. Qual o seu nome e o setor de atuação da sua empresa?" }
+    { role: 'assistant', content: "Olá. Sou o Agente de Inteligência da RIA. Como posso te ajudar hoje?" }
   ]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
@@ -27,66 +27,89 @@ export default function AIChatAgent({ webhookUrl = "https://n8n.seudominio.com/w
     }
   }, [messages, isTyping]);
 
-  const [step, setStep] = useState(0);
-  const [leadData, setLeadData] = useState({ name: "", sector: "", revenue: 0 });
+  const [sessionId] = useState(() => typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(7));
 
   const handleSend = async () => {
     if (!input.trim() || isTyping) return;
 
-    const userMsg: Message = { role: 'user', content: input };
+    const currentInput = input;
+    const userMsg: Message = { role: 'user', content: currentInput };
     setMessages(prev => [...prev, userMsg]);
     setInput("");
     setIsTyping(true);
 
+    // Adicionando um AbortController para evitar que o chat fique carregando infinitamente
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 segundos de limite
+
     try {
-      await new Promise(r => setTimeout(r, 1200)); // Simulate processing
+      console.log("Enviando mensagem para n8n:", currentInput);
+      
+      const response = await fetch(webhookUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json, text/plain, */*'
+        },
+        body: JSON.stringify({
+          sessionId,
+          action: 'sendMessage',
+          chatInput: currentInput,
+        }),
+        signal: controller.signal
+      });
 
-      let response = "";
-      let data = null;
-      let nextStep = step + 1;
+      clearTimeout(timeoutId);
+      console.log("Status da resposta n8n:", response.status);
 
-      switch (step) {
-        case 0: // Just got Name and Sector
-          setLeadData(prev => ({ ...prev, name: input })); // Simplification: assuming input contains name
-          response = "Prazer em conhecer você. Para que eu possa calcular sua alavancagem com precisão: qual o faturamento mensal médio da sua empresa hoje?";
-          break;
-
-        case 1: // Just got Revenue
-          const revenueVal = parseInt(input.replace(/[^0-9]/g, '')) || 0;
-          setLeadData(prev => ({ ...prev, revenue: revenueVal }));
-
-          if (revenueVal < 100000) {
-            response = "Entendido. No momento, a consultoria RIA é focada em empresas que já superaram a barreira dos R$ 100k/mês e buscam escala agressiva. Recomendo que você acompanhe nossa newsletter de IA para preparar seu negócio para o próximo nível. Posso te enviar o link?";
-            nextStep = 99; // Disqualified
-          } else {
-            response = "Faturamento expressivo. Com esse volume, a ineficiência humana está te custando caro. Com base nos seus dados, sua empresa tem um potencial de ROI massivo com agentes de IA. Deseja ver a projeção?";
-          }
-          break;
-
-        case 2: // ROI Calculation
-          const estimatedRoi = leadData.revenue * 0.4; // 40% efficiency gain simulated
-          response = `Análise concluída. Com a implementação de Agentes de IA, seu potencial de recuperação de margem e ganho de escala é de aproximadamente R$ ${estimatedRoi.toLocaleString()} por ano. Isso faz sentido para o seu momento atual?`;
-          data = { 
-            roi: estimatedRoi, 
-            efficiency: 40,
-            name: leadData.name,
-            sector: leadData.sector,
-            revenue: leadData.revenue
-          };
-          break;
-
-        case 99: // Post-disqualification
-          response = "Link enviado. Continue escalando e nos procure quando atingir o marco dos R$ 100k. Estaremos prontos para o seu tsunami.";
-          break;
-
-        default:
-          response = "Minha análise está pronta. Clique abaixo para garantir sua sessão estratégica e discutirmos esses números.";
+      if (!response.ok) {
+        throw new Error(`Erro na requisição ao n8n: Status ${response.status}`);
       }
 
-      setMessages(prev => [...prev, { role: 'assistant', content: response, data }]);
-      setStep(nextStep);
-    } catch (error) {
-      setMessages(prev => [...prev, { role: 'assistant', content: "Erro na conexão com o núcleo neural. Por favor, tente novamente." }]);
+      const textResponse = await response.text();
+      console.log("Texto puro recebido do n8n:", textResponse);
+
+      let responseData;
+      try {
+        responseData = JSON.parse(textResponse);
+      } catch (e) {
+        responseData = textResponse;
+      }
+
+      let botMessage = "A resposta chegou vazia ou em um formato não reconhecido.";
+      let data = undefined;
+
+      if (typeof responseData === 'object' && responseData !== null) {
+        // Se for um array de objetos (n8n as vezes retorna um array de itens)
+        if (Array.isArray(responseData)) {
+          const firstItem = responseData[0];
+          if (firstItem && typeof firstItem === 'object') {
+             botMessage = firstItem.output || firstItem.response || firstItem.message || firstItem.text || JSON.stringify(firstItem);
+          } else {
+             botMessage = JSON.stringify(responseData);
+          }
+        } else {
+          // Objeto normal
+          botMessage = responseData.output || responseData.response || responseData.message || responseData.text || JSON.stringify(responseData);
+          if (responseData.data) {
+            data = responseData.data;
+          }
+        }
+      } else if (typeof responseData === 'string' && responseData.trim() !== "") {
+        botMessage = responseData;
+      }
+
+      setMessages(prev => [...prev, { role: 'assistant', content: botMessage, data }]);
+    } catch (error: any) {
+      clearTimeout(timeoutId);
+      console.error("Erro detalhado no chat:", error);
+      
+      let errorMsg = "Erro na conexão com o núcleo neural. Por favor, tente novamente.";
+      if (error.name === 'AbortError') {
+        errorMsg = "Tempo limite esgotado. O agente demorou muito para responder.";
+      }
+      
+      setMessages(prev => [...prev, { role: 'assistant', content: errorMsg }]);
     } finally {
       setIsTyping(false);
     }
