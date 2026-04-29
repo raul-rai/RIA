@@ -13,7 +13,7 @@ export default function CyberpunkScene({ activeScene }: CyberpunkSceneProps) {
       <AnimatePresence mode="popLayout">
         <motion.img
           key={isLastScene ? 'cyber' : 'real'}
-          src={isLastScene ? '/rio-cyberpunk.png' : '/rio-real.png'}
+          src={isLastScene ? '/rio-cyberpunk.webp' : '/rio-real.webp'}
           alt={isLastScene ? "Rio Cyberpunk" : "Rio Real"}
           initial={{ opacity: 0 }}
           animate={{ opacity: 0.7 }}

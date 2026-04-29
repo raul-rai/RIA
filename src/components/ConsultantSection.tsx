@@ -11,7 +11,7 @@ export default function ConsultantSection() {
           
           <div className="relative rounded-[1.4rem] md:rounded-[2.5rem] overflow-hidden aspect-[4/5] bg-bg-alt border border-white/10">
             <img 
-              src="/raul.pedro.png" 
+              src="/raul.pedro.webp" 
               className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700" 
               alt="Raul Pedro - Consultor de IA"
             />
