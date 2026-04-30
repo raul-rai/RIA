@@ -1,43 +1,77 @@
 import { useState } from 'react';
 import { motion } from 'motion/react';
-import { Globe, Search, Zap, Cpu, Smartphone, ArrowRight } from 'lucide-react';
+import { Globe, Search, Zap, Cpu, Smartphone, ArrowRight, Activity } from 'lucide-react';
+
+type DiagnosticResult = {
+  score: number;
+  nivel: number;
+  nivel_nome: string;
+  leitura: string;
+  dimensoes: {
+    D1: { nome: string; pct: number };
+    D2: { nome: string; pct: number };
+    D3: { nome: string; pct: number };
+    D4: { nome: string; pct: number };
+  };
+  prioridades: { label: string; evidence: string; pct: number }[];
+};
 
 export default function PotentialDiagnostic() {
   const [url, setUrl] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [result, setResult] = useState<null | {
-    metrics: { name: string; score: number; status: string; icon: any }[];
-    totalScore: number;
-  }>(null);
+  const [result, setResult] = useState<null | DiagnosticResult>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const handleAnalyze = async () => {
     if (!url || !url.includes('.')) return;
     
     setIsAnalyzing(true);
     setResult(null);
+    setError(null);
     setProgress(0);
 
-    const steps = [
-      "Pingando servidores...",
-      "Simulando leitura por IAs...",
-      "Relatório técnico..."
-    ];
+    const progressInterval = setInterval(() => {
+      setProgress(prev => {
+        if (prev < 90) return prev + Math.floor(Math.random() * 5) + 1;
+        return prev;
+      });
+    }, 500);
 
-    for (let i = 0; i < steps.length; i++) {
-      setProgress((i + 1) * 33);
-      await new Promise(r => setTimeout(r, 600));
+    try {
+      const webhookUrl = import.meta.env.VITE_N8N_WEBHOOK_URL;
+      if (!webhookUrl) {
+        throw new Error("Webhook URL não configurada");
+      }
+
+      const response = await fetch(webhookUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ url })
+      });
+
+      if (!response.ok) {
+        throw new Error("Erro na requisição");
+      }
+
+      const data: DiagnosticResult = await response.json();
+      
+      clearInterval(progressInterval);
+      setProgress(100);
+      
+      setTimeout(() => {
+        setResult(data);
+        setIsAnalyzing(false);
+      }, 500);
+
+    } catch (err) {
+      clearInterval(progressInterval);
+      setError("Falha ao analisar, tente novamente");
+      setIsAnalyzing(false);
+      setProgress(0);
     }
-
-    setResult({
-      totalScore: 68,
-      metrics: [
-        { name: "Velocidade", score: 42, status: "Crítico", icon: Zap },
-        { name: "SEO IA", score: 28, status: "Nulo", icon: Cpu },
-        { name: "Mobile", score: 88, status: "Bom", icon: Smartphone }
-      ]
-    });
-    setIsAnalyzing(false);
   };
 
   return (
@@ -96,39 +130,60 @@ export default function PotentialDiagnostic() {
                 </div>
               </motion.div>
             )}
+
+            {error && (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-4 text-center">
+                <span className="inline-block text-red-400 text-[10px] md:text-xs uppercase tracking-widest font-bold bg-red-500/10 border border-red-500/20 px-4 py-2 rounded-lg">{error}</span>
+              </motion.div>
+            )}
           </div>
         ) : (
           <motion.div 
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col gap-3 md:grid md:grid-cols-3 md:gap-6"
+            className="flex flex-col gap-3 md:grid md:grid-cols-2 lg:grid-cols-4 md:gap-6"
           >
-            {result.metrics.map((m, i) => {
-              const Icon = m.icon;
+            {[result.dimensoes.D1, result.dimensoes.D2, result.dimensoes.D3, result.dimensoes.D4].map((m, i) => {
+              const icons = [Zap, Search, Cpu, Globe];
+              const Icon = icons[i] || Activity;
+              
+              let colorClass = "text-accent";
+              let bgClass = "bg-accent";
+              
+              if (m.pct < 50) { 
+                colorClass = "text-red-400"; 
+                bgClass = "bg-red-400"; 
+              } else if (m.pct < 80) { 
+                colorClass = "text-yellow-400"; 
+                bgClass = "bg-yellow-400"; 
+              }
+
               return (
                 <div key={i} className="bg-white/5 rounded-xl p-3 md:p-6 border border-white/5 flex items-center md:flex-col gap-3 md:gap-4">
                   <div className="p-1.5 bg-white/5 rounded-lg border border-white/10 shrink-0">
-                    <Icon size={12} className={m.score < 50 ? "text-red-400" : "text-accent"} />
+                    <Icon size={12} className={colorClass} />
                   </div>
                   <div className="flex-1 md:text-center">
-                    <div className="text-xl md:text-3xl font-serif text-white mb-1">{m.score}%</div>
-                    <div className="text-[10px] md:text-xs text-white/60 uppercase tracking-wider font-bold">{m.name}</div>
+                    <div className="text-xl md:text-3xl font-serif text-white mb-1">{m.pct}%</div>
+                    <div className="text-[10px] md:text-xs text-white/60 uppercase tracking-wider font-bold">{m.nome}</div>
                   </div>
                   <div className="hidden md:block h-1 w-full bg-white/5 rounded-full overflow-hidden">
-                    <div className={`h-full ${m.score < 50 ? "bg-red-400" : "bg-accent"}`} style={{ width: `${m.score}%` }} />
+                    <div className={`h-full ${bgClass}`} style={{ width: `${m.pct}%` }} />
                   </div>
                 </div>
               );
             })}
             
-            <div className="col-span-3 mt-4 p-4 bg-accent/5 border border-accent/10 rounded-xl flex items-center justify-between gap-4">
+            <div className="col-span-1 md:col-span-2 lg:col-span-4 mt-2 md:mt-4 p-4 bg-accent/5 border border-accent/10 rounded-xl flex items-center justify-between gap-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full border-2 border-red-400/20 flex items-center justify-center text-red-400 font-serif text-lg shrink-0">
-                  {result.totalScore}
+                <div className={`w-10 h-10 rounded-full border-2 ${result.score < 50 ? 'border-red-400/20 text-red-400' : result.score < 80 ? 'border-yellow-400/20 text-yellow-400' : 'border-accent/20 text-accent'} flex items-center justify-center font-serif text-lg shrink-0`}>
+                  {Math.round(result.score)}
                 </div>
                 <div>
-                  <h4 className="text-white font-bold text-xs md:text-sm uppercase tracking-widest leading-none mb-2">Status: <span className="text-red-400">Ineficiente</span></h4>
-                  <p className="text-white/60 text-[10px] md:text-xs uppercase tracking-wider">Site obsoleto para IA Search.</p>
+                  <h4 className="text-white font-bold text-xs md:text-sm uppercase tracking-widest leading-none mb-2">
+                    Status: <span className={result.score < 50 ? 'text-red-400' : result.score < 80 ? 'text-yellow-400' : 'text-accent'}>{result.nivel_nome}</span>
+                  </h4>
+                  <p className="text-white/60 text-[10px] md:text-xs uppercase tracking-wider">{result.leitura}</p>
                 </div>
               </div>
               <button 
