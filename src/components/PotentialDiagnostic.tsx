@@ -40,8 +40,11 @@ export default function PotentialDiagnostic() {
 
     try {
       const webhookUrl = import.meta.env.VITE_N8N_WEBHOOK_URL;
-      if (!webhookUrl) {
-        throw new Error("Webhook URL não configurada");
+      console.log("Iniciando varredura para:", url);
+      console.log("Webhook configurado:", webhookUrl);
+
+      if (!webhookUrl || webhookUrl.includes("COLOQUE_A_URL")) {
+        throw new Error("URL do Webhook não configurada no arquivo .env");
       }
 
       const response = await fetch(webhookUrl, {
@@ -53,10 +56,11 @@ export default function PotentialDiagnostic() {
       });
 
       if (!response.ok) {
-        throw new Error("Erro na requisição");
+        throw new Error(`Erro do servidor: ${response.status}`);
       }
 
       const data: DiagnosticResult = await response.json();
+      console.log("Resultado recebido:", data);
       
       clearInterval(progressInterval);
       setProgress(100);
@@ -66,9 +70,10 @@ export default function PotentialDiagnostic() {
         setIsAnalyzing(false);
       }, 500);
 
-    } catch (err) {
+    } catch (err: any) {
+      console.error("Erro detalhado na análise:", err);
       clearInterval(progressInterval);
-      setError("Falha ao analisar, tente novamente");
+      setError(err.message || "Falha ao analisar, tente novamente");
       setIsAnalyzing(false);
       setProgress(0);
     }
