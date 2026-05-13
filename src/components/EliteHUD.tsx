@@ -1,10 +1,10 @@
 import { motion } from 'motion/react';
 import { useState, useEffect } from 'react';
 
-export default function EliteHUD() {
+export default function EliteHUD({ activeScene = 0 }: { activeScene?: number }) {
   const [coords, setCoords] = useState({ x: 0, y: 0 });
   const [threatLevel, setThreatLevel] = useState(14);
-  const [logs, setLogs] = useState<string[]>([]);
+  const [logs, setLogs] = useState<{year: string, text: string}[]>([]);
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -20,61 +20,49 @@ export default function EliteHUD() {
     };
     window.addEventListener('mousemove', handleMouseMove);
 
-    const logPool = [
-      "ENCRYPT_SIGNAL_ACTIVE",
-      "CORE_PROCESSING_01_STABLE",
-      "MARKET_VULNERABILITY_SCAN",
-      "NEURAL_LINK_ESTABLISHED",
-      "ASYNC_DATA_FETCH_COMPLETED",
-      "ROI_MULTIPLIER_CALCULATED",
-      "HEADCOUNT_INEFFICIENCY_DETECTED"
+    const aiHistory = [
+      { year: "1950", text: "ALAN_TURING" },
+      { year: "1997", text: "DEEP_BLUE" },
+      { year: "2014", text: "ALPHA_GO" },
+      { year: "2018", text: "ATTENTION_IS_ALL_YOU_NEED" },
+      { year: "2022", text: "CHAT_GPT" },
+      { year: "2025", text: "LLM_MASS_EXPANSION" },
+      { year: "2026", text: "SUA_EMPRESA_OTIMIZADA?" }
     ];
 
-    const interval = setInterval(() => {
-      setLogs(prev => [logPool[Math.floor(Math.random() * logPool.length)], ...prev].slice(0, 5));
+    let currentIndex = 0;
+    let timeoutId: NodeJS.Timeout;
+
+    const pushNextLog = () => {
+      if (currentIndex < aiHistory.length) {
+        const logToPush = aiHistory[currentIndex];
+        setLogs(prev => {
+          return [logToPush, ...prev].slice(0, 7);
+        });
+        currentIndex++;
+        
+        // Exponentially decreasing delay (2500 -> 1625 -> 1056 -> 686 -> 446 -> 290)
+        const nextDelay = 2500 * Math.pow(0.65, currentIndex - 1);
+        timeoutId = setTimeout(pushNextLog, Math.max(nextDelay, 300));
+      }
+    };
+
+    timeoutId = setTimeout(pushNextLog, 1500);
+
+    const threatInterval = setInterval(() => {
       setThreatLevel(prev => Math.min(99, Math.max(10, prev + (Math.random() > 0.5 ? 1 : -1))));
     }, 2000);
 
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
-      clearInterval(interval);
+      clearTimeout(timeoutId);
+      clearInterval(threatInterval);
     };
   }, []);
 
   return (
     <div className="fixed inset-0 pointer-events-none z-[60] font-mono uppercase text-[9px] tracking-[0.2em] text-accent/40 overflow-hidden">
-      {/* Top Left: System Status */}
-      <div className="absolute top-6 left-6 md:top-8 md:left-8 flex flex-col gap-4 md:gap-6">
-        <div className="flex flex-col gap-1">
-          <div className="flex items-center gap-3">
-            <div className="w-1.5 h-1.5 md:w-2 md:h-2 bg-accent animate-pulse rounded-full shadow-[0_0_10px_rgba(0,229,255,1)]" />
-            <span className="text-white/60 text-[8px] md:text-[9px]">Status: <span className="text-accent">Operational</span></span>
-          </div>
-          <div className="hidden md:block text-[7px] text-white/20 ml-5 tracking-[0.4em]">RIA_CORE_v4.2.0</div>
-        </div>
 
-        <div className="hidden md:flex flex-col gap-3 border-l border-accent/20 pl-4">
-          <div className="flex flex-col">
-            <span className="text-white/40 text-[9px] mb-1 uppercase tracking-tighter">Agentes em Operação</span>
-            <div className="flex items-baseline gap-2">
-              <span className="text-white/80 text-xs font-serif italic">14</span>
-              <span className="text-accent/40 text-[6px] tracking-tighter">AGENT_UPLINK</span>
-            </div>
-          </div>
-          <div className="flex flex-col">
-            <span className="text-white/40 text-[9px] mb-1 uppercase tracking-tighter">Automações Ativas (24h)</span>
-            <div className="flex items-baseline gap-2">
-              <span className="text-white/80 text-xs font-serif italic">1.294</span>
-              <span className="text-accent/60 text-[8px] tracking-tighter">SYNC_COMPLETED</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="hidden md:flex flex-col gap-1 opacity-20 pl-4">
-          <div>COORD_X: {coords.x}</div>
-          <div>COORD_Y: {coords.y}</div>
-        </div>
-      </div>
 
       {/* Top Right: AI Threat Level - Hidden on Mobile */}
       <div className="hidden md:flex absolute top-6 right-6 md:top-8 md:right-8 flex-col items-end gap-1 md:gap-2 text-right">
@@ -95,20 +83,23 @@ export default function EliteHUD() {
       </div>
 
       {/* Bottom Left: Live Terminal Data - Desktop Only */}
-      <div className="hidden md:flex absolute bottom-8 left-8 flex flex-col gap-2 max-w-[200px]">
+      <div 
+        className="hidden md:flex absolute bottom-8 left-8 flex-col gap-2 max-w-[250px] transition-opacity duration-1000"
+        style={{ opacity: activeScene === 0 ? 1 : 0 }}
+      >
         <div className="flex items-center gap-2 mb-2">
           <div className="w-4 h-[1px] bg-accent" />
-          <span className="text-accent/60">Live_Stream</span>
+          <span className="text-accent/60">AI_Timeline_Sync</span>
         </div>
         {logs.map((log, i) => (
           <motion.div
             initial={{ opacity: 0, x: -10 }}
-            animate={{ opacity: 1 - (i * 0.2), x: 0 }}
-            key={`${log}-${i}`}
+            animate={{ opacity: 1 - (i * 0.15), x: 0 }}
+            key={`${log.year}-${i}`}
             className="flex items-center gap-2"
           >
-            <span className="text-[7px] text-accent/30">{`[${new Date().toLocaleTimeString()}]`}</span>
-            <span className={i === 0 ? "text-white/60" : "text-white/20"}>{log}</span>
+            <span className="text-[9px] font-bold text-accent/50">{`[${log.year}]`}</span>
+            <span className={i === 0 ? "text-white/80 font-bold" : "text-white/40"}>{log.text}</span>
           </motion.div>
         ))}
       </div>

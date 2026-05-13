@@ -20,13 +20,61 @@ export default function Hero() {
         </motion.div>
 
         <motion.h1
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1.2, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+          initial="hidden"
+          animate="visible"
+          variants={{
+            hidden: { opacity: 1 },
+            visible: {
+              opacity: 1,
+              transition: {
+                staggerChildren: 0.12,
+                delayChildren: 0.1,
+              },
+            },
+          }}
           className="text-[40px] md:text-[60px] lg:text-[80px] font-serif leading-[1.1] mb-8 text-white tracking-tight"
         >
-          A IA não é uma onda, <br />
-          <span className="text-glow-accent italic font-normal text-white">é um oceano de <br className="md:hidden" /> oportunidades.</span>
+          <span className="block pb-2">
+            {"A IA não é uma onda,".split(" ").map((word, i) => (
+              <motion.span
+                key={`w1-${i}`}
+                variants={{
+                  hidden: { opacity: 0, y: 30, filter: "blur(8px)" },
+                  visible: { opacity: 1, y: 0, filter: "blur(0px)" }
+                }}
+                transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+                className="inline-block mr-[0.25em] last:mr-0"
+              >
+                {word}
+              </motion.span>
+            ))}
+          </span>
+          <span className="text-glow-accent italic font-normal text-white block pb-4">
+            {"é um oceano de".split(" ").map((word, i) => (
+              <motion.span
+                key={`w2-${i}`}
+                variants={{
+                  hidden: { opacity: 0, y: 30, filter: "blur(8px)" },
+                  visible: { opacity: 1, y: 0, filter: "blur(0px)" }
+                }}
+                transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+                className="inline-block mr-[0.25em] last:mr-0"
+              >
+                {word}
+              </motion.span>
+            ))}
+            <br className="md:hidden" />
+            <motion.span
+              variants={{
+                hidden: { opacity: 0, y: 30, filter: "blur(8px)" },
+                visible: { opacity: 1, y: 0, filter: "blur(0px)" }
+              }}
+              transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+              className="inline-block ml-0 md:ml-[0.25em]"
+            >
+              oportunidades.
+            </motion.span>
+          </span>
         </motion.h1>
 
         <motion.p

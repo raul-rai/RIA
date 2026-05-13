@@ -8,6 +8,8 @@ interface VideoModalProps {
   videoUrl: string;
   title: string;
   bio?: string;
+  startTime?: number;
+  endTime?: number;
 }
 
 declare global {
@@ -17,7 +19,7 @@ declare global {
   }
 }
 
-export default function VideoModal({ isOpen, onClose, videoUrl, title, bio }: VideoModalProps) {
+export default function VideoModal({ isOpen, onClose, videoUrl, title, bio, startTime, endTime }: VideoModalProps) {
   const playerRef = useRef<any>(null);
   const checkIntervalRef = useRef<number | null>(null);
 
@@ -39,30 +41,34 @@ export default function VideoModal({ isOpen, onClose, videoUrl, title, bio }: Vi
       
       playerRef.current = new window.YT.Player('youtube-player', {
         videoId: videoId,
-        events: {
-          onStateChange: (event: any) => {
-            // When playing, start checking for the 2:34 mark (154 seconds)
-            if (event.data === window.YT.PlayerState.PLAYING) {
-              if (checkIntervalRef.current) window.clearInterval(checkIntervalRef.current);
-              
-              checkIntervalRef.current = window.setInterval(() => {
-                const currentTime = playerRef.current?.getCurrentTime();
-                if (currentTime >= 154) {
-                  window.clearInterval(checkIntervalRef.current!);
-                  onClose();
-                }
-              }, 500); // Check every half second
-            } else {
-              if (checkIntervalRef.current) window.clearInterval(checkIntervalRef.current);
-            }
-          }
-        },
         playerVars: {
           autoplay: 1,
           mute: 0,
           enablejsapi: 1,
           rel: 0,
-          modestbranding: 1
+          modestbranding: 1,
+          start: startTime || 0,
+          ...(endTime ? { end: endTime } : {})
+        },
+        events: {
+          onStateChange: (event: any) => {
+            // When playing, start checking for the end mark
+            if (event.data === window.YT.PlayerState.PLAYING && endTime) {
+              if (checkIntervalRef.current) window.clearInterval(checkIntervalRef.current);
+              
+              checkIntervalRef.current = window.setInterval(() => {
+                const currentTime = playerRef.current?.getCurrentTime();
+                if (currentTime >= endTime) {
+                  window.clearInterval(checkIntervalRef.current!);
+                  onClose();
+                }
+              }, 500); // Check every half second
+            } else if (event.data === window.YT.PlayerState.ENDED) {
+              onClose(); // Automatically close when video naturally ends
+            } else {
+              if (checkIntervalRef.current) window.clearInterval(checkIntervalRef.current);
+            }
+          }
         }
       });
     };
@@ -80,7 +86,7 @@ export default function VideoModal({ isOpen, onClose, videoUrl, title, bio }: Vi
         playerRef.current = null;
       }
     };
-  }, [isOpen, videoUrl, onClose]);
+  }, [isOpen, videoUrl, onClose, startTime, endTime]);
 
   if (!isOpen) return null;
 
@@ -142,9 +148,17 @@ export default function VideoModal({ isOpen, onClose, videoUrl, title, bio }: Vi
                   <span className="text-[10px] text-white/20 uppercase tracking-widest font-bold">Protocolo</span>
                   <span className="text-[11px] text-accent font-mono">RIA_AUTH_VERIFIED</span>
                 </div>
-                <div className="ml-auto px-3 py-1 rounded bg-accent/10 border border-accent/20">
-                  <span className="text-[9px] text-accent font-black">AUTO-STOP: 2:34</span>
-                </div>
+                {endTime ? (
+                  <div className="ml-auto px-3 py-1 rounded bg-accent/10 border border-accent/20">
+                    <span className="text-[9px] text-accent font-black">
+                      AUTO-STOP: {Math.floor(endTime / 60)}:{(endTime % 60).toString().padStart(2, '0')}
+                    </span>
+                  </div>
+                ) : (
+                  <div className="ml-auto px-3 py-1 rounded bg-accent/10 border border-accent/20">
+                    <span className="text-[9px] text-accent font-black">FULL_PLAYBACK</span>
+                  </div>
+                )}
               </div>
             </motion.div>
           </div>
