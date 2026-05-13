@@ -179,8 +179,8 @@ export default function PotentialDiagnostic() {
               );
             })}
             
-            <div className="col-span-1 md:col-span-2 lg:col-span-4 mt-2 md:mt-4 p-4 bg-accent/5 border border-accent/10 rounded-xl flex items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
+            <div className="col-span-1 md:col-span-2 lg:col-span-4 mt-2 md:mt-4 p-4 bg-accent/5 border border-accent/10 rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="flex items-center gap-3 w-full md:w-auto">
                 <div className={`w-10 h-10 rounded-full border-2 ${result.score < 50 ? 'border-red-400/20 text-red-400' : result.score < 80 ? 'border-yellow-400/20 text-yellow-400' : 'border-accent/20 text-accent'} flex items-center justify-center font-serif text-lg shrink-0`}>
                   {Math.round(result.score)}
                 </div>

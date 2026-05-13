@@ -312,7 +312,7 @@ function SceneStats() {
         A IA não vai te substituir.<br />
         <span className="italic font-normal text-white/40">Mas quem usa ela vai.</span>
       </motion.h2>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-14 max-w-5xl mx-auto">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-14 max-w-5xl mx-auto">
         {stats.map((s, i) => (
           <motion.div 
             key={i}
@@ -322,7 +322,7 @@ function SceneStats() {
             }}
             className="flex flex-col items-center text-center md:items-start md:text-left"
           >
-            <div className="text-5xl md:text-7xl font-serif text-transparent bg-clip-text bg-gradient-to-b from-accent to-white/20 mb-3 md:mb-6">
+            <div className="text-4xl md:text-7xl font-serif text-transparent bg-clip-text bg-gradient-to-b from-accent to-white/20 mb-2 md:mb-6">
               {s.number}
             </div>
             <p className="text-white/50 text-base md:text-lg font-sans font-light leading-relaxed max-w-xs">{s.text}</p>
@@ -336,8 +336,8 @@ function SceneStats() {
 // ─── Scene 6: THE OFFER ──────────────────────────────────────────────────────
 function SceneCTA({ onFinalContact }: { onFinalContact: (data: any) => void }) {
   return (
-    <div className="w-full h-[100dvh] max-w-5xl mx-auto px-4 flex flex-col justify-center items-center text-center pointer-events-auto">
-      <div className="w-full mb-4 md:mb-8 mt-16 md:mt-0">
+    <div className="w-full flex-1 min-h-full max-w-5xl mx-auto px-2 md:px-4 flex flex-col justify-center items-center text-center pointer-events-auto pb-4">
+      <div className="w-full mb-4 md:mb-8 mt-2 md:mt-0">
         <h2 className="text-3xl md:text-5xl font-serif text-white mb-2 md:mb-4">
           Você vai surfar ou <span className="italic font-normal text-glow-accent text-white/90">se afogar?</span>
         </h2>
