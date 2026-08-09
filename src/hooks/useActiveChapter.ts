@@ -24,7 +24,14 @@ export function useActiveChapter(count: number) {
           if (index >= 0) setActive(index);
         });
       },
-      { threshold: 0.5 }
+      {
+        // Ativo = o capitulo cruza a linha do meio da tela. Usar rootMargin
+        // em vez de threshold porque o intersectionRatio e calculado sobre a
+        // caixa do elemento: um capitulo mais alto que 2x a viewport nunca
+        // alcancaria threshold 0.5 e jamais viraria ativo.
+        rootMargin: '-50% 0px -50% 0px',
+        threshold: 0,
+      }
     );
 
     const observed = elements.current.filter((el): el is HTMLElement => el !== null);
