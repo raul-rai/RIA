@@ -1,9 +1,10 @@
-import { useState, useCallback } from 'react';
-import { motion, useMotionTemplate, useMotionValue, useSpring } from 'motion/react';
+import { useCallback, useEffect } from 'react';
+import { motion, useScroll, useMotionValue, useSpring } from 'motion/react';
 import { ArrowRight, Bot, Headset, Brain, TrendingUp, Zap, Clock, ShieldCheck, Target, Sparkles, Search, MapPin, Paintbrush, Video, Layout, Settings } from 'lucide-react';
 import CyberpunkScene from '../components/CyberpunkScene';
 import DataWave3D from '../components/DataWave3D';
-import NarrativeScroll from '../components/NarrativeScroll';
+import ChapterSection from '../components/ChapterSection';
+import { useActiveChapter } from '../hooks/useActiveChapter';
 import EliteHUD from '../components/EliteHUD';
 
 import AIChatAgent from '../components/AIChatAgent';
@@ -182,7 +183,7 @@ function SceneServices() {
         visible: { transition: { staggerChildren: 0.15 } },
         hidden: {}
       }}
-      className="w-full max-w-5xl mx-auto px-2 md:px-4 pointer-events-auto flex flex-col items-center justify-center h-full py-2 relative z-10"
+      className="w-full max-w-5xl mx-auto px-2 md:px-4 pointer-events-auto flex flex-col items-center justify-center py-2 relative z-10"
     >
       <motion.div 
         variants={{
@@ -337,8 +338,8 @@ function SceneStats() {
 // ─── Scene 6: THE OFFER ──────────────────────────────────────────────────────
 function SceneCTA({ onFinalContact }: { onFinalContact: (data: any) => void }) {
   return (
-    <div className="w-full flex-1 min-h-full max-w-5xl mx-auto px-2 md:px-4 flex flex-col justify-center items-center text-center pointer-events-auto pb-4">
-      <div className="w-full mb-4 md:mb-8 mt-2 md:mt-0">
+    <div className="w-full max-w-5xl mx-auto px-2 md:px-4 flex flex-col justify-center items-center text-center pointer-events-auto">
+      <div className="w-full mb-4 md:mb-8">
         <h2 className="text-3xl md:text-5xl font-serif text-white mb-2 md:mb-4">
           Você vai surfar ou <span className="italic font-normal text-glow-accent text-white/90">se afogar?</span>
         </h2>
@@ -347,7 +348,7 @@ function SceneCTA({ onFinalContact }: { onFinalContact: (data: any) => void }) {
         </p>
       </div>
 
-      <div className="w-full flex-1 max-h-[65vh] md:max-h-[600px] mb-8">
+      <div className="w-full h-[70svh] md:h-[600px] mb-8">
         <AIChatAgent onComplete={onFinalContact} />
       </div>
     </div>
@@ -356,31 +357,30 @@ function SceneCTA({ onFinalContact }: { onFinalContact: (data: any) => void }) {
 
 
 // ─── Component ───────────────────────────────────────────────────────────────
+const CHAPTERS = [
+  { label: 'A ameaça silenciosa', title: 'RIA — A Ameaça Silenciosa' },
+  { label: 'O mercado está mudando', title: 'RIA — O Mercado está Mudando' },
+  { label: 'Diagnóstico de saúde digital', title: 'RIA — Diagnóstico de Saúde Digital' },
+  { label: 'Possibilidades infinitas', title: 'RIA — Possibilidades Infinitas' },
+  { label: 'O momento é agora', title: 'RIA — O Momento é Agora' },
+  { label: 'Seu consultor', title: 'RIA — Seu Consultor' },
+  { label: 'Estratégia de defesa', title: 'RIA — Estratégia de Defesa' },
+];
+
 export default function LandingPage() {
-  const waveProgress = useMotionValue(0);
-  const [activeScene, setActiveScene] = useState(0);
-  const [requestedScene, setRequestedScene] = useState<number | undefined>(undefined);
+  // A onda le direto do progresso do scroll — sem passar pelo React.
+  const { scrollYProgress } = useScroll();
+  const { active, setRef } = useActiveChapter(CHAPTERS.length);
 
-  const handleWaveProgress = useCallback((p: number) => {
-    waveProgress.set(p);
-  }, [waveProgress]);
+  useEffect(() => {
+    const chapter = CHAPTERS[active];
+    if (chapter) document.title = chapter.title;
+  }, [active]);
 
-  const handleSceneChange = useCallback((index: number) => {
-    setActiveScene(index);
-    
-    const titles = [
-      "RIA — A Ameaça Silenciosa",
-      "RIA — O Mercado está Mudando",
-      "RIA — Diagnóstico de Saúde Digital",
-      "RIA — Possibilidades Infinitas",
-      "RIA — O Momento é Agora",
-      "RIA — Seu Consultor",
-      "RIA — Estratégia de Defesa"
-    ];
-    if (titles[index]) {
-      document.title = titles[index];
-    }
-    setRequestedScene(undefined);
+  const goToChapter = useCallback((index: number) => {
+    document
+      .getElementById(`capitulo-${index}`)
+      ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, []);
 
   const handleFinalContact = useCallback((data: any) => {
@@ -397,31 +397,39 @@ export default function LandingPage() {
     window.open(whatsappWithMessage(message), '_blank');
   }, []);
 
-  const scenes = [
-    { id: 0, waveProgress: 0,    content: <SceneHero onStartDiagnostic={() => setRequestedScene(6)} /> },
-    { id: 1, waveProgress: 0.15, content: <SocialProofSection /> },
-    { id: 2, waveProgress: 0.35, content: <PotentialDiagnostic /> },
-    { id: 3, waveProgress: 0.55, content: <SceneServices /> },
-    { id: 4, waveProgress: 0.70, content: <SceneStats /> },
-    { id: 5, waveProgress: 0.85, content: <ConsultantSection onStrategyClick={() => setRequestedScene(6)} /> },
-    { id: 6, waveProgress: 1.0,  content: <SceneCTA onFinalContact={handleFinalContact} /> },
+  const chapterContent = [
+    <SceneHero onStartDiagnostic={() => goToChapter(6)} />,
+    <SocialProofSection />,
+    <PotentialDiagnostic onWantStrategy={() => goToChapter(6)} />,
+    <SceneServices />,
+    <SceneStats />,
+    <ConsultantSection onStrategyClick={() => goToChapter(6)} />,
+    <SceneCTA onFinalContact={handleFinalContact} />,
   ];
 
   return (
-    <div className="bg-[#010408] min-h-screen text-white font-sans selection:bg-accent/30 selection:text-white overflow-hidden" style={{ height: '100vh' }}>
-      <CyberpunkScene activeScene={activeScene} />
-      <DataWave3D progress={waveProgress} />
+    <div className="bg-[#010408] text-white font-sans selection:bg-accent/30 selection:text-white">
+      <a
+        href="#capitulo-6"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-white focus:text-black focus:rounded-lg focus:text-xs focus:font-bold"
+      >
+        Pular para o agente de IA
+      </a>
+
+      <CyberpunkScene activeScene={active} />
+      <DataWave3D progress={scrollYProgress} />
       <div className="fixed inset-0 z-20 vignette-overlay pointer-events-none" />
-      
-      <EliteHUD activeScene={activeScene} />
+
+      <EliteHUD activeScene={active} />
       <div className="scanline" />
-      
-      <NarrativeScroll 
-        scenes={scenes} 
-        onWaveProgress={handleWaveProgress} 
-        onSceneChange={handleSceneChange}
-        externalActiveScene={requestedScene}
-      />
+
+      <main className="relative z-10">
+        {CHAPTERS.map((chapter, i) => (
+          <ChapterSection key={i} index={i} label={chapter.label} setRef={setRef(i)}>
+            {chapterContent[i]}
+          </ChapterSection>
+        ))}
+      </main>
 
       <motion.div
         initial={{ opacity: 0 }}

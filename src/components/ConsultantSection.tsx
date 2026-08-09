@@ -14,9 +14,11 @@ export default function ConsultantSection({ onStrategyClick }: ConsultantSection
           <div className="absolute -inset-1.5 md:-inset-3 border border-accent/20 rounded-[1.5rem] md:rounded-[2.5rem] -rotate-1 md:-rotate-2" />
           
           <div className="relative rounded-[1.4rem] md:rounded-[2.2rem] overflow-hidden aspect-[4/5] bg-bg-alt border border-white/10 shadow-[0_0_40px_rgba(0,0,0,0.5)]">
-            <img 
-              src="/raul.pedro.webp" 
-              className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700" 
+            <img
+              src="/raul.pedro.webp"
+              loading="lazy"
+              decoding="async"
+              className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700"
               alt="Raul Pedro - Consultor de IA"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-transparent opacity-80 z-10" />

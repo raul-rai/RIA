@@ -67,8 +67,10 @@ export default function SocialProofSection() {
             >
               {/* Background Image with Overlay */}
               <div className="absolute inset-0 z-0">
-                <img 
-                  src={item.thumbnail} 
+                <img
+                  src={item.thumbnail}
+                  loading="lazy"
+                  decoding="async"
                   className="w-full h-full object-cover opacity-40 transition-all duration-700 group-hover:scale-105 group-hover:opacity-20"
                   style={{ objectPosition: "center top" }}
                   alt={item.name}

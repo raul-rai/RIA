@@ -17,7 +17,11 @@ type DiagnosticResult = {
   prioridades: { label: string; evidence: string; pct: number }[];
 };
 
-export default function PotentialDiagnostic() {
+interface PotentialDiagnosticProps {
+  onWantStrategy?: () => void;
+}
+
+export default function PotentialDiagnostic({ onWantStrategy }: PotentialDiagnosticProps) {
   const [url, setUrl] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -190,7 +194,7 @@ export default function PotentialDiagnostic() {
                 </div>
               </div>
               <button 
-                onClick={() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })}
+                onClick={() => onWantStrategy?.()}
                 className="px-5 py-3 bg-white text-black rounded-lg text-xs font-black uppercase tracking-widest hover:bg-accent transition-all flex items-center gap-2"
               >
                 <span>Corrigir</span>
