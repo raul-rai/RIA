@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { resolveDpr, TIERS, type QualityTier } from '../lib/canvas-quality';
 
 interface DataWave3DProps {
   waveProgress: number; // 0 = far away, 1 = crashed on screen
@@ -17,12 +18,27 @@ export default function DataWave3D({ waveProgress }: DataWave3DProps) {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+    if (!ctx) {
+      canvas.style.background =
+        'radial-gradient(120% 80% at 50% 118%, rgba(0,229,255,0.28) 0%, rgba(0,229,255,0.05) 45%, transparent 72%)';
+      return;
+    }
 
     let width = window.innerWidth;
     let height = window.innerHeight;
-    canvas.width = width;
-    canvas.height = height;
+
+    const applySize = () => {
+      const dpr = resolveDpr(window.devicePixelRatio);
+      width = window.innerWidth;
+      height = window.innerHeight;
+      canvas.width = Math.floor(width * dpr);
+      canvas.height = Math.floor(height * dpr);
+      canvas.style.width = `${width}px`;
+      canvas.style.height = `${height}px`;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    };
+
+    applySize();
 
     let time = 0;
     const cols = 45; // Reduced from 55
@@ -165,10 +181,7 @@ export default function DataWave3D({ waveProgress }: DataWave3DProps) {
 
     frameId = requestAnimationFrame(render);
 
-    const handleResize = () => {
-      width = canvas.width = window.innerWidth;
-      height = canvas.height = window.innerHeight;
-    };
+    const handleResize = () => applySize();
     window.addEventListener('resize', handleResize);
 
     return () => {
