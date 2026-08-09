@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { motion, useScroll, useMotionValue, useSpring } from 'motion/react';
 import { ArrowRight, Bot, Headset, Brain, TrendingUp, Zap, Clock, ShieldCheck, Target, Sparkles, Search, MapPin, Paintbrush, Video, Layout, Settings } from 'lucide-react';
 import CyberpunkScene from '../components/CyberpunkScene';
@@ -12,6 +12,7 @@ import PotentialDiagnostic from '../components/PotentialDiagnostic';
 import SocialProofSection from '../components/SocialProofSection';
 import ConsultantSection from '../components/ConsultantSection';
 import { whatsappWithMessage } from '../constants/links';
+import { prefersReducedMotion } from '../lib/canvas-quality';
 
 function MagneticButton({ children, onClick, className }: { children: React.ReactNode, onClick: () => void, className?: string }) {
   const x = useMotionValue(0);
@@ -380,7 +381,12 @@ export default function LandingPage() {
   const goToChapter = useCallback((index: number) => {
     document
       .getElementById(`capitulo-${index}`)
-      ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      ?.scrollIntoView({
+        // behavior explicito em JS sobrepoe a propriedade CSS, entao a media
+        // query de movimento reduzido do index.css nao basta aqui.
+        behavior: prefersReducedMotion() ? 'auto' : 'smooth',
+        block: 'start',
+      });
   }, []);
 
   const handleFinalContact = useCallback((data: any) => {
@@ -397,7 +403,9 @@ export default function LandingPage() {
     window.open(whatsappWithMessage(message), '_blank');
   }, []);
 
-  const chapterContent = [
+  // Memoizado para que trocar de capitulo ativo nao re-renderize as 7
+  // subarvores. Sem isso, cada fronteira custava de 1 a 3 frames.
+  const chapterContent = useMemo(() => [
     <SceneHero onStartDiagnostic={() => goToChapter(6)} />,
     <SocialProofSection />,
     <PotentialDiagnostic onWantStrategy={() => goToChapter(6)} />,
@@ -405,7 +413,7 @@ export default function LandingPage() {
     <SceneStats />,
     <ConsultantSection onStrategyClick={() => goToChapter(6)} />,
     <SceneCTA onFinalContact={handleFinalContact} />,
-  ];
+  ], [goToChapter, handleFinalContact]);
 
   return (
     <div className="bg-[#010408] text-white font-sans selection:bg-accent/30 selection:text-white">
