@@ -29,3 +29,52 @@ describe('TIERS', () => {
     expect(TIERS.low.fill).toBe(false);
   });
 });
+
+import { pickInitialTier, downgrade, createFpsMeter } from '../src/lib/canvas-quality';
+
+describe('pickInitialTier', () => {
+  it('QUAL-06: telas estreitas comecam no nivel baixo', () => {
+    expect(pickInitialTier({ cores: 16, width: 420 })).toBe('low');
+  });
+
+  it('QUAL-07: poucos nucleos comecam no nivel baixo', () => {
+    expect(pickInitialTier({ cores: 2, width: 1920 })).toBe('low');
+  });
+
+  it('QUAL-08: maquina intermediaria comeca no medio', () => {
+    expect(pickInitialTier({ cores: 8, width: 1440 })).toBe('medium');
+  });
+
+  it('QUAL-09: desktop potente comeca no alto', () => {
+    expect(pickInitialTier({ cores: 16, width: 1920 })).toBe('high');
+  });
+});
+
+describe('downgrade', () => {
+  it('QUAL-10: desce um degrau por vez e para no baixo', () => {
+    expect(downgrade('high')).toBe('medium');
+    expect(downgrade('medium')).toBe('low');
+    expect(downgrade('low')).toBe('low');
+  });
+});
+
+describe('createFpsMeter', () => {
+  it('QUAL-11: so devolve media ao completar a janela de amostras', () => {
+    const meter = createFpsMeter(3);
+    expect(meter.tick(0)).toBeNull();
+    expect(meter.tick(16)).toBeNull();
+    expect(meter.tick(32)).toBeNull();
+    const avg = meter.tick(48);
+    expect(avg).not.toBeNull();
+    expect(avg!).toBeGreaterThan(55);
+    expect(avg!).toBeLessThan(70);
+  });
+
+  it('QUAL-12: reinicia a janela apos entregar uma media', () => {
+    const meter = createFpsMeter(2);
+    meter.tick(0);
+    meter.tick(16);
+    expect(meter.tick(32)).not.toBeNull();
+    expect(meter.tick(48)).toBeNull();
+  });
+});

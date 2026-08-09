@@ -1,5 +1,8 @@
 import { useEffect, useRef } from 'react';
-import { resolveDpr, TIERS, type QualityTier } from '../lib/canvas-quality';
+import {
+  resolveDpr, TIERS, downgrade, pickInitialTier, createFpsMeter, prefersReducedMotion,
+  type QualityTier,
+} from '../lib/canvas-quality';
 
 interface DataWave3DProps {
   waveProgress: number; // 0 = far away, 1 = crashed on screen
@@ -41,36 +44,62 @@ export default function DataWave3D({ waveProgress }: DataWave3DProps) {
     applySize();
 
     let time = 0;
-    const cols = 45; // Reduced from 55
-    const rows = 55; // Increased to cover more distance
+
+    const reduced = prefersReducedMotion();
+
+    let tier: QualityTier = reduced
+      ? 'low'
+      : pickInitialTier({
+          cores: navigator.hardwareConcurrency ?? 4,
+          width: window.innerWidth,
+        });
+
+    let cols = TIERS[tier].cols;
+    let rows = TIERS[tier].rows;
+    let fillQuads = TIERS[tier].fill;
+
     const spacing = 150; // Adjusted for better perspective at depth
-    const totalDepth = rows * spacing; // ~8250 units
 
     // Smooth internal scroll progress (lerps toward waveProgressRef)
     let currentScroll = 0;
 
-    const points: {x: number, y: number, z: number, px: number, py: number, scale: number}[] = [];
+    let points: { x: number; y: number; z: number; px: number; py: number; scale: number }[] = [];
 
-    for (let z = 0; z < rows; z++) {
-      for (let x = 0; x < cols; x++) {
-        points.push({
-          x: (x - cols / 2) * spacing,
-          z: z * spacing,
-          y: 0,
-          px: 0, py: 0, scale: 0
-        });
+    const buildPoints = () => {
+      cols = TIERS[tier].cols;
+      rows = TIERS[tier].rows;
+      fillQuads = TIERS[tier].fill;
+      points = [];
+      for (let z = 0; z < rows; z++) {
+        for (let x = 0; x < cols; x++) {
+          points.push({
+            x: (x - cols / 2) * spacing,
+            z: z * spacing,
+            y: 0,
+            px: 0, py: 0, scale: 0,
+          });
+        }
       }
-    }
+    };
+
+    buildPoints();
+
+    const fps = createFpsMeter(60);
+    let badWindows = 0;
 
     let frameId: number;
 
     const render = () => {
       // Smooth lerp toward target progress
-      currentScroll += (waveProgressRef.current - currentScroll) * 0.04;
+      currentScroll += reduced
+        ? waveProgressRef.current - currentScroll
+        : (waveProgressRef.current - currentScroll) * 0.04;
 
       ctx.clearRect(0, 0, width, height);
 
-      time += 0.012 + (currentScroll * 0.008);
+      if (!reduced) {
+        time += 0.012 + currentScroll * 0.008;
+      }
 
       const focalLength = 800;
       const cameraZ = -400 + (currentScroll * 200);
@@ -161,8 +190,10 @@ export default function DataWave3D({ waveProgress }: DataWave3DProps) {
           ctx.closePath();
 
           // Solid deep blue/black body fill to hide background
-          ctx.fillStyle = `rgba(1, 4, 8, ${Math.min(1, depthAlpha * 1.5)})`;
-          ctx.fill();
+          if (fillQuads) {
+            ctx.fillStyle = `rgba(1, 4, 8, ${Math.min(1, depthAlpha * 1.5)})`;
+            ctx.fill();
+          }
 
           // Cyan tech wireframe lines
           const heightIntensity = Math.min(1, Math.max(0, -p.y / (400 + currentScroll * 800)));
@@ -176,16 +207,54 @@ export default function DataWave3D({ waveProgress }: DataWave3DProps) {
         }
       }
 
-      frameId = requestAnimationFrame(render);
+      const avg = fps.tick(performance.now());
+      if (avg !== null) {
+        if (avg < 45 && tier !== 'low') {
+          badWindows++;
+          if (badWindows >= 2) {
+            tier = downgrade(tier);
+            buildPoints();
+            badWindows = 0;
+          }
+        } else {
+          badWindows = 0;
+        }
+      }
+
+      if (!reduced && running) {
+        frameId = requestAnimationFrame(render);
+      }
     };
 
-    frameId = requestAnimationFrame(render);
+    let running = true;
+
+    const start = () => {
+      if (!running) {
+        running = true;
+        frameId = requestAnimationFrame(render);
+      }
+    };
+
+    const stop = () => {
+      running = false;
+      cancelAnimationFrame(frameId);
+    };
+
+    const onVisibility = () => (document.hidden ? stop() : start());
+    document.addEventListener('visibilitychange', onVisibility);
+
+    if (!reduced) {
+      frameId = requestAnimationFrame(render);
+    } else {
+      render();
+    }
 
     const handleResize = () => applySize();
     window.addEventListener('resize', handleResize);
 
     return () => {
-      cancelAnimationFrame(frameId);
+      stop();
+      document.removeEventListener('visibilitychange', onVisibility);
       window.removeEventListener('resize', handleResize);
     };
   }, []);
