@@ -385,14 +385,14 @@ export default function LandingPage() {
 
   const handleFinalContact = useCallback((data: any) => {
     const message = [
-      'Ola! Realizei o diagnostico via chat RIA.',
+      'Olá! Realizei o diagnóstico via chat RIA.',
       '',
-      `Nome: ${data.name}`,
-      `Faturamento: R$ ${data.revenue.toLocaleString()}/mes`,
-      `ROI Projetado: R$ ${data.roi.toLocaleString()}/ano`,
-      `Eficiencia: +${data.efficiency}%`,
+      `👤 Nome: ${data.name}`,
+      `💰 Faturamento: R$ ${data.revenue.toLocaleString()}/mês`,
+      `💸 ROI Projetado: R$ ${data.roi.toLocaleString()}/ano`,
+      `🚀 Eficiência: +${data.efficiency}%`,
       '',
-      'Quero agendar minha sessao estrategica para escalar esses numeros.',
+      'Quero agendar minha sessão estratégica para escalar esses números.',
     ].join('\n');
     window.open(whatsappWithMessage(message), '_blank');
   }, []);

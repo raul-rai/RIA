@@ -44,8 +44,12 @@ export default function AIChatAgent({ webhookUrl = config.chatWebhook, onComplet
     const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 segundos de limite
 
     try {
+      if (!webhookUrl) {
+        throw new Error('Agente indisponivel no momento.');
+      }
+
       console.log("Enviando mensagem para n8n:", currentInput);
-      
+
       const response = await fetch(webhookUrl, {
         method: 'POST',
         headers: {
