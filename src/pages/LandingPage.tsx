@@ -357,13 +357,13 @@ function SceneCTA({ onFinalContact }: { onFinalContact: (data: any) => void }) {
 
 // ─── Component ───────────────────────────────────────────────────────────────
 export default function LandingPage() {
-  const [waveProgress, setWaveProgress] = useState(0);
+  const waveProgress = useMotionValue(0);
   const [activeScene, setActiveScene] = useState(0);
   const [requestedScene, setRequestedScene] = useState<number | undefined>(undefined);
 
   const handleWaveProgress = useCallback((p: number) => {
-    setWaveProgress(p);
-  }, []);
+    waveProgress.set(p);
+  }, [waveProgress]);
 
   const handleSceneChange = useCallback((index: number) => {
     setActiveScene(index);
@@ -410,7 +410,7 @@ export default function LandingPage() {
   return (
     <div className="bg-[#010408] min-h-screen text-white font-sans selection:bg-accent/30 selection:text-white overflow-hidden" style={{ height: '100vh' }}>
       <CyberpunkScene activeScene={activeScene} />
-      <DataWave3D waveProgress={waveProgress} />
+      <DataWave3D progress={waveProgress} />
       <div className="fixed inset-0 z-20 vignette-overlay pointer-events-none" />
       
       <EliteHUD activeScene={activeScene} />

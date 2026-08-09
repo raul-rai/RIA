@@ -1,21 +1,17 @@
 import { useEffect, useRef } from 'react';
+import type { MotionValue } from 'motion/react';
 import {
   resolveDpr, TIERS, downgrade, pickInitialTier, createFpsMeter, prefersReducedMotion,
   type QualityTier,
 } from '../lib/canvas-quality';
 
 interface DataWave3DProps {
-  waveProgress: number; // 0 = far away, 1 = crashed on screen
+  /** Progresso 0 → 1. MotionValue para nao disparar re-render a cada frame. */
+  progress: MotionValue<number>;
 }
 
-export default function DataWave3D({ waveProgress }: DataWave3DProps) {
+export default function DataWave3D({ progress }: DataWave3DProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const waveProgressRef = useRef(waveProgress);
-
-  // Sync prop to ref so the animation loop always reads latest value
-  useEffect(() => {
-    waveProgressRef.current = waveProgress;
-  }, [waveProgress]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -91,9 +87,8 @@ export default function DataWave3D({ waveProgress }: DataWave3DProps) {
 
     const render = () => {
       // Smooth lerp toward target progress
-      currentScroll += reduced
-        ? waveProgressRef.current - currentScroll
-        : (waveProgressRef.current - currentScroll) * 0.04;
+      const target = progress.get();
+      currentScroll += reduced ? target - currentScroll : (target - currentScroll) * 0.04;
 
       ctx.clearRect(0, 0, width, height);
 
@@ -252,12 +247,15 @@ export default function DataWave3D({ waveProgress }: DataWave3DProps) {
     const handleResize = () => applySize();
     window.addEventListener('resize', handleResize);
 
+    const unsubscribe = reduced ? progress.on('change', () => render()) : undefined;
+
     return () => {
       stop();
       document.removeEventListener('visibilitychange', onVisibility);
       window.removeEventListener('resize', handleResize);
+      unsubscribe?.();
     };
-  }, []);
+  }, [progress]);
 
   return (
     <div className="fixed inset-0 z-[1] pointer-events-none">
