@@ -22,3 +22,7 @@ export const EMAIL = 'contato@ria.com.br'; // TODO: update when real email is de
 
 /** LinkedIn — placeholder until profile is created */
 export const LINKEDIN_URL = '#'; // TODO: update when LinkedIn profile is created
+
+/** WhatsApp com mensagem livre — usado pelo resultado do chat/diagnostico */
+export const whatsappWithMessage = (message: string): string =>
+  `https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(message)}`;

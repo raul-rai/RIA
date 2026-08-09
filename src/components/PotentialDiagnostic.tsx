@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'motion/react';
 import { Globe, Search, Zap, Cpu, Smartphone, ArrowRight, Activity } from 'lucide-react';
+import { config } from '../config';
 
 type DiagnosticResult = {
   score: number;
@@ -39,12 +40,10 @@ export default function PotentialDiagnostic() {
     }, 500);
 
     try {
-      const webhookUrl = import.meta.env.VITE_N8N_WEBHOOK_URL;
-      console.log("Iniciando varredura para:", url);
-      console.log("Webhook configurado:", webhookUrl);
+      const webhookUrl = config.diagnosticWebhook;
 
-      if (!webhookUrl || webhookUrl.includes("COLOQUE_A_URL")) {
-        throw new Error("URL do Webhook não configurada no arquivo .env");
+      if (!webhookUrl) {
+        throw new Error('Diagnostico indisponivel no momento.');
       }
 
       const response = await fetch(webhookUrl, {

@@ -10,6 +10,7 @@ import AIChatAgent from '../components/AIChatAgent';
 import PotentialDiagnostic from '../components/PotentialDiagnostic';
 import SocialProofSection from '../components/SocialProofSection';
 import ConsultantSection from '../components/ConsultantSection';
+import { whatsappWithMessage } from '../constants/links';
 
 function MagneticButton({ children, onClick, className }: { children: React.ReactNode, onClick: () => void, className?: string }) {
   const x = useMotionValue(0);
@@ -383,8 +384,17 @@ export default function LandingPage() {
   }, []);
 
   const handleFinalContact = useCallback((data: any) => {
-    const message = `Olá! Realizei o diagnóstico via chat RIA.%0A%0A👤 Nome: ${data.name}%0A💰 Faturamento: R$ ${data.revenue.toLocaleString()}/mês%0A💸 ROI Projetado: R$ ${data.roi.toLocaleString()}/ano%0A🚀 Eficiência: +${data.efficiency}%25%0A%0AQuero agendar minha sessão estratégica para escalar esses números.`;
-    window.open(`https://wa.me/5516997879837?text=${message}`, '_blank');
+    const message = [
+      'Ola! Realizei o diagnostico via chat RIA.',
+      '',
+      `Nome: ${data.name}`,
+      `Faturamento: R$ ${data.revenue.toLocaleString()}/mes`,
+      `ROI Projetado: R$ ${data.roi.toLocaleString()}/ano`,
+      `Eficiencia: +${data.efficiency}%`,
+      '',
+      'Quero agendar minha sessao estrategica para escalar esses numeros.',
+    ].join('\n');
+    window.open(whatsappWithMessage(message), '_blank');
   }, []);
 
   const scenes = [

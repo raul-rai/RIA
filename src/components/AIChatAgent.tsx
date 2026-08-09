@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Send, User, Bot, Loader2, Sparkles, TrendingUp, ArrowRight } from 'lucide-react';
+import { config } from '../config';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -13,7 +14,7 @@ interface AIChatAgentProps {
   onComplete: (data: any) => void;
 }
 
-export default function AIChatAgent({ webhookUrl = "https://libra-credito-n8n.usybav.easypanel.host/webhook/n8n", onComplete }: AIChatAgentProps) {
+export default function AIChatAgent({ webhookUrl = config.chatWebhook, onComplete }: AIChatAgentProps) {
   const [messages, setMessages] = useState<Message[]>([
     { role: 'assistant', content: "Olá. Sou o Agente de Inteligência da RIA. Como posso te ajudar hoje?" }
   ]);
