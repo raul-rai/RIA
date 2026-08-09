@@ -18,7 +18,20 @@
 }
 
 @layer base {
+  html {
+    scroll-snap-type: y proximity;
+    scroll-behavior: smooth;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+      scroll-snap-type: none;
+    }
+  }
+
   body {
+    overscroll-behavior-y: contain;
     @apply bg-bg-base text-white antialiased overflow-x-hidden selection:bg-accent/30 selection:text-white font-sans;
   }
   
