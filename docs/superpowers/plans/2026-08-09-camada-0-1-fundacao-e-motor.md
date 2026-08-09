@@ -433,14 +433,25 @@ export default defineConfig(() => {
 ```bash
 npm run lint && npm test && npm run build
 ```
-Esperado: os três com código 0, e o bundle menor que os 421 kB de antes.
+Esperado: os três com código 0.
+
+**Sobre o tamanho do bundle:** ele **não** vai encolher, e isso é o comportamento correto. Os 11 componentes não eram importados por ninguém, então o Vite já os removia por tree-shaking — nunca estiveram no bundle. Os ganhos reais desta task são outros e devem ser medidos assim:
+
+- `dist/` encolhe ~3,8 MB (as duas imagens saíram do deploy)
+- `node_modules` perde 5 dependências
+- a chave `GEMINI_API_KEY` deixa de poder vazar para o bundle do cliente
+- 2.612 linhas a menos para manter
+
+Quem reduz o JS é a Task 11, via code splitting, contra o orçamento de < 200 kB gzip.
 
 - [ ] **Step 7: Commit**
 
 ```bash
-git add -A
+git add package.json package-lock.json vite.config.ts
 git commit -m "chore: remover codigo, assets e dependencias mortos da v1"
 ```
+
+Os `git rm` dos steps anteriores já colocaram as remoções no stage. **Não use `git add -A`** — há arquivos no working tree que não pertencem a este trabalho.
 
 ---
 
