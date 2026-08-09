@@ -1284,7 +1284,14 @@ export function useActiveChapter(count: number) {
           if (index >= 0) setActive(index);
         });
       },
-      { threshold: 0.5 }
+      {
+        // Ativo = o capitulo cruza a linha do meio da tela. Usar rootMargin
+        // em vez de threshold porque o intersectionRatio e calculado sobre a
+        // caixa do elemento: um capitulo mais alto que 2x a viewport nunca
+        // alcancaria threshold 0.5 e jamais viraria ativo.
+        rootMargin: '-50% 0px -50% 0px',
+        threshold: 0,
+      }
     );
 
     const observed = elements.current.filter((el): el is HTMLElement => el !== null);
@@ -1297,7 +1304,7 @@ export function useActiveChapter(count: number) {
 }
 ```
 
-`threshold: 0.5` significa que o capítulo vira ativo quando ocupa metade da tela — coincide com onde o snap o deixa.
+**Por que `rootMargin` e não `threshold`:** o `IntersectionObserver` calcula a proporção visível sobre a caixa do **elemento observado**, não sobre a tela. Com `threshold: 0.5`, um capítulo mais alto que o dobro da viewport nunca alcançaria 50% de visibilidade e jamais viraria ativo — justamente o caso que o `proximity` foi escolhido para acomodar. Encolher o root a uma faixa central de altura zero transforma o critério em "o capítulo cruza a linha do meio da tela", que vale para qualquer altura.
 
 - [ ] **Step 4: Verificar que compila**
 
