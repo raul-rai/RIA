@@ -59,8 +59,7 @@ export default function PotentialDiagnostic() {
       }
 
       const data: DiagnosticResult = await response.json();
-      console.log("Resultado recebido:", data);
-      
+
       clearInterval(progressInterval);
       setProgress(100);
       

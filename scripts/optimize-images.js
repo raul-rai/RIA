@@ -8,11 +8,7 @@ const __dirname = path.dirname(__filename);
 
 const publicDir = path.resolve(__dirname, '../public');
 
-const imagesToOptimize = [
-  'rio-real.png',
-  'rio-cyberpunk.png',
-  'raul.pedro.png'
-];
+const imagesToOptimize = []; // Sem PNGs pendentes de conversao no momento.
 
 async function optimizeImages() {
   for (const img of imagesToOptimize) {

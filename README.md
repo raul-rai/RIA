@@ -1,20 +1,29 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# RIA — Revolução da Inteligência Artificial
 
-# Run and deploy your AI Studio app
+Landing page de conversão para consultoria de IA. React 19 + Vite 6 + Tailwind 4 + Motion.
 
-This contains everything you need to run your app locally.
+## Rodar localmente
 
-View your app in AI Studio: https://ai.studio/apps/df61c384-fcd3-4842-b9f2-bd143c7f9ed1
+```bash
+npm install
+cp .env.example .env   # preencher os dois webhooks n8n
+npm run dev
+```
 
-## Run Locally
+## Comandos
 
-**Prerequisites:**  Node.js
+| Comando | O que faz |
+|---|---|
+| `npm run dev` | Servidor de desenvolvimento na porta 3000 |
+| `npm run build` | Build de produção em `dist/` |
+| `npm run preview` | Serve o build de produção |
+| `npm run lint` | Checagem de tipos (`tsc --noEmit`) |
+| `npm test` | Testes de contrato (Vitest) |
 
+## Estrutura
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+- `src/pages/LandingPage.tsx` — a narrativa de 7 capítulos
+- `src/components/DataWave3D.tsx` — o tsunami em canvas, dirigido pelo scroll
+- `src/config.ts` — endpoints n8n (única fonte)
+- `src/constants/links.ts` — contatos (única fonte)
+- `docs/superpowers/specs/` — decisões de design

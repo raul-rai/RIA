@@ -48,8 +48,6 @@ export default function AIChatAgent({ webhookUrl = config.chatWebhook, onComplet
         throw new Error('Agente indisponivel no momento.');
       }
 
-      console.log("Enviando mensagem para n8n:", currentInput);
-
       const response = await fetch(webhookUrl, {
         method: 'POST',
         headers: {
@@ -65,14 +63,12 @@ export default function AIChatAgent({ webhookUrl = config.chatWebhook, onComplet
       });
 
       clearTimeout(timeoutId);
-      console.log("Status da resposta n8n:", response.status);
 
       if (!response.ok) {
         throw new Error(`Erro na requisição ao n8n: Status ${response.status}`);
       }
 
       const textResponse = await response.text();
-      console.log("Texto puro recebido do n8n:", textResponse);
 
       let responseData;
       try {
