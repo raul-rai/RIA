@@ -5,8 +5,8 @@ import { resolve } from 'path';
 const css = readFileSync(resolve(process.cwd(), 'src/index.css'), 'utf-8');
 
 describe('Brand tokens and assets (BRAND-01, BRAND-02)', () => {
-  it('BRAND-01: --color-cta token is defined in @theme', () => {
-    expect(css).toContain('--color-cta: #2a42ec');
+  it('BRAND-01: --color-accent token is defined in @theme', () => {
+    expect(css).toContain('--color-accent: #00E5FF');
   });
 
   it('BRAND-02: public/og-image.png exists', () => {
