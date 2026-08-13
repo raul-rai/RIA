@@ -48,69 +48,91 @@ export default function PotentialDiagnostic({ onWantStrategy }: PotentialDiagnos
         ? url 
         : `https://${url}`;
 
-      const params = new URLSearchParams({
-        url: targetUrl,
-        strategy: 'mobile',
-      });
-      params.append('category', 'PERFORMANCE');
-      params.append('category', 'SEO');
-      params.append('category', 'ACCESSIBILITY');
-      params.append('category', 'BEST_PRACTICES');
+      let diagnosticData: DiagnosticResult | null = null;
 
-      if (config.pageSpeedApiKey) {
-        params.append('key', config.pageSpeedApiKey);
+      // 1. Tenta PageSpeed API
+      try {
+        const params = new URLSearchParams({
+          url: targetUrl,
+          strategy: 'mobile',
+        });
+        params.append('category', 'PERFORMANCE');
+        params.append('category', 'SEO');
+        params.append('category', 'ACCESSIBILITY');
+        params.append('category', 'BEST_PRACTICES');
+
+        if (config.pageSpeedApiKey) {
+          params.append('key', config.pageSpeedApiKey);
+        }
+
+        const apiUrl = `${config.pageSpeedApiUrl}?${params.toString()}`;
+        const response = await fetch(apiUrl, { method: 'GET' });
+
+        if (response.ok) {
+          const data = await response.json();
+          const categories = data?.lighthouseResult?.categories || {};
+
+          const d1Pct = Math.round((categories.performance?.score ?? 0.7) * 100);
+          const d2Pct = Math.round((categories.seo?.score ?? 0.75) * 100);
+          const d3Pct = Math.round((categories.accessibility?.score ?? 0.8) * 100);
+          const d4Pct = Math.round((categories['best-practices']?.score ?? 0.8) * 100);
+
+          const overallScore = Math.round((d1Pct * 0.4) + (d2Pct * 0.3) + (d3Pct * 0.15) + (d4Pct * 0.15));
+
+          let nivel = 1;
+          let nivel_nome = "Crítico";
+          let leitura = "Gargalos severos de carregamento e estruturação detectados no Google Lighthouse.";
+
+          if (overallScore >= 80) {
+            nivel = 3;
+            nivel_nome = "Otimizado para IA";
+            leitura = "Excelente velocidade, estruturação SEO e conformidade com as diretrizes do Google.";
+          } else if (overallScore >= 50) {
+            nivel = 2;
+            nivel_nome = "Atenção Requerida";
+            leitura = "Boa base técnica, mas necessita otimizações de carregamento e marcadores semânticos.";
+          }
+
+          diagnosticData = {
+            score: overallScore,
+            nivel,
+            nivel_nome,
+            leitura,
+            dimensoes: {
+              D1: { nome: 'Performance (Velocidade)', pct: d1Pct },
+              D2: { nome: 'SEO & Visibilidade', pct: d2Pct },
+              D3: { nome: 'Acessibilidade', pct: d3Pct },
+              D4: { nome: 'Melhores Práticas', pct: d4Pct },
+            },
+            prioridades: [
+              { label: 'Desempenho Mobile', evidence: `Performance Lighthouse em ${d1Pct}%`, pct: d1Pct },
+              { label: 'Indexação e SEO', evidence: `Pontuação SEO Google em ${d2Pct}%`, pct: d2Pct },
+            ]
+          };
+        }
+      } catch (psErr) {
+        console.warn("Google PageSpeed API indisponível/cota excedida, tentando webhook de fallback:", psErr);
       }
 
-      const apiUrl = `${config.pageSpeedApiUrl}?${params.toString()}`;
-
-      const response = await fetch(apiUrl, { method: 'GET' });
-
-      if (!response.ok) {
-        const errJson = await response.json().catch(() => ({}));
-        const msg = errJson?.error?.message || `Erro na análise (${response.status})`;
-        throw new Error(msg);
+      // 2. Fallback para o webhook n8n se a PageSpeed API falhar ou estiver sem cota
+      if (!diagnosticData && config.diagnosticWebhook) {
+        try {
+          const webhookRes = await fetch(config.diagnosticWebhook, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ url: targetUrl })
+          });
+          if (webhookRes.ok) {
+            diagnosticData = await webhookRes.json();
+          }
+        } catch (wbErr) {
+          console.warn("Fallback n8n indisponível:", wbErr);
+        }
       }
 
-      const data = await response.json();
-      const categories = data?.lighthouseResult?.categories || {};
-
-      const d1Pct = Math.round((categories.performance?.score ?? 0.7) * 100);
-      const d2Pct = Math.round((categories.seo?.score ?? 0.75) * 100);
-      const d3Pct = Math.round((categories.accessibility?.score ?? 0.8) * 100);
-      const d4Pct = Math.round((categories['best-practices']?.score ?? 0.8) * 100);
-
-      const overallScore = Math.round((d1Pct * 0.4) + (d2Pct * 0.3) + (d3Pct * 0.15) + (d4Pct * 0.15));
-
-      let nivel = 1;
-      let nivel_nome = "Crítico";
-      let leitura = "Gargalos severos de carregamento e estruturação detectados no Google Lighthouse.";
-
-      if (overallScore >= 80) {
-        nivel = 3;
-        nivel_nome = "Otimizado para IA";
-        leitura = "Excelente velocidade, estruturação SEO e conformidade com as diretrizes do Google.";
-      } else if (overallScore >= 50) {
-        nivel = 2;
-        nivel_nome = "Atenção Requerida";
-        leitura = "Boa base técnica, mas necessita otimizações de carregamento e marcadores semânticos.";
+      if (!diagnosticData) {
+        throw new Error("Cota de varredura temporariamente excedida no Google. Tente novamente em instantes.");
       }
-
-      const diagnosticData: DiagnosticResult = {
-        score: overallScore,
-        nivel,
-        nivel_nome,
-        leitura,
-        dimensoes: {
-          D1: { nome: 'Performance (Velocidade)', pct: d1Pct },
-          D2: { nome: 'SEO & Visibilidade', pct: d2Pct },
-          D3: { nome: 'Acessibilidade', pct: d3Pct },
-          D4: { nome: 'Melhores Práticas', pct: d4Pct },
-        },
-        prioridades: [
-          { label: 'Desempenho Mobile', evidence: `Performance Lighthouse em ${d1Pct}%`, pct: d1Pct },
-          { label: 'Indexação e SEO', evidence: `Pontuação SEO Google em ${d2Pct}%`, pct: d2Pct },
-        ]
-      };
 
       clearInterval(progressInterval);
       setProgress(100);
@@ -121,13 +143,18 @@ export default function PotentialDiagnostic({ onWantStrategy }: PotentialDiagnos
       }, 400);
 
     } catch (err: any) {
-      console.error("Erro na análise do PageSpeed:", err);
+      console.error("Erro no diagnóstico:", err);
       clearInterval(progressInterval);
-      setError(err.message || "Falha ao analisar o site no Google PageSpeed");
+      let userMsg = err.message || "Falha ao analisar o site";
+      if (userMsg.toLowerCase().includes("quota") || userMsg.toLowerCase().includes("limit")) {
+        userMsg = "Limite de consultas temporariamente atingido no Google. Tente novamente em instantes.";
+      }
+      setError(userMsg);
       setIsAnalyzing(false);
       setProgress(0);
     }
   };
+
 
 
   return (
