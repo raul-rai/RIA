@@ -14,6 +14,11 @@ export const WHATSAPP_URL_CTA = `https://wa.me/${WHATSAPP_PHONE}?text=${encodeUR
   'Olá Raul, quero agendar minha sessão estratégica de 30 minutos.'
 )}`;
 
+/** Floating FAB — subtle entry point for browsing visitors */
+export const WHATSAPP_URL_FAB = `https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(
+  'Olá Raul, estou visitando seu site e gostaria de saber mais sobre consultoria de IA.'
+)}`;
+
 /** Icon link — generic entry point (no pre-filled text) */
 export const WHATSAPP_URL = `https://wa.me/${WHATSAPP_PHONE}`;
 

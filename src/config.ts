@@ -19,4 +19,7 @@ export const config = {
     import.meta.env.VITE_N8N_DIAGNOSTIC_WEBHOOK_URL,
     'VITE_N8N_DIAGNOSTIC_WEBHOOK_URL'
   ),
+  pageSpeedApiUrl: 'https://www.googleapis.com/pagespeedonline/v5/runPagespeed',
+  pageSpeedApiKey: import.meta.env.VITE_PAGESPEED_API_KEY || '',
 } as const;
+

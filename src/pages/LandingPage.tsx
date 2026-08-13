@@ -11,6 +11,7 @@ import AIChatAgent from '../components/AIChatAgent';
 import PotentialDiagnostic from '../components/PotentialDiagnostic';
 import SocialProofSection from '../components/SocialProofSection';
 import ConsultantSection from '../components/ConsultantSection';
+import WhatsAppFab from '../components/WhatsAppFab';
 import { whatsappWithMessage } from '../constants/links';
 import { prefersReducedMotion } from '../lib/canvas-quality';
 
@@ -452,6 +453,7 @@ export default function LandingPage() {
       </motion.div>
 
       <div className="fixed inset-0 z-40 opacity-[0.03] pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
+      <WhatsAppFab />
     </div>
   );
 }
