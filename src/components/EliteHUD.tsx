@@ -12,10 +12,8 @@ const AI_HISTORY = [
   { year: '2026', text: 'SUA_EMPRESA_OTIMIZADA?' },
 ];
 
-function toneOf(index: number | null, hasNoWebsite: boolean) {
-  if (hasNoWebsite) return { text: 'text-red-600', bar: '#ef4444' };
-  if (index === null) return { text: 'text-slate-400', bar: '#cbd5e1' };
-  if (index > 60) return { text: 'text-red-600', bar: '#f87171' };
+function toneOf(index: number, hasNoWebsite: boolean) {
+  if (hasNoWebsite || index > 60) return { text: 'text-red-600', bar: '#ef4444' };
   if (index > 35) return { text: 'text-amber-600', bar: '#f59e0b' };
   return { text: 'text-emerald-600', bar: '#10b981' };
 }
@@ -30,10 +28,6 @@ export default function EliteHUD({ activeScene = 0 }: { activeScene?: number }) 
 
     const pushNextLog = () => {
       if (currentIndex >= AI_HISTORY.length) return;
-      // A entrada e capturada FORA do updater. React pode invocar o updater mais
-      // de uma vez (e o faz em StrictMode); lendo AI_HISTORY[currentIndex] la
-      // dentro, a segunda invocacao ja ve o indice incrementado e acaba
-      // empurrando undefined para a lista.
       const entry = AI_HISTORY[currentIndex];
       setLogs((prev) => [entry, ...prev].slice(0, 7));
       currentIndex++;
@@ -44,8 +38,9 @@ export default function EliteHUD({ activeScene = 0 }: { activeScene?: number }) 
     return () => clearTimeout(timeoutId);
   }, []);
 
-  const tone = toneOf(vulnerabilityIndex, hasNoWebsite);
-  const label = hasNoWebsite ? '100' : assessed && vulnerabilityIndex !== null ? String(vulnerabilityIndex) : '--';
+  const val = hasNoWebsite ? 100 : vulnerabilityIndex;
+  const tone = toneOf(val, hasNoWebsite);
+  const label = String(val);
 
   return (
     <div className="fixed inset-0 pointer-events-none z-[60] font-mono uppercase text-[9px] tracking-[0.2em] overflow-hidden">
@@ -62,8 +57,7 @@ export default function EliteHUD({ activeScene = 0 }: { activeScene?: number }) 
             VULNERAB.
           </span>
           <span className={`text-base font-serif italic font-black leading-none ${tone.text}`}>
-            {label}
-            {assessed || hasNoWebsite ? '%' : ''}
+            {label}%
           </span>
         </div>
 
@@ -77,15 +71,14 @@ export default function EliteHUD({ activeScene = 0 }: { activeScene?: number }) 
 
           <div className="flex items-end gap-1.5 h-6 w-full justify-end">
             {[55, 65, 80, 65, 50, 60, 78, 50, 75, 65].map((base, i) => {
-              const filled = vulnerabilityIndex !== null || hasNoWebsite;
-              const threshold = Math.floor(((hasNoWebsite ? 100 : vulnerabilityIndex ?? 0) / 100) * 10);
-              const isCritical = filled && i >= Math.max(2, 10 - threshold);
+              const threshold = Math.floor((val / 100) * 10);
+              const isCritical = i >= Math.max(2, 10 - threshold);
               return (
                 <motion.div
                   key={i}
                   animate={{ height: [`${base}%`, `${Math.min(100, base + 12)}%`, `${base}%`] }}
                   transition={{ duration: 2.5, repeat: Infinity, repeatType: 'reverse', delay: i * 0.1, ease: 'easeInOut' }}
-                  style={{ backgroundColor: !filled ? '#e2e8f0' : isCritical ? tone.bar : '#38bdf8' }}
+                  style={{ backgroundColor: isCritical ? tone.bar : '#cbd5e1' }}
                   className="w-1.5 rounded-full transition-colors duration-500"
                 />
               );
@@ -93,16 +86,15 @@ export default function EliteHUD({ activeScene = 0 }: { activeScene?: number }) 
           </div>
 
           <span className={`text-3xl font-serif italic font-black leading-none tracking-tight ${tone.text}`}>
-            {label}
-            {assessed || hasNoWebsite ? '%' : ''}
+            {label}%
           </span>
 
           <span className="text-[9px] font-mono text-slate-500 font-bold tracking-wider normal-case">
             {hasNoWebsite
               ? 'Invisibilidade digital'
               : assessed
-                ? 'Atualiza conforme voce responde'
-                : 'Ainda nao avaliado'}
+                ? 'Atualiza conforme você responde'
+                : 'Responda para reduzir o risco'}
           </span>
         </div>
       </div>

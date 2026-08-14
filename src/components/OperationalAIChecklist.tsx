@@ -48,13 +48,11 @@ interface OperationalAIChecklistProps {
 }
 
 export default function OperationalAIChecklist({ onWantStrategy }: OperationalAIChecklistProps) {
-  const { operationalAIChecks, toggleOperationalAICheck, vulnerabilityIndex, assessed, hasNoWebsite } =
+  const { operationalAIChecks, toggleOperationalAICheck, vulnerabilityIndex, hasNoWebsite } =
     useVulnerability();
 
   const checkedCount = operationalAIChecks.filter(Boolean).length;
-  // Enquanto nada foi respondido nao existe veredito — 100% antes da primeira
-  // pergunta e acusacao, nao diagnostico.
-  const score = assessed && vulnerabilityIndex !== null ? vulnerabilityIndex : null;
+  const score = vulnerabilityIndex;
 
   return (
     <section className="w-full max-w-5xl mx-auto px-4 py-8 md:py-16">
