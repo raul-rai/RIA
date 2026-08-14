@@ -19,7 +19,7 @@ export default function DataWave3D({ progress }: DataWave3DProps) {
     const ctx = canvas.getContext('2d');
     if (!ctx) {
       canvas.style.background =
-        'radial-gradient(120% 80% at 50% 118%, rgba(0,229,255,0.28) 0%, rgba(0,229,255,0.05) 45%, transparent 72%)';
+        'radial-gradient(120% 80% at 50% 118%, rgba(0,180,216,0.12) 0%, rgba(0,180,216,0.02) 45%, transparent 72%)';
       return;
     }
 
@@ -88,7 +88,9 @@ export default function DataWave3D({ progress }: DataWave3DProps) {
     const render = () => {
       // Smooth lerp toward target progress
       const target = progress.get();
-      currentScroll += reduced ? target - currentScroll : (target - currentScroll) * 0.04;
+      // 0.09 alcanca o scroll em ~1s. Mais lento que isso e a agua continua
+      // deslizando sobre o conteudo depois que o leitor ja chegou no capitulo.
+      currentScroll += reduced ? target - currentScroll : (target - currentScroll) * 0.09;
 
       ctx.clearRect(0, 0, width, height);
 
@@ -98,26 +100,25 @@ export default function DataWave3D({ progress }: DataWave3DProps) {
 
       const focalLength = 800;
       const cameraZ = -400 + (currentScroll * 200);
-      const cameraY = -280 + (currentScroll * 100);
+      const cameraY = -320 + (currentScroll * 120);
 
-      const tsunamiZ = 7000 - (currentScroll * 6800); // Starts at 7k instead of 3.5k
+      // Wave starts at 3600 on fold 0 so the 3D wave is ALREADY right front & center!
+      const tsunamiZ = 3600 - (currentScroll * 3400);
 
       const halfW = width / 2;
-      const halfH = height * 0.51; 
+      const halfH = height * 0.54; 
 
       // 1. Update point positions
       for (let i = 0; i < points.length; i++) {
         const p = points[i];
 
-        // Organic liquid movement (V2 math)
+        // Organic liquid movement
         const noiseX = Math.sin(p.x * 0.005 + time * 1.5);
         const noiseZ = Math.cos(p.z * 0.005 - time * 1.2);
-        let y = (noiseX + noiseZ) * 20;
+        let y = (noiseX + noiseZ) * 25;
 
-        // ─── WAVE MODELING V3 (Curved 'V' Projection) ────────────────────────
-        // The peak is no longer a straight line. We add a parabolic delay based on X.
-        // Higher X = Higher delay (Peak stays further back).
-        const curvature = (p.x * p.x) * 0.0002; // Slightly more pointed
+        // ─── WAVE MODELING V3 ────────────────────────
+        const curvature = (p.x * p.x) * 0.0002;
         const curvedTsunamiZ = tsunamiZ + curvature;
         
         const distToTsunami = p.z - curvedTsunamiZ;
@@ -130,7 +131,8 @@ export default function DataWave3D({ progress }: DataWave3DProps) {
             waveHeight = Math.sqrt(Math.cos((distToTsunami / -600) * (Math.PI / 2)));
           }
 
-          const maxAmplitude = 400 + (currentScroll * 1400); 
+          // Initial max amplitude starts at 750 for 3D volume on fold 0, grows as submerged
+          const maxAmplitude = 750 + (currentScroll * 1250); 
 
           const edgeRatio = Math.abs(p.x) / 3800;
           const edgeTaper = Math.pow(Math.max(0, 1 - edgeRatio), 1.6);
@@ -139,9 +141,9 @@ export default function DataWave3D({ progress }: DataWave3DProps) {
           y -= currentAmplitude;
 
           // Organic chaotic foam at the crest
-          if (waveHeight > 0.7) {
-            const crestNoise = (Math.sin(p.x * 0.01 + time * 4) + Math.cos(p.z * 0.01 - time * 3)) * (40 + currentScroll * 60);
-            y -= crestNoise * (waveHeight - 0.7) * 4;
+          if (waveHeight > 0.6) {
+            const crestNoise = (Math.sin(p.x * 0.01 + time * 4) + Math.cos(p.z * 0.01 - time * 3)) * (50 + currentScroll * 50);
+            y -= crestNoise * (waveHeight - 0.6) * 4;
           }
         }
 
@@ -153,7 +155,7 @@ export default function DataWave3D({ progress }: DataWave3DProps) {
         p.py = (p.y - cameraY) * scale + halfH;
       }
 
-      ctx.lineWidth = 1.2;
+      ctx.lineWidth = 1.5;
       ctx.lineJoin = 'round';
 
       // 2. Draw back to front
@@ -184,20 +186,31 @@ export default function DataWave3D({ progress }: DataWave3DProps) {
           ctx.lineTo(pBottom.px, pBottom.py);
           ctx.closePath();
 
-          // Solid deep blue/black body fill to hide background
+          const normalizedY = Math.min(1, Math.max(0, (-p.y - 40) / 650));
+
           if (fillQuads) {
-            ctx.fillStyle = `rgba(1, 4, 8, ${Math.min(1, depthAlpha * 1.5)})`;
+            // A onda e cenario, nao superficie de leitura (spec D-01). A agua fica
+            // em tons pastel e o alpha tem teto baixo, de forma que o pior caso —
+            // texto slate-600 sobre a crista mais escura — ainda passa de 5:1 em
+            // contraste. Escurecer estes numeros e reabrir o bug de legibilidade.
+            const fillR = Math.floor(196 - normalizedY * 60);
+            const fillG = Math.floor(226 - normalizedY * 40);
+            const fillB = Math.floor(235 - normalizedY * 20);
+            const fillAlpha = Math.min(0.5, depthAlpha * 0.8);
+
+            ctx.fillStyle = `rgba(${fillR}, ${fillG}, ${fillB}, ${fillAlpha})`;
             ctx.fill();
           }
 
-          // Cyan tech wireframe lines
-          const heightIntensity = Math.min(1, Math.max(0, -p.y / (400 + currentScroll * 800)));
-          const r = Math.floor(0 + heightIntensity * 100);
-          const g = Math.floor(180 + heightIntensity * 75);
-          const b = 255;
-          const alpha = depthAlpha * (0.4 + heightIntensity * 0.6);
+          // Contorno batimetrico: teal mais fechado que a agua, para a estrutura
+          // da onda continuar visivel agora que o corpo dela e claro.
+          const lineR = Math.floor(120 - normalizedY * 92);
+          const lineG = Math.floor(190 - normalizedY * 62);
+          const lineB = Math.floor(205 - normalizedY * 42);
+          const lineAlpha = depthAlpha * (0.45 + normalizedY * 0.3);
 
-          ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${alpha})`;
+          ctx.lineWidth = 1.1;
+          ctx.strokeStyle = `rgba(${lineR}, ${lineG}, ${lineB}, ${lineAlpha})`;
           ctx.stroke();
         }
       }

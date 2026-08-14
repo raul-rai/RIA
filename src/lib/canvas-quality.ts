@@ -13,6 +13,8 @@ export interface TierSpec {
 export const TIERS: Record<QualityTier, TierSpec> = {
   high: { cols: 45, rows: 55, fill: true },
   medium: { cols: 32, rows: 40, fill: true },
+  // Sem fill: no nivel baixo a onda vira desenho batimetrico em arame puro.
+  // Metade do custo por frame e, num fundo branco, continua legivel.
   low: { cols: 24, rows: 30, fill: false },
 };
 
