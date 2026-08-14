@@ -128,7 +128,7 @@ export default function VideoModal({ isOpen, onClose, videoUrl, title, bio, star
             >
               <div className="flex items-center gap-2 mb-4">
                 <Award size={16} className="text-accent" />
-                <span className="text-accent text-[10px] md:text-[11px] font-black uppercase tracking-[0.3em]">Speaker Profile</span>
+                <span className="text-accent-dark text-[10px] md:text-[11px] font-black uppercase tracking-[0.3em]">Speaker Profile</span>
               </div>
               
               <h3 className="text-2xl md:text-3xl font-serif text-white mb-2">{title}</h3>

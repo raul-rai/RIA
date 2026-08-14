@@ -1,37 +1,44 @@
 import { useState } from 'react';
 import { motion } from 'motion/react';
-import { Quote, Play, TrendingUp, Cpu, Brain } from 'lucide-react';
+import { Quote, Play, TrendingUp, Cpu, Check, ShieldAlert } from 'lucide-react';
 import VideoModal from './VideoModal';
+import { useVulnerability } from '../context/VulnerabilityContext';
 
 const influencers = [
   {
+    id: 0,
     name: "Ricardo Amorim",
     title: "Economista & Estrategista",
     quote: "A IA não é o futuro, é a sobrevivência do presente. Quem não se adaptar agora será engolido pelo mercado.",
+    checkboxLabel: "Estou ciente de que a IA não é o futuro, mas sim a sobrevivência do presente.",
     videoUrl: "https://www.youtube.com/embed/4ZRJCW9CSvE?autoplay=1",
-    thumbnail: "https://commons.wikimedia.org/wiki/Special:FilePath/Ricardo_Amorim_1.jpg",
+    thumbnail: "/autoridades/ricardo-amorim.webp",
     bio: "Economista mais influente do Brasil segundo a Forbes, apresentador do Manhattan Connection e LinkedIn Top Voice. Com mais de 20 anos no mercado financeiro global, é a voz mais respeitada sobre transformações econômicas e tecnológicas no país.",
     icon: TrendingUp,
     startTime: 0,
     endTime: 154
   },
   {
+    id: 1,
     name: "Silvio Meira",
     title: "Cientista Chefe TDS",
     quote: "A Inteligência Artificial emerge não como uma simples ferramenta, mas como uma força estratégica - uma nova dimensão da inteligência para os negócios.",
+    checkboxLabel: "Estou ciente de que a IA é uma força estratégica indispensável para os negócios.",
     videoUrl: "https://www.youtube.com/embed/tcmntVEQr2o?autoplay=1",
-    thumbnail: "https://commons.wikimedia.org/wiki/Special:FilePath/Silvio_Meira_0038.jpg",
+    thumbnail: "/autoridades/silvio-meira.webp",
     bio: "Um dos fundadores do CESAR (Centro de Estudos e Sistemas Avançados do Recife) e Cientista Chefe da TDS Company. Uma das maiores referências em engenharia de software e inovação digital do Brasil.",
     icon: Cpu,
     startTime: 1378,
     endTime: 1438
   },
   {
+    id: 2,
     name: "Flávio Augusto",
     title: "Fundador Wiser Educação",
     quote: "A Inteligência Artificial não é um hype, é a maior alavanca de eficiência do nosso tempo. O mercado recompensa a eficiência e não perdoa a inércia.",
+    checkboxLabel: "Estou ciente de que o mercado recompensa a eficiência e não perdoa a inércia.",
     videoUrl: "https://www.youtube.com/embed/a1MVf8eGlG8?autoplay=1",
-    thumbnail: "https://commons.wikimedia.org/wiki/Special:FilePath/Fl%C3%A1vio_Augusto_(cropped).jpg",
+    thumbnail: "/autoridades/flavio-augusto.webp",
     bio: "Um dos empreendedores mais bem-sucedidos do Brasil, fundador da Wiser Educação (Wise Up) e ex-dono do Orlando City. Referência absoluta em vendas, gestão e escala de negócios no país.",
     icon: TrendingUp
   }
@@ -39,63 +46,118 @@ const influencers = [
 
 export default function SocialProofSection() {
   const [selectedInfluencer, setSelectedInfluencer] = useState<typeof influencers[0] | null>(null);
+  const { awarenessChecks, toggleAwarenessCheck } = useVulnerability();
+  const vistos = awarenessChecks.filter(Boolean).length;
 
   return (
-    <div className="w-full max-w-6xl mx-auto px-4 py-2 md:py-4 pointer-events-auto flex flex-col justify-center h-full">
-      <div className="mb-4 md:mb-6 text-center">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/5 mb-2">
-          <Quote size={12} className="text-accent" />
-          <span className="text-white/60 text-[10px] md:text-xs uppercase tracking-[0.2em] font-bold">Vozes do Mercado</span>
+    <div className="w-full max-w-6xl mx-auto px-4 py-8 md:py-16 pointer-events-auto flex flex-col justify-center">
+      {/* Header */}
+      <div className="mb-6 md:mb-10 text-center">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-amber-500/20 bg-amber-500/10 mb-3">
+          <ShieldAlert size={14} className="text-amber-600" />
+          <span className="text-amber-800 text-[10px] md:text-xs uppercase tracking-[0.2em] font-black">
+            Vozes do mercado
+          </span>
         </div>
-        <h2 className="text-xl md:text-3xl lg:text-4xl font-serif text-white mb-1 leading-tight">
-          Vozes da <span className="italic font-normal text-white/50 text-glow-accent">Evolução.</span>
+        <h2 className="text-2xl md:text-4xl lg:text-5xl font-serif text-slate-900 mb-2 leading-tight">
+          Não é só a <span className="italic font-normal text-slate-500">nossa opinião.</span>
         </h2>
+        <p className="text-slate-600 text-xs md:text-sm max-w-xl mx-auto font-light leading-relaxed">
+          Três das vozes mais ouvidas do mercado brasileiro, falando sobre a mesma coisa.
+          {vistos > 0 && (
+            <span className="block mt-1 text-slate-500 font-mono text-[11px] tracking-wider">
+              {vistos} de 3 marcados
+            </span>
+          )}
+        </p>
       </div>
 
-      {/* Grid for 3 items - perfectly centered */}
+      {/* Cards Grid / Mobile Carousel */}
       <div className="flex overflow-x-auto pb-4 md:pb-0 md:grid md:grid-cols-3 gap-4 md:gap-6 no-scrollbar snap-x snap-mandatory max-w-5xl mx-auto w-full">
         {influencers.map((item, i) => {
           const Icon = item.icon;
+          const isChecked = awarenessChecks[i];
+
           return (
             <motion.div
               key={i}
-              onClick={() => setSelectedInfluencer(item)}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.1 }}
-              className="group relative flex flex-col justify-end w-[85vw] md:w-auto h-[55vh] min-h-[280px] max-h-[360px] shrink-0 snap-center rounded-2xl overflow-hidden border border-white/5 bg-white/5 cursor-pointer hover:border-accent/30 transition-all duration-500"
+              className={`group relative flex flex-col justify-between w-[85vw] sm:w-[320px] md:w-auto shrink-0 snap-center rounded-2xl overflow-hidden border bg-white shadow-md transition-all duration-500 ${
+                isChecked
+                  ? 'border-emerald-400 ring-2 ring-emerald-400/20 shadow-emerald-500/10'
+                  : 'border-slate-200 hover:border-slate-300 hover:shadow-xl'
+              }`}
             >
-              {/* Background Image with Overlay */}
-              <div className="absolute inset-0 z-0">
+              {/* Top Video Trigger Area */}
+              <div 
+                onClick={() => setSelectedInfluencer(item)}
+                className="relative h-48 md:h-52 overflow-hidden cursor-pointer bg-slate-950"
+              >
                 <img
                   src={item.thumbnail}
                   loading="lazy"
                   decoding="async"
-                  className="w-full h-full object-cover opacity-40 transition-all duration-700 group-hover:scale-105 group-hover:opacity-20"
+                  width={640}
+                  height={416}
+                  className="w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-700"
                   style={{ objectPosition: "center top" }}
                   alt={item.name}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-bg-base via-bg-base/60 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent" />
+                
+                {/* Icon Badge */}
+                <div className="absolute top-3 left-3 z-10 p-1.5 rounded-lg bg-white/20 backdrop-blur-md border border-white/30 text-white">
+                  <Icon size={14} />
+                </div>
+
+                {/* Play Button Overlay */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-11 h-11 rounded-full bg-white/90 text-slate-950 flex items-center justify-center shadow-xl group-hover:scale-110 group-hover:bg-accent group-hover:text-white transition-all">
+                    <Play size={18} fill="currentColor" className="ml-0.5" />
+                  </div>
+                </div>
+
+                <div className="absolute bottom-3 left-3 right-3 text-left">
+                  <span className="text-[10px] font-mono text-cyan-300 uppercase tracking-widest font-bold block mb-0.5">
+                    {item.title}
+                  </span>
+                  <h3 className="text-white text-sm md:text-base font-bold">{item.name}</h3>
+                </div>
               </div>
 
-              {/* Content */}
-              <div className="relative z-10 p-5 md:p-6 flex flex-col h-full justify-end">
-                <div className="mb-4">
-                  <div className="p-1.5 w-fit rounded-lg bg-accent/10 border border-accent/20 mb-3">
-                    <Icon size={14} className="text-accent" />
+              {/* Quote & Interactive Checkbox Body */}
+              <div className="p-4 md:p-5 flex flex-col justify-between flex-1 bg-white">
+                <blockquote className="text-slate-600 text-xs italic mb-4 leading-relaxed bg-slate-50 p-3 rounded-xl border border-slate-100">
+                  "{item.quote}"
+                </blockquote>
+
+                {/* Interactive Checkbox */}
+                <div
+                  onClick={() => toggleAwarenessCheck(i)}
+                  className={`p-3 rounded-xl border cursor-pointer select-none transition-all flex items-start gap-2.5 ${
+                    isChecked
+                      ? 'bg-emerald-50 border-emerald-300 text-emerald-950'
+                      : 'bg-slate-50 border-slate-200 hover:bg-slate-100 text-slate-700'
+                  }`}
+                >
+                  <div
+                    className={`w-5 h-5 rounded-md border flex items-center justify-center shrink-0 mt-0.5 transition-colors ${
+                      isChecked
+                        ? 'bg-emerald-600 border-emerald-600 text-white'
+                        : 'border-slate-300 bg-white'
+                    }`}
+                  >
+                    {isChecked && <Check size={14} strokeWidth={3} />}
                   </div>
-                  <p className="text-white/90 text-sm md:text-[15px] font-serif leading-snug italic line-clamp-4">
-                    "{item.quote}"
-                  </p>
-                </div>
-                
-                <div className="flex items-center gap-3 border-t border-white/10 pt-4 mt-auto">
-                  <div className="flex flex-col">
-                    <span className="text-white font-bold text-xs uppercase tracking-wider">{item.name}</span>
-                    <span className="text-accent/80 text-[9px] uppercase font-medium">{item.title}</span>
-                  </div>
-                  <div className="ml-auto w-8 h-8 md:w-10 md:h-10 rounded-full bg-accent text-black flex items-center justify-center shadow-[0_0_15px_rgba(0,229,255,0.4)] group-hover:scale-110 transition-transform shrink-0">
-                    <Play size={14} fill="currentColor" />
+                  <div className="flex-1 text-left">
+                    <span className="text-[11px] md:text-xs font-semibold block leading-tight">
+                      {item.checkboxLabel}
+                    </span>
+                    <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block mt-1">
+                      {isChecked ? '✓ Marcado' : 'Marcar se você concorda'}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -103,8 +165,16 @@ export default function SocialProofSection() {
           );
         })}
       </div>
-      
-      <VideoModal 
+
+      {/* Declaracoes publicas sobre IA em geral — nao endosso a RIA. Dizer isso
+          protege a marca e nao custa nada em conversao. */}
+      <p className="text-[10px] md:text-[11px] text-slate-500 text-center mt-5 max-w-2xl mx-auto leading-relaxed bg-white/80 rounded-lg px-3 py-2">
+        Declarações públicas sobre inteligência artificial no mercado brasileiro. Não constituem
+        endosso, parceria ou recomendação da RIA.
+      </p>
+
+      {/* Video Modal Player */}
+      <VideoModal
         isOpen={!!selectedInfluencer} 
         onClose={() => setSelectedInfluencer(null)} 
         videoUrl={selectedInfluencer?.videoUrl || ''} 
@@ -113,10 +183,6 @@ export default function SocialProofSection() {
         startTime={selectedInfluencer?.startTime}
         endTime={selectedInfluencer?.endTime}
       />
-
-      <div className="mt-4 md:mt-8 text-center text-white/40 text-[10px] md:text-xs uppercase tracking-[0.2em] font-black px-4">
-        CONSCIÊNCIA COLETIVA • OBSOLESCÊNCIA: <span className="text-red-500/80">CRÍTICO</span>
-      </div>
     </div>
   );
 }

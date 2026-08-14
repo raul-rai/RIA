@@ -1,8 +1,14 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { WHATSAPP_URL_FAB } from '../constants/links';
+import { track } from '../lib/analytics';
 
-export default function WhatsAppFab() {
+interface WhatsAppFabProps {
+  /** Capitulo em que o FAB se recolhe — o do CTA, onde ele seria redundante. */
+  hideOnChapter: number;
+}
+
+export default function WhatsAppFab({ hideOnChapter }: WhatsAppFabProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [isCtaVisible, setIsCtaVisible] = useState(false);
 
@@ -20,7 +26,7 @@ export default function WhatsAppFab() {
   }, []);
 
   useEffect(() => {
-    const targetElement = document.getElementById('capitulo-6');
+    const targetElement = document.getElementById(`capitulo-${hideOnChapter}`);
     if (!targetElement) return;
 
     const observer = new IntersectionObserver(
@@ -32,7 +38,7 @@ export default function WhatsAppFab() {
 
     observer.observe(targetElement);
     return () => observer.disconnect();
-  }, []);
+  }, [hideOnChapter]);
 
   const shouldShow = isVisible && !isCtaVisible;
 
@@ -44,6 +50,7 @@ export default function WhatsAppFab() {
           target="_blank"
           rel="noopener noreferrer"
           aria-label="Conversar pelo WhatsApp"
+          onClick={() => track('whatsapp_click', { location: 'fab' })}
           initial={{ opacity: 0, scale: 0.5, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.5, y: 20 }}
