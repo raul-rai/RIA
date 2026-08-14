@@ -5,13 +5,13 @@
   --font-serif: "Playfair Display", serif;
   --font-display: "Playfair Display", serif;
   
-  --color-bg-base: #010408;
-  --color-bg-alt: #00080f;
+  --color-bg-base: #ffffff;
+  --color-bg-alt: #f8fafc;
   
-  --color-primary: #ffffff;
-  --color-accent: #00E5FF;
-  --color-accent-dark: #00838F;
-  --color-muted: #a1a1aa;
+  --color-primary: #0f172a;
+  --color-accent: #00838F;
+  --color-accent-dark: #005662;
+  --color-muted: #64748b;
   
   --radius-xl: 1.5rem;
   --radius-2xl: 2rem;
@@ -32,21 +32,21 @@
 
   body {
     overscroll-behavior-y: contain;
-    @apply bg-bg-base text-white antialiased overflow-x-hidden selection:bg-accent/30 selection:text-white font-sans;
+    @apply bg-white text-slate-900 antialiased overflow-x-hidden selection:bg-accent/20 selection:text-slate-900 font-sans;
   }
   
   h1, h2, h3, h4, h5, h6 {
-    @apply font-serif tracking-tight leading-[1.2] md:leading-tight;
+    @apply font-serif tracking-tight leading-[1.2] md:leading-tight text-slate-900;
   }
 }
 
 @layer utilities {
   .premium-glass {
     @apply relative overflow-hidden;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.85);
+    border: 1px solid rgba(0, 0, 0, 0.08);
     backdrop-filter: blur(16px);
-    box-shadow: 0 4px 24px -1px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.05);
     transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
   }
   
@@ -54,15 +54,16 @@
     content: "";
     position: absolute;
     inset: 0;
-    background: linear-gradient(135deg, rgba(0, 229, 255, 0.05), transparent 60%);
+    background: linear-gradient(135deg, rgba(0, 180, 216, 0.08), transparent 60%);
     opacity: 0;
     transition: opacity 0.5s ease;
   }
 
   .premium-glass:hover {
-    @apply border-white/20;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+    @apply border-accent/40;
+    background: rgba(255, 255, 255, 0.95);
     transform: translateY(-4px);
+    box-shadow: 0 15px 35px -5px rgba(0, 180, 216, 0.15);
   }
 
   .premium-glass:hover::before {
@@ -70,7 +71,7 @@
   }
   
   .text-glow-accent {
-    text-shadow: 0 0 30px rgba(0, 229, 255, 0.3);
+    text-shadow: 0 0 30px rgba(0, 180, 216, 0.3);
   }
 
   .vignette-overlay {

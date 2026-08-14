@@ -21,16 +21,14 @@ export default function OndaPage() {
   }, [progress]);
 
   return (
-    <div className="bg-[#000408] min-h-screen overflow-hidden">
-      <div className="fixed inset-0 z-30 opacity-[0.04] pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
-
+    <div className="bg-white min-h-screen overflow-hidden">
       <div className="fixed top-6 left-6 z-30 pointer-events-none">
-        <span className="text-white/40 text-[10px] tracking-[0.4em] uppercase font-bold">RIA • Isolated Wave</span>
+        <span className="text-slate-500 text-[10px] tracking-[0.4em] uppercase font-bold">RIA • Isolated Wave</span>
       </div>
 
       <DataWave3D progress={progress} />
 
-      <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-30 text-white/20 text-[10px] uppercase tracking-widest font-medium pointer-events-none">
+      <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-30 text-slate-400 text-[10px] uppercase tracking-widest font-medium pointer-events-none">
         Visão Pura da Alavancagem Digital
       </div>
     </div>
