@@ -5,11 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>RIA — Revolução da Inteligência Artificial</title>
     
-    <!-- Critical Preloads -->
-    <link rel="preload" href="/rio-real.webp" as="image" fetchpriority="high" />
-    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" as="style" />
-
-    <!-- Fonts -->
+    <!-- Fontes. Nao ha mais preload de imagem: /rio-real.webp era pre-carregado
+         com fetchpriority=high e nunca usado (o componente que o consumiria
+         devolvia null), disputando banda com o LCP real. -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
@@ -103,7 +101,7 @@
           "name": "Quanto custa implementar IA em uma empresa?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "O custo varia conforme a complexidade. Muitas soluções de IA para pequenas e médias empresas podem ser implementadas por R$500 a R$5.000/mês. A RIA oferece diagnóstico gratuito para estimar o investimento real para o seu caso."
+            "text": "O custo varia conforme a complexidade. Implementações para pequenas e médias empresas costumam ficar entre R$500 e R$5.000/mês, conforme o escopo. A sessão estratégica de 30 minutos é gratuita e o valor do seu caso sai na proposta, depois do diagnóstico. Sem contrato de fidelidade: se o primeiro processo automatizado não entregar o resultado acordado no prazo acordado, a etapa não é cobrada."
           }
         },
         {
