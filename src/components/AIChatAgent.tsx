@@ -1,24 +1,66 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Send, User, Bot, Loader2, Sparkles, TrendingUp, ArrowRight } from 'lucide-react';
+import { Send, User, Bot, Sparkles, TrendingUp, ArrowRight, MessageCircle } from 'lucide-react';
 import { config } from '../config';
+import { useVulnerability } from '../context/VulnerabilityContext';
+import { whatsappWithMessage } from '../constants/links';
+import { track } from '../lib/analytics';
+
+interface RoiData {
+  roi: number;
+  name?: string;
+  revenue?: number;
+  efficiency?: number;
+}
 
 interface Message {
   role: 'user' | 'assistant';
   content: string;
-  data?: any; // For ROI or other structured data
+  /** Cartao de ROI — so preenchido quando o payload do n8n tem forma valida. */
+  data?: RoiData;
+  /** Quando o agente nao pode responder, o lead ainda precisa de um destino. */
+  handoff?: boolean;
 }
 
 interface AIChatAgentProps {
   webhookUrl?: string;
-  onComplete: (data: any) => void;
+  onComplete: (data: RoiData) => void;
+}
+
+const SUGGESTIONS = [
+  'Onde a IA me daria mais retorno hoje?',
+  'Quanto custa comecar?',
+  'Quero falar sobre o meu diagnostico',
+];
+
+/**
+ * O n8n pode devolver qualquer coisa. Um payload sem `roi` numerico nao pode
+ * chegar ao render — `toLocaleString()` num undefined derruba a tela inteira.
+ */
+function parseRoiData(raw: unknown): RoiData | undefined {
+  if (!raw || typeof raw !== 'object') return undefined;
+  const candidate = raw as Record<string, unknown>;
+  const roi = Number(candidate.roi);
+  if (!Number.isFinite(roi)) return undefined;
+  return {
+    roi,
+    name: typeof candidate.name === 'string' ? candidate.name : undefined,
+    revenue: Number.isFinite(Number(candidate.revenue)) ? Number(candidate.revenue) : undefined,
+    efficiency: Number.isFinite(Number(candidate.efficiency)) ? Number(candidate.efficiency) : undefined,
+  };
 }
 
 export default function AIChatAgent({ webhookUrl = config.chatWebhook, onComplete }: AIChatAgentProps) {
+  const { vulnerabilityIndex, hasNoWebsite, operationalAIChecks, websiteScore } = useVulnerability();
+
   const [messages, setMessages] = useState<Message[]>([
-    { role: 'assistant', content: "Olá. Sou o Agente de Inteligência da RIA. Como posso te ajudar hoje?" }
+    {
+      role: 'assistant',
+      content:
+        'Ola. Sou o Agente de Inteligencia da RIA. Me conte em uma frase o que sua empresa faz e onde o tempo da equipe esta indo — eu volto com onde a IA paga mais rapido.',
+    },
   ]);
-  const [input, setInput] = useState("");
+  const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -28,110 +70,150 @@ export default function AIChatAgent({ webhookUrl = config.chatWebhook, onComplet
     }
   }, [messages, isTyping]);
 
-  const [sessionId] = useState(() => typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(7));
+  const [sessionId] = useState(() =>
+    typeof crypto !== 'undefined' && crypto.randomUUID
+      ? crypto.randomUUID()
+      : Math.random().toString(36).substring(7)
+  );
 
-  const handleSend = async () => {
-    if (!input.trim() || isTyping) return;
+  /** Mensagem de WhatsApp que carrega tudo que o visitante ja respondeu. */
+  const handoffUrl = useMemo(() => {
+    const marcados = operationalAIChecks.filter(Boolean).length;
+    const linhas = [
+      'Ola Raul, tentei falar com o agente no site e quero continuar por aqui.',
+      '',
+      vulnerabilityIndex === null
+        ? 'Indice de Vulnerabilidade: nao avaliado'
+        : `Indice de Vulnerabilidade: ${vulnerabilityIndex}%`,
+      hasNoWebsite
+        ? 'Site: ainda nao tenho'
+        : websiteScore !== null
+          ? `Site auditado: ${websiteScore}/100`
+          : 'Site: nao auditado',
+      `Pilares de IA em uso: ${marcados} de 5`,
+    ];
+    return whatsappWithMessage(linhas.join('\n'));
+  }, [vulnerabilityIndex, hasNoWebsite, websiteScore, operationalAIChecks]);
 
-    const currentInput = input;
-    const userMsg: Message = { role: 'user', content: currentInput };
-    setMessages(prev => [...prev, userMsg]);
-    setInput("");
+  const send = async (text: string) => {
+    const currentInput = text.trim();
+    if (!currentInput || isTyping) return;
+
+    setMessages((prev) => [...prev, { role: 'user', content: currentInput }]);
+    setInput('');
     setIsTyping(true);
+    track('agent_message_sent', { vulnerability_index: vulnerabilityIndex });
 
-    // Adicionando um AbortController para evitar que o chat fique carregando infinitamente
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 segundos de limite
+    const timeoutId = setTimeout(() => controller.abort(), 60000);
+    const startedAt = performance.now();
 
     try {
-      if (!webhookUrl) {
-        throw new Error('Agente indisponivel no momento.');
-      }
+      if (!webhookUrl) throw new Error('missing-webhook');
 
       const response = await fetch(webhookUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Accept': 'application/json, text/plain, */*'
+          Accept: 'application/json, text/plain, */*',
         },
         body: JSON.stringify({
           sessionId,
           action: 'sendMessage',
           chatInput: currentInput,
+          context: {
+            vulnerabilityIndex,
+            hasNoWebsite,
+            websiteScore,
+            operationalPillars: operationalAIChecks.filter(Boolean).length,
+          },
         }),
-        signal: controller.signal
+        signal: controller.signal,
       });
 
       clearTimeout(timeoutId);
-
-      if (!response.ok) {
-        throw new Error(`Erro na requisição ao n8n: Status ${response.status}`);
-      }
+      if (!response.ok) throw new Error(`status-${response.status}`);
 
       const textResponse = await response.text();
 
-      let responseData;
+      let responseData: unknown;
       try {
         responseData = JSON.parse(textResponse);
-      } catch (e) {
+      } catch {
         responseData = textResponse;
       }
 
-      let botMessage = "A resposta chegou vazia ou em um formato não reconhecido.";
-      let data = undefined;
+      let botMessage = '';
+      let data: RoiData | undefined;
 
-      if (typeof responseData === 'object' && responseData !== null) {
-        // Se for um array de objetos (n8n as vezes retorna um array de itens)
-        if (Array.isArray(responseData)) {
-          const firstItem = responseData[0];
-          if (firstItem && typeof firstItem === 'object') {
-             botMessage = firstItem.output || firstItem.response || firstItem.message || firstItem.text || JSON.stringify(firstItem);
-          } else {
-             botMessage = JSON.stringify(responseData);
-          }
-        } else {
-          // Objeto normal
-          botMessage = responseData.output || responseData.response || responseData.message || responseData.text || JSON.stringify(responseData);
-          if (responseData.data) {
-            data = responseData.data;
-          }
+      if (Array.isArray(responseData)) {
+        const first = responseData[0];
+        if (first && typeof first === 'object') {
+          const f = first as Record<string, unknown>;
+          botMessage = String(f.output ?? f.response ?? f.message ?? f.text ?? '');
+          data = parseRoiData(f.data);
         }
-      } else if (typeof responseData === 'string' && responseData.trim() !== "") {
+      } else if (responseData && typeof responseData === 'object') {
+        const o = responseData as Record<string, unknown>;
+        botMessage = String(o.output ?? o.response ?? o.message ?? o.text ?? '');
+        data = parseRoiData(o.data);
+      } else if (typeof responseData === 'string') {
         botMessage = responseData;
       }
 
-      setMessages(prev => [...prev, { role: 'assistant', content: botMessage, data }]);
-    } catch (error: any) {
+      botMessage = botMessage.trim();
+
+      // Resposta vazia ou ilegivel conta como falha, nao como fala do agente.
+      if (!botMessage) throw new Error('empty-response');
+
+      track('agent_replied', { latency_ms: Math.round(performance.now() - startedAt) });
+      setMessages((prev) => [...prev, { role: 'assistant', content: botMessage, data }]);
+    } catch (error: unknown) {
       clearTimeout(timeoutId);
-      console.error("Erro detalhado no chat:", error);
-      
-      let errorMsg = "Erro na conexão com o núcleo neural. Por favor, tente novamente.";
-      if (error.name === 'AbortError') {
-        errorMsg = "Tempo limite esgotado. O agente demorou muito para responder.";
-      }
-      
-      setMessages(prev => [...prev, { role: 'assistant', content: errorMsg }]);
+      const reason = error instanceof Error ? error.message : 'unknown';
+      track('agent_failed', { reason });
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: 'assistant',
+          content:
+            reason === 'AbortError' || (error as Error)?.name === 'AbortError'
+              ? 'A analise esta demorando mais que o normal e prefiro nao te deixar esperando. Me chame no WhatsApp que eu respondo pessoalmente — levo tudo que voce ja respondeu aqui.'
+              : 'Nao consegui completar a conexao agora. Isso e problema meu, nao seu. Me chame no WhatsApp que eu respondo pessoalmente — levo tudo que voce ja respondeu aqui.',
+          handoff: true,
+        },
+      ]);
     } finally {
       setIsTyping(false);
     }
   };
 
+  const showSuggestions = messages.length === 1 && !isTyping;
+
   return (
-    <div className="w-full max-w-2xl mx-auto flex flex-col h-full premium-glass rounded-3xl border border-white/10 overflow-hidden shadow-2xl text-left">
-      {/* Chat Header */}
-      <div className="px-6 py-4 border-b border-white/5 bg-white/5 flex items-center justify-between">
+    <div className="w-full h-full flex flex-col premium-glass rounded-3xl border border-slate-200 overflow-hidden shadow-xl bg-white/95 text-left">
+      {/* Cabecalho */}
+      <div className="p-4 md:p-6 border-b border-slate-200 flex items-center justify-between bg-slate-50/80">
         <div className="flex items-center gap-3">
-          <div className="w-2 h-2 bg-accent rounded-full animate-pulse" />
-          <span className="text-white/80 font-mono text-xs uppercase tracking-widest">RIA_AGENT_CONNECTED</span>
+          <div className="p-2.5 bg-accent/10 border border-accent/20 rounded-xl">
+            <Bot size={18} className="text-accent" />
+          </div>
+          <div>
+            <h3 className="text-sm font-bold uppercase tracking-wider text-slate-900 leading-none mb-1">
+              Agente de IA RIA
+            </h3>
+            <p className="text-[10px] text-slate-500 font-medium">Diagnostico de Inteligencia Empresarial</p>
+          </div>
         </div>
-        <Sparkles size={14} className="text-accent/40" />
+        <div className="flex items-center gap-2 px-3 py-1 bg-accent/10 border border-accent/20 rounded-full">
+          <Sparkles size={12} className="text-accent animate-pulse" />
+          <span className="text-[9px] font-bold uppercase tracking-widest text-accent-dark">Ativo</span>
+        </div>
       </div>
 
-      {/* Chat Messages */}
-      <div 
-        ref={scrollRef}
-        className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-hide"
-      >
+      {/* Mensagens */}
+      <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 md:p-6 space-y-5 scrollbar-hide bg-white/50">
         <AnimatePresence initial={false}>
           {messages.map((msg, i) => (
             <motion.div
@@ -140,74 +222,136 @@ export default function AIChatAgent({ webhookUrl = config.chatWebhook, onComplet
               animate={{ opacity: 1, y: 0 }}
               className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
             >
-              <div className={`flex gap-3 max-w-[85%] ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 border ${
-                  msg.role === 'user' ? 'bg-white/10 border-white/20' : 'bg-accent/10 border-accent/30'
-                }`}>
-                  {msg.role === 'user' ? <User size={14} className="text-white/60" /> : <Bot size={14} className="text-accent" />}
+              <div className={`flex gap-3 max-w-[88%] ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
+                <div
+                  className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 border ${
+                    msg.role === 'user'
+                      ? 'bg-slate-800 border-slate-700 text-white'
+                      : 'bg-accent/10 border-accent/30 text-accent'
+                  }`}
+                >
+                  {msg.role === 'user' ? <User size={14} /> : <Bot size={14} />}
                 </div>
-                <div className={`p-4 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap ${
-                  msg.role === 'user' ? 'bg-white/5 text-white/80' : 'bg-accent/5 text-accent/90 border border-accent/10'
-                }`}>
+                <div
+                  className={`p-4 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap ${
+                    msg.role === 'user'
+                      ? 'bg-slate-900 text-white shadow-sm'
+                      : 'bg-slate-50 text-slate-800 border border-slate-200 shadow-sm'
+                  }`}
+                >
                   {msg.content}
-                  
+
                   {msg.data && (
-                    <motion.div 
-                      initial={{ opacity: 0, scale: 0.9 }}
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.96 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      className="mt-4 p-4 bg-black/40 rounded-xl border border-accent/20"
+                      className="mt-4 p-4 bg-white rounded-xl border border-accent/30 shadow-md"
                     >
                       <div className="flex items-center gap-2 mb-2">
                         <TrendingUp size={14} className="text-accent" />
-                        <span className="text-xs uppercase font-bold tracking-widest text-white/60">ROI Detetado</span>
+                        <span className="text-xs uppercase font-bold tracking-widest text-slate-600">
+                          ROI Detectado
+                        </span>
                       </div>
-                      <div className="text-2xl font-serif text-white mb-2">R$ {msg.data.roi.toLocaleString()} /ano</div>
-                      <button 
-                        onClick={() => onComplete(msg.data)}
-                        className="w-full py-3 bg-accent text-black text-xs md:text-sm font-bold uppercase tracking-widest rounded-lg flex items-center justify-center gap-2"
+                      <div className="text-2xl font-serif text-slate-900 mb-2">
+                        R$ {msg.data.roi.toLocaleString('pt-BR')} /ano
+                      </div>
+                      <button
+                        onClick={() => {
+                          track('cta_click', { location: 'agent_roi_card' });
+                          onComplete(msg.data!);
+                        }}
+                        className="w-full py-3 bg-slate-900 hover:bg-accent text-white text-xs md:text-sm font-bold uppercase tracking-widest rounded-lg flex items-center justify-center gap-2 shadow-md transition-colors"
                       >
-                        Ver Detalhes <ArrowRight size={12} />
+                        Ver detalhes <ArrowRight size={12} />
                       </button>
                     </motion.div>
+                  )}
+
+                  {msg.handoff && (
+                    <a
+                      href={handoffUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => track('whatsapp_click', { location: 'agent_handoff' })}
+                      className="mt-4 w-full py-3 px-4 bg-slate-900 hover:bg-accent text-white text-xs font-bold uppercase tracking-widest rounded-lg flex items-center justify-center gap-2 shadow-md transition-colors"
+                    >
+                      <MessageCircle size={14} />
+                      Falar com o Raul no WhatsApp
+                    </a>
                   )}
                 </div>
               </div>
             </motion.div>
           ))}
+
           {isTyping && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex gap-3">
               <div className="w-8 h-8 rounded-full bg-accent/10 border border-accent/30 flex items-center justify-center">
                 <Bot size={14} className="text-accent" />
               </div>
-              <div className="p-4 rounded-2xl bg-accent/5 flex items-center gap-1">
-                <div className="w-1.5 h-1.5 bg-accent/40 rounded-full animate-bounce [animation-delay:-0.3s]" />
-                <div className="w-1.5 h-1.5 bg-accent/40 rounded-full animate-bounce [animation-delay:-0.15s]" />
-                <div className="w-1.5 h-1.5 bg-accent/40 rounded-full animate-bounce" />
+              <div className="p-4 rounded-2xl bg-slate-100 border border-slate-200 flex items-center gap-1">
+                <div className="w-1.5 h-1.5 bg-accent rounded-full animate-bounce [animation-delay:-0.3s]" />
+                <div className="w-1.5 h-1.5 bg-accent rounded-full animate-bounce [animation-delay:-0.15s]" />
+                <div className="w-1.5 h-1.5 bg-accent rounded-full animate-bounce" />
               </div>
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Sugestoes de primeira mensagem — o vazio de 350px sai daqui */}
+        {showSuggestions && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="flex flex-wrap gap-2 pl-11"
+          >
+            {SUGGESTIONS.map((s) => (
+              <button
+                key={s}
+                onClick={() => send(s)}
+                className="px-3.5 py-2 rounded-full border border-slate-300 bg-white text-slate-700 text-xs font-semibold hover:border-accent hover:text-accent hover:bg-accent/5 transition-colors"
+              >
+                {s}
+              </button>
+            ))}
+          </motion.div>
+        )}
       </div>
 
-      {/* Chat Input */}
-      <div className="p-4 bg-white/5 border-t border-white/5">
+      {/* Entrada */}
+      <div className="p-4 bg-slate-50 border-t border-slate-200">
         <div className="relative flex items-center">
-          <input 
+          <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+            onKeyDown={(e) => e.key === 'Enter' && send(input)}
+            aria-label="Mensagem para o agente de IA"
             placeholder="Digite sua resposta..."
-            className="w-full bg-white/5 border border-white/10 rounded-xl py-4 pl-4 pr-12 text-base md:text-sm text-white focus:outline-none focus:border-accent/40 transition-all placeholder:text-white/40"
+            className="w-full bg-white border border-slate-300 rounded-xl py-4 pl-4 pr-12 text-base md:text-sm text-slate-900 focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-all placeholder:text-slate-400 shadow-sm"
           />
-          <button 
-            onClick={handleSend}
+          <button
+            onClick={() => send(input)}
             disabled={!input.trim() || isTyping}
-            className="absolute right-3 p-2 bg-accent text-black rounded-lg hover:scale-110 active:scale-95 disabled:opacity-50 disabled:scale-100 transition-all"
+            aria-label="Enviar mensagem"
+            className="absolute right-3 p-2 bg-slate-900 text-white rounded-lg hover:bg-accent hover:scale-110 active:scale-95 disabled:opacity-50 disabled:scale-100 transition-all shadow-md"
           >
             <Send size={16} />
           </button>
         </div>
-        <p className="mt-3 text-center text-[10px] md:text-xs text-white/40 uppercase tracking-[0.2em]">Agente de Inteligência Conectado via n8n Protocol</p>
+        <p className="mt-3 text-center text-[10px] md:text-xs text-slate-500">
+          Prefere falar direto?{' '}
+          <a
+            href={handoffUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => track('whatsapp_click', { location: 'agent_footer' })}
+            className="text-accent font-semibold underline underline-offset-2 hover:text-accent-dark"
+          >
+            Chame o Raul no WhatsApp
+          </a>
+        </p>
       </div>
     </div>
   );
