@@ -1172,7 +1172,6 @@ export default function QualificationFlow({
     const updated = { ...answers, [step.field]: value.trim() };
     setAnswers(updated);
     setError(null);
-    setDraft('');
     track('qualification_step', { field: step.field, index });
 
     if (isLast) {
@@ -1180,6 +1179,10 @@ export default function QualificationFlow({
       onComplete(updated as Qualification);
       return;
     }
+    // Le do objeto atualizado, nao do estado velho de answers, porque o
+    // proximo passo pode ja ter sido respondido antes (voltar e avancar de novo).
+    const next = QUALIFICATION_STEPS[index + 1];
+    setDraft(updated[next.field] ?? '');
     setIndex(index + 1);
   };
 
@@ -1216,16 +1219,24 @@ export default function QualificationFlow({
 
       {step.options ? (
         <div className="flex flex-col gap-2">
-          {step.options.map((option) => (
-            <button
-              key={option.value}
-              type="button"
-              onClick={() => commit(option.value)}
-              className="text-left px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 hover:border-accent hover:bg-accent/5 active:scale-[0.99] transition-all text-xs font-semibold text-slate-800"
-            >
-              {option.label}
-            </button>
-          ))}
+          {step.options.map((option) => {
+            const isSelected = answers[step.field] === option.value;
+            return (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => commit(option.value)}
+                aria-pressed={isSelected}
+                className={`text-left px-3.5 py-2.5 rounded-xl border active:scale-[0.99] transition-all text-xs font-semibold ${
+                  isSelected
+                    ? 'bg-emerald-50/90 border-emerald-300 text-emerald-950'
+                    : 'border-slate-200 bg-slate-50 text-slate-800 hover:border-accent hover:bg-accent/5'
+                }`}
+              >
+                {option.label}
+              </button>
+            );
+          })}
         </div>
       ) : (
         <form
