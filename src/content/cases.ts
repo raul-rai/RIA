@@ -10,6 +10,8 @@
 //
 // PENDENTE — confirmar autorizacao de cada cliente para uso do nome.
 
+import type { FrontId } from './fronts';
+
 export type CaseKind =
   /** Resultado de negocio medido no sistema do cliente. */
   | 'resultado'
@@ -18,6 +20,11 @@ export type CaseKind =
 
 export interface CaseStudy {
   kind: CaseKind;
+  /**
+   * Qual das cinco frentes este caso prova. E o que costura a dobra 4 com a
+   * dobra 3: o visitante acabou de ver o catalogo e aqui ve cada item provado.
+   */
+  front: FrontId;
   /** Nome do cliente + contexto curto. */
   segment: string;
   /** A afirmacao principal do cartao. */
@@ -38,6 +45,7 @@ export interface CaseStudy {
 export const CASES: CaseStudy[] = [
   {
     kind: 'resultado',
+    front: 1,
     segment: 'Nexa Interiores',
     headline: 'Da inauguração a R$ 200 mil/mês',
     before: 'Operação recém-inaugurada, sem presença digital e sem canal de atendimento estruturado.',
@@ -48,6 +56,7 @@ export const CASES: CaseStudy[] = [
   },
   {
     kind: 'resultado',
+    front: 2,
     segment: 'Libra Crédito',
     headline: 'Recorde de qualificação no primeiro mês',
     before: 'Qualificação de leads dependente de abordagem manual pelo time comercial.',
@@ -58,6 +67,7 @@ export const CASES: CaseStudy[] = [
   },
   {
     kind: 'entrega',
+    front: 4,
     segment: 'DecorColorir',
     headline: 'Do protótipo ao produto final',
     before: 'Ideia de produto sem validação técnica nem caminho de implementação.',
