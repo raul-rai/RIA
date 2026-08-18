@@ -17,7 +17,7 @@ import { whatsappWithMessage } from '../constants/links';
 import { prefersReducedMotion } from '../lib/canvas-quality';
 import { track } from '../lib/analytics';
 import { VulnerabilityProvider } from '../context/VulnerabilityContext';
-import OperationalAIChecklist from '../components/OperationalAIChecklist';
+import FiveFronts from '../components/FiveFronts';
 
 /** Capitulo que concentra a oferta e o agente. Todo CTA aponta para ca. */
 const CTA_CHAPTER = 6;
@@ -267,7 +267,7 @@ export default function LandingPage() {
     <SocialProofSection />,
     <PotentialDiagnostic onWantStrategy={goToCta} onNoWebsite={goToCta} />,
     <ProofSection onWantStrategy={goToCta} />,
-    <OperationalAIChecklist onWantStrategy={goToCta} />,
+    <FiveFronts onWantStrategy={goToCta} />,
     <ConsultantSection onStrategyClick={goToCta} />,
     <SceneCTA onFinalContact={handleFinalContact} />,
   ], [goToCta, goToMarketVoices, handleFinalContact]);

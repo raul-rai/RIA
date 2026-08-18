@@ -9,6 +9,7 @@ export type RiaEvent =
   | 'cta_click'
   | 'awareness_check'
   | 'operational_check'
+  | 'front_toggle'
   | 'diagnostic_started'
   | 'diagnostic_completed'
   | 'diagnostic_failed'
