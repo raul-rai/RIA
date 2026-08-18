@@ -194,23 +194,23 @@ export default function DataWave3D({ progress }: DataWave3DProps) {
           const normalizedY = Math.min(1, Math.max(0, (-p.y - 40) / 650));
 
           if (fillQuads) {
-            // Onda opaca em tons de azul (azul cobalto no vale ate azul real eletrico na crista)
-            const fillR = Math.floor(10 + normalizedY * 30);
-            const fillG = Math.floor(60 + normalizedY * 85);
-            const fillB = Math.floor(180 + normalizedY * 70);
-            const fillAlpha = Math.min(1.0, depthAlpha);
+            // Onda 3D em tom Azul Oceano com gradiente azul cobalto -> azul real
+            const fillR = Math.floor(12 + normalizedY * 30);
+            const fillG = Math.floor(74 + normalizedY * 80);
+            const fillB = Math.floor(110 + normalizedY * 110);
+            const fillAlpha = Math.min(0.85, depthAlpha);
 
             ctx.fillStyle = `rgba(${fillR}, ${fillG}, ${fillB}, ${fillAlpha})`;
             ctx.fill();
           }
 
-          // Linhas de grade em azul eletrico / ciano brilhante
-          const lineR = Math.floor(40 + normalizedY * 50);
-          const lineG = Math.floor(140 + normalizedY * 85);
-          const lineB = Math.floor(220 + normalizedY * 35);
-          const lineAlpha = Math.min(1.0, depthAlpha);
+          // Linhas da malha em Ciano / Azul Elétrico brilhante
+          const lineR = Math.floor(56 + normalizedY * 40);
+          const lineG = Math.floor(189 + normalizedY * 40);
+          const lineB = Math.floor(248);
+          const lineAlpha = Math.min(0.95, depthAlpha);
 
-          ctx.lineWidth = 1.1;
+          ctx.lineWidth = 1.2;
           ctx.strokeStyle = `rgba(${lineR}, ${lineG}, ${lineB}, ${lineAlpha})`;
           ctx.stroke();
         }
