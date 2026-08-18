@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { motion } from 'motion/react';
 import {
   Globe, Search, Zap, Cpu, ArrowRight, Activity, AlertTriangle,
@@ -155,9 +155,16 @@ function generateHeuristicDiagnostic(domain: string): DiagnosticResult {
 
 interface PotentialDiagnosticProps {
   onWantStrategy?: () => void;
+  /** Declarar que nao tem site encerra o diagnostico: nao ha o que auditar,
+   *  e o unico proximo passo util e o agente. A pagina leva o visitante ate la. */
+  onNoWebsite?: () => void;
 }
 
-export default function PotentialDiagnostic({ onWantStrategy }: PotentialDiagnosticProps) {
+/** Respiro entre o clique e a rolagem. Sem ele o visitante e teletransportado
+ *  antes de ver o indice virar 101% — que e justamente o argumento. */
+const NO_WEBSITE_SCROLL_DELAY_MS = 900;
+
+export default function PotentialDiagnostic({ onWantStrategy, onNoWebsite }: PotentialDiagnosticProps) {
   const {
     hasNoWebsite, setNoWebsite, setWebsiteAuditScore,
     socialChecks, toggleSocialCheck,
@@ -171,11 +178,11 @@ export default function PotentialDiagnostic({ onWantStrategy }: PotentialDiagnos
 
   const manualAuditUrl = whatsappWithMessage(
     [
-      'Ola Raul, tentei rodar a varredura no site e ela nao completou.',
+      'Olá Raul, tentei rodar a varredura no site e ela não completou.',
       '',
-      `Dominio: ${url || '(nao informado)'}`,
+      `Domínio: ${url || '(não informado)'}`,
       '',
-      'Pode fazer a analise manualmente?',
+      'Pode fazer a análise manualmente?',
     ].join('\n')
   );
 
@@ -183,6 +190,19 @@ export default function PotentialDiagnostic({ onWantStrategy }: PotentialDiagnos
     setResult(null);
     setFailure(null);
     setProgress(0);
+  };
+
+  /** Guardado para nao rolar a pagina depois que o componente saiu de cena. */
+  const scrollTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => { if (scrollTimer.current) clearTimeout(scrollTimer.current); }, []);
+
+  const declareNoWebsite = () => {
+    setNoWebsite(true);
+    reset();
+    setUrl('');
+    track('diagnostic_no_website');
+    if (scrollTimer.current) clearTimeout(scrollTimer.current);
+    scrollTimer.current = setTimeout(() => onNoWebsite?.(), NO_WEBSITE_SCROLL_DELAY_MS);
   };
 
   const handleAnalyze = async () => {
@@ -336,43 +356,48 @@ export default function PotentialDiagnostic({ onWantStrategy }: PotentialDiagnos
         <div className="text-center mb-6 md:mb-10">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 border border-accent/20 mb-3">
             <Search size={12} className="text-accent" />
-            <span className="text-accent-dark text-[10px] md:text-xs font-black uppercase tracking-[0.2em]">
-              Diagnostico de Presenca Digital
+            <span className="text-accent-dark text-[10px] md:text-xs font-black uppercase tracking-[0.14em] md:tracking-[0.2em]">
+              Diagnóstico de Presença Digital
             </span>
           </div>
-          <h2 className="text-xl md:text-5xl font-serif text-slate-900 mb-2">
-            Seu site sobrevive a <span className="italic font-normal text-slate-500">era dos motores de IA?</span>
+          <h2 className="text-2xl md:text-5xl font-serif text-slate-900 mb-2">
+            Seu site sobrevive à <span className="italic font-normal text-slate-500">era dos motores de IA?</span>
           </h2>
-          <p className="text-slate-600 text-xs md:text-sm max-w-xl mx-auto font-light leading-snug">
-            Se sua empresa nao possui site ou possui um site com SEO deficiente, a IA nao conseguira
-            recomenda-la aos clientes.
+          <p className="text-slate-600 text-[13px] md:text-sm max-w-xl mx-auto font-light leading-snug">
+            Se sua empresa não possui site ou possui um site com SEO deficiente, a IA não conseguirá
+            recomendá-la aos clientes.
           </p>
         </div>
 
-        {/* Tem site / nao tem site */}
-        <div className="max-w-2xl mx-auto mb-6 flex flex-col sm:flex-row items-center justify-center gap-3">
+        {/* Tem site / nao tem site.
+            min-h-11 (44px) e a altura minima de alvo tocavel do iOS; o Android
+            pede 48dp. Com py-2 estes dois botoes tinham 34px e erravam o toque
+            justamente na escolha que abre o diagnostico. */}
+        <div className="max-w-2xl mx-auto mb-6 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-2.5 sm:gap-3">
           <button
             onClick={() => setNoWebsite(false)}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 border ${
+            aria-pressed={!hasNoWebsite}
+            className={`px-4 py-3 min-h-12 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 border ${
               !hasNoWebsite
                 ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
                 : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
             }`}
           >
-            <Globe size={14} />
+            <Globe size={14} className="shrink-0" />
             <span>Possuo um site para analisar</span>
           </button>
 
           <button
-            onClick={() => setNoWebsite(true)}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 border ${
+            onClick={declareNoWebsite}
+            aria-pressed={hasNoWebsite}
+            className={`px-4 py-3 min-h-12 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 border ${
               hasNoWebsite
                 ? 'bg-red-600 text-white border-red-600 shadow-md shadow-red-500/20'
                 : 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100'
             }`}
           >
-            <AlertTriangle size={14} />
-            <span>Nao tenho um site ainda</span>
+            <AlertTriangle size={14} className="shrink-0" />
+            <span>Não tenho um site ainda</span>
           </button>
         </div>
 
@@ -386,12 +411,17 @@ export default function PotentialDiagnostic({ onWantStrategy }: PotentialDiagnos
               <AlertTriangle size={24} />
             </div>
             <h3 className="text-base md:text-lg font-black uppercase tracking-wider text-red-900 mb-1">
-              Invisibilidade Digital
+              Invisibilidade Digital — Índice 101%
             </h3>
             <p className="text-xs text-red-800 leading-relaxed mb-4">
-              Sem um site estruturado para a Web Generativa, sua empresa nao existe para os assistentes de
-              IA (ChatGPT, Perplexity, Gemini, Claude). E o gargalo que impede qualquer outra alavanca de
-              funcionar.
+              Sem um site estruturado para a Web Generativa, sua empresa não existe para os assistentes de
+              IA (ChatGPT, Perplexity, Gemini, Claude). É o gargalo que impede qualquer outra alavanca de
+              funcionar — por isso o índice estoura a escala.
+            </p>
+            {/* Diz o que vai acontecer antes de acontecer: rolagem que o
+                visitante nao pediu, sem aviso, e sequestro de scroll. */}
+            <p className="text-[10px] uppercase tracking-[0.18em] font-black text-red-500 mb-3">
+              Levando você ao agente…
             </p>
             <button
               onClick={() => { track('cta_click', { location: 'diagnostic_no_website' }); onWantStrategy?.(); }}
@@ -411,7 +441,7 @@ export default function PotentialDiagnostic({ onWantStrategy }: PotentialDiagnos
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleAnalyze()}
-                  aria-label="Dominio do seu site"
+                  aria-label="Domínio do seu site"
                   placeholder="seu-dominio.com.br"
                   className="w-full bg-transparent py-3 pl-10 pr-4 text-slate-900 focus:outline-none text-base md:text-sm placeholder:text-slate-400"
                 />
@@ -457,14 +487,14 @@ export default function PotentialDiagnostic({ onWantStrategy }: PotentialDiagnos
               <AlertTriangle size={20} />
             </div>
             <h3 className="text-sm font-black uppercase tracking-wider text-amber-900 mb-2">
-              {failure === 'invalid-url' ? 'Endereco incompleto' : 'A varredura nao completou'}
+              {failure === 'invalid-url' ? 'Endereço incompleto' : 'A varredura não completou'}
             </h3>
             <p className="text-xs text-amber-900/90 leading-relaxed mb-5 max-w-md mx-auto">
               {failure === 'invalid-url'
-                ? 'Digite o dominio com o ponto — por exemplo, suaempresa.com.br.'
+                ? 'Digite o domínio com o ponto — por exemplo, suaempresa.com.br.'
                 : failure === 'quota'
-                  ? 'O limite diario da API do Google foi atingido. Prefiro nao te mostrar um numero estimado: o Raul roda a analise manualmente e te manda o laudo real.'
-                  : 'Nao consegui alcancar as fontes de medicao agora. Prefiro nao te mostrar um numero estimado: o Raul roda a analise manualmente e te manda o laudo real.'}
+                  ? 'O limite diário da API do Google foi atingido. Prefiro não te mostrar um número estimado: o Raul roda a análise manualmente e te manda o laudo real.'
+                  : 'Não consegui alcançar as fontes de medição agora. Prefiro não te mostrar um número estimado: o Raul roda a análise manualmente e te manda o laudo real.'}
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <button
@@ -483,7 +513,7 @@ export default function PotentialDiagnostic({ onWantStrategy }: PotentialDiagnos
                   className="px-5 py-3 bg-slate-900 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-accent transition-all inline-flex items-center justify-center gap-2 shadow-md"
                 >
                   <MessageCircle size={14} />
-                  Pedir analise manual
+                  Pedir análise manual
                 </a>
               )}
             </div>
@@ -605,7 +635,7 @@ export default function PotentialDiagnostic({ onWantStrategy }: PotentialDiagnos
         <div className="mt-6 pt-6 border-t border-slate-200/80 max-w-2xl mx-auto">
           <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 mb-3 text-center flex items-center justify-center gap-2">
             <Share2 size={14} className="text-accent" />
-            <span>Presenca e tracao nas redes sociais</span>
+            <span>Presença e tração nas redes sociais</span>
           </h4>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {[

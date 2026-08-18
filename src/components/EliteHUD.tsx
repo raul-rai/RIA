@@ -38,7 +38,9 @@ export default function EliteHUD({ activeScene = 0 }: { activeScene?: number }) 
     return () => clearTimeout(timeoutId);
   }, []);
 
-  const val = hasNoWebsite ? 100 : vulnerabilityIndex;
+  // O indice ja resolve o caso "sem site" sozinho (101). Reescreve-lo para 100
+  // aqui era o que escondia do visitante o unico numero que devia assusta-lo.
+  const val = vulnerabilityIndex;
   const tone = toneOf(val, hasNoWebsite);
   const label = String(val);
 
@@ -46,23 +48,32 @@ export default function EliteHUD({ activeScene = 0 }: { activeScene?: number }) 
     <div className="fixed inset-0 pointer-events-none z-[60] font-mono uppercase text-[9px] tracking-[0.2em] overflow-hidden">
       {/* Indice — pilula compacta no mobile, cartao no desktop. Largura contida
           para nao invadir a coluna de conteudo dos capitulos. */}
+      {/* top/right com env(): no iPhone a pilula ficava sob a Dynamic Island em
+          paisagem, e no Android sob o recorte da camera. max() mantem o respiro
+          de 1rem em aparelho sem recorte. */}
       <div
-        className={`absolute top-4 right-4 md:top-6 md:right-6 rounded-2xl bg-white/95 border shadow-[0_8px_24px_rgba(0,0,0,.07)] backdrop-blur-md transition-all duration-500 ${
+        className={`absolute top-[max(1rem,env(safe-area-inset-top))] right-[max(1rem,env(safe-area-inset-right))] md:top-6 md:right-6 rounded-2xl bg-white/95 border shadow-[0_8px_24px_rgba(0,0,0,.07)] backdrop-blur-md transition-all duration-500 ${
           hasNoWebsite ? 'border-red-300 ring-2 ring-red-400/20' : 'border-slate-200'
         }`}
       >
-        {/* Mobile: so o numero */}
-        <div className="flex md:hidden items-center gap-2 px-3 py-2">
+        {/* Mobile: so o numero. Tambem no celular deitado — ali a largura passa
+            de 767px, mas sobram 390px de altura e o cartao grande comia um
+            terco da tela. O criterio ali e a altura, nao a largura. */}
+        <div className="flex md:hidden [@media(max-height:600px)]:flex items-center gap-2 px-3 py-2">
           <span className="text-[8px] font-bold tracking-[0.14em] text-slate-500 leading-none">
-            VULNERAB.
+            {assessed || hasNoWebsite ? 'VULNERAB.' : 'RISCO'}
           </span>
-          <span className={`text-base font-serif italic font-black leading-none ${tone.text}`}>
-            {label}%
+          <span
+            className={`text-base font-serif italic font-black leading-none ${
+              assessed || hasNoWebsite ? tone.text : 'text-slate-400'
+            }`}
+          >
+            {assessed || hasNoWebsite ? `${label}%` : '—'}
           </span>
         </div>
 
         {/* Desktop: numero + barras */}
-        <div className="hidden md:flex flex-col items-end gap-2 px-5 py-4 w-[178px]">
+        <div className="hidden md:flex [@media(max-height:600px)]:hidden flex-col items-end gap-2 px-5 py-4 w-[178px]">
           <span
             className={`text-[9.5px] font-bold tracking-[0.2em] ${hasNoWebsite ? 'text-red-600' : 'text-slate-600'}`}
           >

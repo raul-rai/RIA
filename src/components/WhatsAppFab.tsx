@@ -45,6 +45,8 @@ export default function WhatsAppFab({ hideOnChapter }: WhatsAppFabProps) {
   return (
     <AnimatePresence>
       {shouldShow && (
+        // bottom com env(): sem isto o botao cai sobre a barra de gestos do
+        // iPhone e do Android, onde o toque e do sistema, nao da pagina.
         <motion.a
           href={WHATSAPP_URL_FAB}
           target="_blank"
@@ -55,7 +57,7 @@ export default function WhatsAppFab({ hideOnChapter }: WhatsAppFabProps) {
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.5, y: 20 }}
           transition={{ type: 'spring', stiffness: 260, damping: 20 }}
-          className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-[#2a42ec] text-white flex items-center justify-center shadow-[0_4px_25px_rgba(42,66,236,0.5)] border border-white/20 hover:scale-110 hover:shadow-[0_6px_35px_rgba(42,66,236,0.8)] active:scale-95 transition-all duration-300 group"
+          className="fixed bottom-[max(1rem,calc(env(safe-area-inset-bottom)+0.5rem))] right-[max(1rem,env(safe-area-inset-right))] md:bottom-6 md:right-6 z-50 w-13 h-13 md:w-14 md:h-14 rounded-full bg-[#2a42ec] text-white flex items-center justify-center shadow-[0_4px_25px_rgba(42,66,236,0.5)] border border-white/20 md:hover:scale-110 md:hover:shadow-[0_6px_35px_rgba(42,66,236,0.8)] active:scale-95 transition-all duration-300 group"
         >
           {/* Subtle pulse animation ring */}
           <span className="absolute inset-0 rounded-full bg-[#2a42ec] animate-ping opacity-30 pointer-events-none" style={{ animationDuration: '2.5s' }} />

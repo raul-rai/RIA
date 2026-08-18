@@ -72,7 +72,7 @@ export default function OfferSection() {
       <p className="mt-6 pt-5 border-t border-slate-200 text-xs text-slate-600 flex items-start gap-2">
         <Check size={14} className="text-accent shrink-0 mt-0.5" />
         <span>
-          Próximo passo: conte ao agente ao lado o que sua empresa faz. Ele devolve onde a IA paga
+          Próximo passo: conte ao agente da RIA o que sua empresa faz. Ele devolve onde a IA paga
           mais rápido no seu caso e agenda a sessão.
         </span>
       </p>

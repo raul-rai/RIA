@@ -29,9 +29,23 @@ interface AIChatAgentProps {
 
 const SUGGESTIONS = [
   'Onde a IA me daria mais retorno hoje?',
-  'Quanto custa comecar?',
-  'Quero falar sobre o meu diagnostico',
+  'Quanto custa começar?',
+  'Quero falar sobre o meu diagnóstico',
 ];
+
+/** Quem chega aqui declarando que nao tem site nao quer falar de ROI ainda:
+ *  quer saber quanto custa existir. As sugestoes acompanham. */
+const NO_WEBSITE_SUGGESTIONS = [
+  'Quanto custa um site pronto para IA?',
+  'Em quanto tempo ele fica no ar?',
+  'Como a IA vai passar a me indicar?',
+];
+
+const GREETING =
+  'Olá. Sou o Agente de Inteligência da RIA. Me conte em uma frase o que sua empresa faz e onde o tempo da equipe está indo — eu volto com onde a IA paga mais rápido.';
+
+const NO_WEBSITE_GREETING =
+  'Você ainda nem tem um site para surfar a era da inteligência artificial. Por isso seu índice bateu 101%: não existe página para o ChatGPT, o Gemini ou o Perplexity citarem quando alguém procura o que você vende. Me diga em uma frase o que sua empresa faz — eu volto com o que precisa estar no ar primeiro.';
 
 /**
  * O n8n pode devolver qualquer coisa. Um payload sem `roi` numerico nao pode
@@ -54,15 +68,25 @@ export default function AIChatAgent({ webhookUrl = config.chatWebhook, onComplet
   const { vulnerabilityIndex, hasNoWebsite, operationalAIChecks, websiteScore } = useVulnerability();
 
   const [messages, setMessages] = useState<Message[]>([
-    {
-      role: 'assistant',
-      content:
-        'Ola. Sou o Agente de Inteligencia da RIA. Me conte em uma frase o que sua empresa faz e onde o tempo da equipe esta indo — eu volto com onde a IA paga mais rapido.',
-    },
+    { role: 'assistant', content: hasNoWebsite ? NO_WEBSITE_GREETING : GREETING },
   ]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  /**
+   * O agente e montado junto com a pagina, muito antes de o visitante declarar
+   * que nao tem site. Quando ele declara, a saudacao e reescrita — mas so
+   * enquanto a conversa nao comecou: trocar o texto por baixo de quem ja
+   * respondeu apagaria o proprio historico.
+   */
+  useEffect(() => {
+    setMessages((prev) => {
+      if (prev.length !== 1 || prev[0].role !== 'assistant') return prev;
+      const greeting = hasNoWebsite ? NO_WEBSITE_GREETING : GREETING;
+      return prev[0].content === greeting ? prev : [{ role: 'assistant', content: greeting }];
+    });
+  }, [hasNoWebsite]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -80,16 +104,16 @@ export default function AIChatAgent({ webhookUrl = config.chatWebhook, onComplet
   const handoffUrl = useMemo(() => {
     const marcados = operationalAIChecks.filter(Boolean).length;
     const linhas = [
-      'Ola Raul, tentei falar com o agente no site e quero continuar por aqui.',
+      'Olá Raul, tentei falar com o agente no site e quero continuar por aqui.',
       '',
       vulnerabilityIndex === null
-        ? 'Indice de Vulnerabilidade: nao avaliado'
-        : `Indice de Vulnerabilidade: ${vulnerabilityIndex}%`,
+        ? 'Índice de Vulnerabilidade: não avaliado'
+        : `Índice de Vulnerabilidade: ${vulnerabilityIndex}%`,
       hasNoWebsite
-        ? 'Site: ainda nao tenho'
+        ? 'Site: ainda não tenho'
         : websiteScore !== null
           ? `Site auditado: ${websiteScore}/100`
-          : 'Site: nao auditado',
+          : 'Site: não auditado',
       `Pilares de IA em uso: ${marcados} de 5`,
     ];
     return whatsappWithMessage(linhas.join('\n'));
@@ -179,8 +203,8 @@ export default function AIChatAgent({ webhookUrl = config.chatWebhook, onComplet
           role: 'assistant',
           content:
             reason === 'AbortError' || (error as Error)?.name === 'AbortError'
-              ? 'A analise esta demorando mais que o normal e prefiro nao te deixar esperando. Me chame no WhatsApp que eu respondo pessoalmente — levo tudo que voce ja respondeu aqui.'
-              : 'Nao consegui completar a conexao agora. Isso e problema meu, nao seu. Me chame no WhatsApp que eu respondo pessoalmente — levo tudo que voce ja respondeu aqui.',
+              ? 'A análise está demorando mais que o normal e prefiro não te deixar esperando. Me chame no WhatsApp que eu respondo pessoalmente — levo tudo que você já respondeu aqui.'
+              : 'Não consegui completar a conexão agora. Isso é problema meu, não seu. Me chame no WhatsApp que eu respondo pessoalmente — levo tudo que você já respondeu aqui.',
           handoff: true,
         },
       ]);
@@ -203,7 +227,7 @@ export default function AIChatAgent({ webhookUrl = config.chatWebhook, onComplet
             <h3 className="text-sm font-bold uppercase tracking-wider text-slate-900 leading-none mb-1">
               Agente de IA RIA
             </h3>
-            <p className="text-[10px] text-slate-500 font-medium">Diagnostico de Inteligencia Empresarial</p>
+            <p className="text-[10px] text-slate-500 font-medium">Diagnóstico de Inteligência Empresarial</p>
           </div>
         </div>
         <div className="flex items-center gap-2 px-3 py-1 bg-accent/10 border border-accent/20 rounded-full">
@@ -307,11 +331,11 @@ export default function AIChatAgent({ webhookUrl = config.chatWebhook, onComplet
             transition={{ delay: 0.4 }}
             className="flex flex-wrap gap-2 pl-11"
           >
-            {SUGGESTIONS.map((s) => (
+            {(hasNoWebsite ? NO_WEBSITE_SUGGESTIONS : SUGGESTIONS).map((s) => (
               <button
                 key={s}
                 onClick={() => send(s)}
-                className="px-3.5 py-2 rounded-full border border-slate-300 bg-white text-slate-700 text-xs font-semibold hover:border-accent hover:text-accent hover:bg-accent/5 transition-colors"
+                className="px-4 py-2.5 min-h-11 rounded-full border border-slate-300 bg-white text-slate-700 text-xs font-semibold hover:border-accent hover:text-accent hover:bg-accent/5 transition-colors"
               >
                 {s}
               </button>
@@ -329,25 +353,27 @@ export default function AIChatAgent({ webhookUrl = config.chatWebhook, onComplet
             onKeyDown={(e) => e.key === 'Enter' && send(input)}
             aria-label="Mensagem para o agente de IA"
             placeholder="Digite sua resposta..."
-            className="w-full bg-white border border-slate-300 rounded-xl py-4 pl-4 pr-12 text-base md:text-sm text-slate-900 focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-all placeholder:text-slate-400 shadow-sm"
+            className="w-full bg-white border border-slate-300 rounded-xl py-4 pl-4 pr-14 text-base md:text-sm text-slate-900 focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-all placeholder:text-slate-400 shadow-sm"
           />
+          {/* 44x44: o botao tinha 32px de lado, o menor alvo da pagina — e o
+              unico que envia a mensagem. */}
           <button
             onClick={() => send(input)}
             disabled={!input.trim() || isTyping}
             aria-label="Enviar mensagem"
-            className="absolute right-3 p-2 bg-slate-900 text-white rounded-lg hover:bg-accent hover:scale-110 active:scale-95 disabled:opacity-50 disabled:scale-100 transition-all shadow-md"
+            className="absolute right-2 w-11 h-11 flex items-center justify-center bg-slate-900 text-white rounded-lg md:hover:bg-accent md:hover:scale-110 active:scale-95 disabled:opacity-50 disabled:scale-100 transition-all shadow-md"
           >
             <Send size={16} />
           </button>
         </div>
-        <p className="mt-3 text-center text-[10px] md:text-xs text-slate-500">
+        <p className="mt-2 text-center text-[10px] md:text-xs text-slate-500">
           Prefere falar direto?{' '}
           <a
             href={handoffUrl}
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => track('whatsapp_click', { location: 'agent_footer' })}
-            className="text-accent font-semibold underline underline-offset-2 hover:text-accent-dark"
+            className="inline-block py-2 text-accent font-semibold underline underline-offset-2 hover:text-accent-dark"
           >
             Chame o Raul no WhatsApp
           </a>

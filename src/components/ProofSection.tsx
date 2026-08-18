@@ -27,7 +27,10 @@ export default function ProofSection({ onWantStrategy }: ProofSectionProps) {
             {hasCases ? 'Onde a RIA já esteve' : 'Como medimos'}
           </span>
         </div>
-        <h2 className="text-2xl md:text-4xl lg:text-5xl font-serif text-slate-900 leading-tight">
+        {/* Este titulo cai direto sobre a onda, sem cartao atras. As linhas do
+            canvas passavam por dentro das letras. reading-surface devolve o
+            fundo de leitura sem transformar o titulo em mais uma caixa. */}
+        <h2 className="text-2xl md:text-4xl lg:text-5xl font-serif text-slate-900 leading-tight reading-surface md:bg-transparent md:backdrop-blur-none inline-block px-4 py-2">
           {hasCases ? (
             <>
               Clientes reais, <span className="italic font-normal text-slate-500">não folheto.</span>

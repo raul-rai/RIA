@@ -26,14 +26,19 @@ export default function DataWave3D({ progress }: DataWave3DProps) {
     let width = window.innerWidth;
     let height = window.innerHeight;
 
+    /**
+     * O tamanho de exibicao fica com o CSS (w-full h-full sobre um container
+     * fixed inset-0). Aqui so o buffer de desenho e ajustado. Antes o tamanho
+     * vinha de style.width/height inline, o que travava o canvas na altura
+     * medida no momento do resize — quando a barra de URL do celular recolhia,
+     * sobrava uma faixa branca no rodape ate o proximo resize.
+     */
     const applySize = () => {
       const dpr = resolveDpr(window.devicePixelRatio);
       width = window.innerWidth;
       height = window.innerHeight;
       canvas.width = Math.floor(width * dpr);
       canvas.height = Math.floor(height * dpr);
-      canvas.style.width = `${width}px`;
-      canvas.style.height = `${height}px`;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     };
 
@@ -257,7 +262,25 @@ export default function DataWave3D({ progress }: DataWave3DProps) {
       render();
     }
 
-    const handleResize = () => applySize();
+    /**
+     * No celular a barra de URL entra e sai sozinha durante a rolagem, e cada
+     * entrada dispara um `resize` com ate ~120px de diferenca de altura. Como
+     * `applySize` reatribui canvas.width, o navegador descarta o bitmap e
+     * realoca — a onda pisca a cada mudanca de direcao do dedo, exatamente
+     * quando o usuario esta lendo. Largura muda so em rotacao de verdade; a
+     * altura so vale redesenho quando a diferenca e maior que a barra.
+     */
+    const URL_BAR_TOLERANCE = 140;
+
+    const handleResize = () => {
+      const nextWidth = window.innerWidth;
+      const nextHeight = window.innerHeight;
+      const widthChanged = nextWidth !== width;
+      const heightJumped = Math.abs(nextHeight - height) > URL_BAR_TOLERANCE;
+      if (!widthChanged && !heightJumped) return;
+      applySize();
+    };
+
     window.addEventListener('resize', handleResize);
 
     const unsubscribe = reduced ? progress.on('change', () => render()) : undefined;

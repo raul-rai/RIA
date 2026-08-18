@@ -30,8 +30,8 @@ describe('SEO meta tags (SEO-01 to SEO-05)', () => {
     expect(html).toContain('name="twitter:card"');
   });
 
-  it('SEO-04: has favicon link to /favicon.svg', () => {
-    expect(html).toContain('href="/favicon.svg"');
+  it('SEO-04: has favicon link', () => {
+    expect(html).toContain('href="/favicon.ico"');
   });
 
   it('SEO-05: has canonical link', () => {

@@ -12,6 +12,8 @@ export type RiaEvent =
   | 'diagnostic_started'
   | 'diagnostic_completed'
   | 'diagnostic_failed'
+  /** Visitante declarou que ainda nao tem site — indice 101%, rota curta ao agente. */
+  | 'diagnostic_no_website'
   | 'agent_message_sent'
   | 'agent_replied'
   | 'agent_failed'

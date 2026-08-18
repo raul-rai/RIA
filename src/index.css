@@ -21,6 +21,21 @@
   html {
     scroll-snap-type: y proximity;
     scroll-behavior: smooth;
+    /* iOS aumenta o corpo do texto sozinho quando a pagina gira. Fixar aqui
+       mantem a escala tipografica identica em retrato e paisagem. */
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  /* A maioria dos capitulos e mais alta que a viewport de um celular. Com snap
+     ligado o dedo do usuario briga com o navegador justamente onde ha mais
+     conteudo para ler (iOS Safari e Chrome Android prendem o scroll dentro do
+     capitulo). O criterio e o ponteiro, nao a largura: um iPhone deitado tem
+     844px de largura e continua sendo um dedo numa tela de 390px de altura. */
+  @media (hover: none), (max-height: 700px) {
+    html {
+      scroll-snap-type: none;
+    }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -32,6 +47,9 @@
 
   body {
     overscroll-behavior-y: contain;
+    /* Sem isto o toque no Android pinta um retangulo cinza sobre cada cartao
+       clicavel — o mesmo cinza que o design gasta energia para evitar. */
+    -webkit-tap-highlight-color: transparent;
     @apply bg-white text-slate-900 antialiased overflow-x-hidden selection:bg-accent/20 selection:text-slate-900 font-sans;
   }
   
@@ -41,6 +59,29 @@
 }
 
 @layer utilities {
+  /* Estas duas classes ja eram usadas pelo carrossel de depoimentos e pelo
+     chat, mas nunca existiram — as barras de rolagem apareciam por dentro dos
+     cartoes. Sao o mesmo comportamento com os dois nomes que o codigo pede. */
+  .no-scrollbar,
+  .scrollbar-hide {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .no-scrollbar::-webkit-scrollbar,
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Carrossel horizontal: sem isto o overflow-x:auto promove o eixo Y para
+     auto tambem, e um pixel de sobra na animacao de entrada dos cartoes
+     desenha uma segunda barra, vertical, dentro do carrossel. */
+  .carousel-x {
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+
   .premium-glass {
     @apply relative overflow-hidden;
     background: rgba(255, 255, 255, 0.85);
@@ -50,24 +91,42 @@
     transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
   }
   
+  /* O brilho cobre o cartao inteiro. Sem pointer-events:none ele vence o hit
+     test de todo filho que nao cria contexto de empilhamento proprio — foi o
+     que matou os botoes de "tenho / nao tenho site" e os checks de redes. */
   .premium-glass::before {
     content: "";
     position: absolute;
     inset: 0;
+    pointer-events: none;
     background: linear-gradient(135deg, rgba(0, 180, 216, 0.08), transparent 60%);
     opacity: 0;
     transition: opacity 0.5s ease;
   }
 
-  .premium-glass:hover {
-    @apply border-accent/40;
-    background: rgba(255, 255, 255, 0.95);
-    transform: translateY(-4px);
-    box-shadow: 0 15px 35px -5px rgba(0, 180, 216, 0.15);
+  /* Hover so onde ha ponteiro. No touch o :hover fica grudado depois do toque:
+     o cartao sobe 4px e nunca mais desce, ate o usuario tocar em outro lugar. */
+  @media (hover: hover) and (pointer: fine) {
+    .premium-glass:hover {
+      @apply border-accent/40;
+      background: rgba(255, 255, 255, 0.95);
+      transform: translateY(-4px);
+      box-shadow: 0 15px 35px -5px rgba(0, 180, 216, 0.15);
+    }
+
+    .premium-glass:hover::before {
+      opacity: 1;
+    }
   }
 
-  .premium-glass:hover::before {
-    opacity: 1;
+  /* Orcamento de blur no celular. Cada camada com backdrop-filter forca o
+     compositor a reler o fundo — e o fundo aqui e um canvas que redesenha a
+     cada frame. Havia 15 camadas dessas em uma unica tela; a 16px o Android
+     intermediario perde frames rolando. A 8px o efeito continua legivel. */
+  @media (max-width: 767px) {
+    .premium-glass {
+      backdrop-filter: blur(8px);
+    }
   }
   
   .text-glow-accent {
@@ -79,8 +138,19 @@
   }
 
   /* Responsive Typography Utilities */
+  /* 22px deixava o H1 quase do tamanho do paragrafo de apoio (16px): no celular
+     a primeira tela nao tinha hierarquia. 30px devolve a diferenca sem estourar
+     a linha em telas de 360px. */
   .heading-hero {
-    @apply text-[22px] sm:text-[32px] md:text-[42px] lg:text-[52px] font-serif leading-[1.1];
+    @apply text-[30px] sm:text-[36px] md:text-[42px] lg:text-[52px] font-serif leading-[1.12];
+  }
+
+  /* Superficie de leitura para titulo que cai sobre a onda. Mais leve que um
+     cartao: da contraste sem virar mais uma caixa na pilha. */
+  .reading-surface {
+    background: rgba(255, 255, 255, 0.82);
+    backdrop-filter: blur(8px);
+    border-radius: 1rem;
   }
 
   .heading-section {
