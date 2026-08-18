@@ -1,6 +1,6 @@
 import { Fragment, useCallback, useEffect, useMemo } from 'react';
 import { motion, useScroll, useMotionValue, useSpring } from 'motion/react';
-import { ArrowRight, Target } from 'lucide-react';
+import { ArrowRight, Target, ChevronDown } from 'lucide-react';
 import DataWave3D from '../components/DataWave3D';
 import ChapterSection from '../components/ChapterSection';
 import { useActiveChapter } from '../hooks/useActiveChapter';
@@ -127,10 +127,8 @@ function SceneHero({ onStartDiagnostic }: { onStartDiagnostic: () => void }) {
         className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-slate-300 bg-white/95 backdrop-blur-md mb-5 md:mb-6 shadow-md"
       >
         <Target className="text-accent animate-pulse" size={16} />
-        {/* tracking menor no celular: com 0.2em o selo quebrava em duas linhas
-            a 375px e virava um bloco no lugar de uma etiqueta. */}
-        <span className="text-slate-900 font-sans tracking-[0.1em] md:tracking-[0.2em] uppercase text-[10px] md:text-xs font-black">
-          {ref && REF_LABEL[ref] ? `Estratégia para ${REF_LABEL[ref]}` : 'Exclusivo para empresas de R$ 100k+'}
+        <span className="text-slate-900 font-sans tracking-[0.1em] md:tracking-[0.15em] uppercase text-[10px] md:text-xs font-black whitespace-nowrap">
+          {ref && REF_LABEL[ref] ? `Estratégia para ${REF_LABEL[ref]}` : 'Conhecimento relevante para todo empresário'}
         </span>
       </motion.div>
 
@@ -143,36 +141,36 @@ function SceneHero({ onStartDiagnostic }: { onStartDiagnostic: () => void }) {
         {headline}
       </motion.h1>
 
-      {/* Tres superficies com borda e sombra empilhadas (selo, paragrafo, dica)
-          deixavam a primeira tela parecendo um formulario. No celular so o selo
-          continua com contorno: o paragrafo mantem o fundo que da contraste
-          sobre a onda, mas perde borda e sombra. */}
       <motion.p
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.6, duration: 1 }}
         className="text-[15px] md:text-xl text-slate-800 max-w-2xl mb-8 md:mb-10 font-sans font-medium leading-relaxed px-4 py-3 bg-white/80 backdrop-blur-md rounded-2xl md:border md:border-slate-200/60 md:shadow-sm"
       >
-        A ineficiência é o imposto invisível que você paga todos os dias. Seu negócio está pronto
-        para navegar — ou será submergido?
+        Se você ainda não utiliza inteligência artificial em <strong className="font-bold text-slate-950">TODOS OS SEUS PROJETOS</strong>, você está rasgando dinheiro.
       </motion.p>
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.8, duration: 1 }}
-        className="flex flex-col items-center gap-4 w-full sm:w-auto pointer-events-auto"
+        className="flex flex-col sm:flex-row items-center justify-center gap-3.5 md:gap-4 w-full sm:w-auto pointer-events-auto"
       >
         <MagneticButton
-          onClick={onStartDiagnostic}
-          className="w-full sm:w-auto group px-8 py-5 bg-slate-950 text-white rounded-xl font-black text-xs uppercase tracking-widest transition-colors duration-300 hover:bg-accent shadow-2xl flex items-center justify-center gap-3"
+          onClick={onStopWastingMoney}
+          className="w-full sm:w-auto group px-7 py-4 bg-slate-950 text-white rounded-xl font-black text-xs uppercase tracking-widest transition-all duration-300 hover:bg-accent shadow-2xl flex items-center justify-center gap-2.5 min-h-[52px]"
         >
-          <span>Garantir minha alavancagem</span>
+          <span>Pare de rasgar dinheiro</span>
           <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform duration-300" />
         </MagneticButton>
-        <p className="text-slate-600 md:text-slate-800 text-[10px] md:text-xs tracking-[0.16em] md:tracking-[0.2em] uppercase font-black mt-1 md:mt-2 px-4 py-1.5 rounded-full md:bg-white/90 md:border md:border-slate-200 md:shadow-sm md:backdrop-blur-md">
-          Role para aceitar a verdade
-        </p>
+
+        <MagneticButton
+          onClick={onUnderstandMore}
+          className="w-full sm:w-auto group px-7 py-4 bg-white/90 text-slate-900 border border-slate-300 hover:border-accent hover:text-accent rounded-xl font-black text-xs uppercase tracking-widest transition-all duration-300 shadow-md backdrop-blur-md flex items-center justify-center gap-2.5 min-h-[52px]"
+        >
+          <span>Entenda melhor</span>
+          <ChevronDown size={16} className="group-hover:translate-y-0.5 transition-transform duration-300" />
+        </MagneticButton>
       </motion.div>
     </div>
   );
@@ -244,6 +242,7 @@ export default function LandingPage() {
   }, []);
 
   const goToCta = useCallback(() => goToChapter(CTA_CHAPTER), [goToChapter]);
+  const goToMarketVoices = useCallback(() => goToChapter(1), [goToChapter]);
 
   const handleFinalContact = useCallback((data: { roi: number; name?: string; revenue?: number; efficiency?: number }) => {
     const message = [
@@ -261,14 +260,14 @@ export default function LandingPage() {
   }, []);
 
   const chapterContent = useMemo(() => [
-    <SceneHero onStartDiagnostic={goToCta} />,
+    <SceneHero onStopWastingMoney={goToCta} onUnderstandMore={goToMarketVoices} />,
     <SocialProofSection />,
     <PotentialDiagnostic onWantStrategy={goToCta} onNoWebsite={goToCta} />,
     <ProofSection onWantStrategy={goToCta} />,
     <OperationalAIChecklist onWantStrategy={goToCta} />,
     <ConsultantSection onStrategyClick={goToCta} />,
     <SceneCTA onFinalContact={handleFinalContact} />,
-  ], [goToCta, handleFinalContact]);
+  ], [goToCta, goToMarketVoices, handleFinalContact]);
 
   return (
     <VulnerabilityProvider>
