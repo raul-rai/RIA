@@ -51,7 +51,10 @@ function MagneticButton({ children, onClick, className }: { children: React.Reac
 }
 
 // ─── Capitulo 0: A AMEACA ────────────────────────────────────────────────────
-function SceneHero({ onStartDiagnostic }: { onStartDiagnostic: () => void }) {
+function SceneHero({ onStopWastingMoney, onUnderstandMore }: {
+  onStopWastingMoney: () => void;
+  onUnderstandMore: () => void;
+}) {
   const searchParams = new URLSearchParams(window.location.search);
   const ref = searchParams.get('ref')?.toLowerCase();
 
