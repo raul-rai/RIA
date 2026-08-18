@@ -1,0 +1,131 @@
+import { useState } from 'react';
+import { motion } from 'motion/react';
+import { ArrowRight, ArrowLeft } from 'lucide-react';
+import {
+  QUALIFICATION_STEPS,
+  validateField,
+  type Qualification,
+} from '../lib/qualification';
+import { track } from '../lib/analytics';
+
+/**
+ * Os cinco passos, dentro da bolha do chat.
+ *
+ * Este componente nao conhece o agente: recebe um callback e devolve os cinco
+ * campos. Um passo por vez porque cinco campos de uma vez dentro de um chat
+ * viram formulario — e formulario dentro de conversa quebra as duas coisas.
+ */
+export default function QualificationFlow({
+  onComplete,
+}: {
+  onComplete: (q: Qualification) => void;
+}) {
+  const [index, setIndex] = useState(0);
+  const [answers, setAnswers] = useState<Partial<Qualification>>({});
+  const [draft, setDraft] = useState('');
+  const [error, setError] = useState<string | null>(null);
+
+  const step = QUALIFICATION_STEPS[index];
+  const isLast = index === QUALIFICATION_STEPS.length - 1;
+
+  const commit = (value: string) => {
+    const problem = validateField(step.field, value);
+    if (problem) {
+      setError(problem);
+      return;
+    }
+
+    const updated = { ...answers, [step.field]: value.trim() };
+    setAnswers(updated);
+    setError(null);
+    setDraft('');
+    track('qualification_step', { field: step.field, index });
+
+    if (isLast) {
+      track('qualification_completed', {});
+      onComplete(updated as Qualification);
+      return;
+    }
+    setIndex(index + 1);
+  };
+
+  const back = () => {
+    if (index === 0) return;
+    const previous = QUALIFICATION_STEPS[index - 1];
+    setDraft(answers[previous.field] ?? '');
+    setError(null);
+    setIndex(index - 1);
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="mt-3 p-4 bg-white rounded-xl border border-accent/30 shadow-md text-left"
+    >
+      <div className="flex items-center justify-between mb-2.5">
+        <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-slate-500">
+          {index + 1} de {QUALIFICATION_STEPS.length}
+        </span>
+        {index > 0 && (
+          <button
+            type="button"
+            onClick={back}
+            className="text-[10px] font-bold uppercase tracking-wider text-slate-500 hover:text-slate-900 inline-flex items-center gap-1"
+          >
+            <ArrowLeft size={11} /> Voltar
+          </button>
+        )}
+      </div>
+
+      <p className="text-sm text-slate-900 font-semibold leading-snug mb-3">{step.prompt}</p>
+
+      {step.options ? (
+        <div className="flex flex-col gap-2">
+          {step.options.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              onClick={() => commit(option.value)}
+              className="text-left px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 hover:border-accent hover:bg-accent/5 active:scale-[0.99] transition-all text-xs font-semibold text-slate-800"
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      ) : (
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            commit(draft);
+          }}
+          className="flex gap-2"
+        >
+          <input
+            autoFocus
+            value={draft}
+            onChange={(e) => { setDraft(e.target.value); setError(null); }}
+            placeholder={step.placeholder}
+            inputMode={step.field === 'phone' ? 'tel' : step.field === 'email' ? 'email' : 'text'}
+            aria-label={step.prompt}
+            aria-invalid={error !== null}
+            className="flex-1 min-w-0 px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-accent"
+          />
+          <button
+            type="submit"
+            aria-label="Continuar"
+            className="px-4 rounded-xl bg-slate-900 text-white hover:bg-accent active:scale-95 transition-all shrink-0"
+          >
+            <ArrowRight size={16} />
+          </button>
+        </form>
+      )}
+
+      {error && (
+        <p role="alert" className="mt-2 text-[11px] font-semibold text-red-700">
+          {error}
+        </p>
+      )}
+    </motion.div>
+  );
+}

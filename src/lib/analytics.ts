@@ -18,7 +18,9 @@ export type RiaEvent =
   | 'agent_message_sent'
   | 'agent_replied'
   | 'agent_failed'
-  | 'whatsapp_click';
+  | 'whatsapp_click'
+  | 'qualification_step'
+  | 'qualification_completed';
 
 type Params = Record<string, string | number | boolean | undefined>;
 
