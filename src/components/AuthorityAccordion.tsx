@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'motion/react';
-import { ChevronDown, Play, Check } from 'lucide-react';
+import { ChevronDown, Play } from 'lucide-react';
 import type { Authority } from '../content/authorities';
 import AwarenessCheck from './AwarenessCheck';
 import { prefersReducedMotion } from '../lib/canvas-quality';
@@ -17,9 +17,14 @@ interface AuthorityAccordionProps {
 /**
  * Versao mobile do capitulo 1.
  *
- * A lista vertical mostra os tres nomes e os checkboxes interativos de cara,
- * mesmo com o acordeon encolhido. O visitante pode marcar/desmarcar diretamente
- * no cabeçalho ou expandir para ler a citação e assistir o vídeo.
+ * A marcacao fica FORA do painel colapsavel, sempre visivel abaixo do
+ * palestrante, e carrega a frase inteira. O que se pede aqui nao e um clique em
+ * "marcar" — e a confirmacao de que a pessoa concorda com aquela afirmacao
+ * especifica, e isso so tem sentido se a afirmacao estiver na tela junto do
+ * controle. Um chip compacto escrito "Marcar" nao diz com o que se concorda.
+ *
+ * Expandir revela a evidencia (citacao + video), que aparece acima da marcacao:
+ * le-se a prova e so entao se confirma.
  */
 export default function AuthorityAccordion({
   authorities, openIndex, onToggleOpen, checks, onToggleCheck, onPlay,
@@ -44,14 +49,13 @@ export default function AuthorityAccordion({
                 : 'border-slate-200 shadow-sm'
             }`}
           >
-            <div className="flex items-center justify-between p-3 gap-2">
+            <h3 id={headerId} className="m-0">
               <button
                 type="button"
                 onClick={() => onToggleOpen(i)}
                 aria-expanded={isOpen}
                 aria-controls={panelId}
-                id={headerId}
-                className="flex-1 flex items-center gap-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-lg min-w-0"
+                className="w-full flex items-center gap-3 p-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-inset"
               >
                 {/* objectPosition 22%: "center top" cortava no cabelo — num
                     circulo de 44px sobrava testa e nenhum rosto. */}
@@ -84,49 +88,19 @@ export default function AuthorityAccordion({
                     {authority.title}
                   </span>
                 </span>
-              </button>
 
-              {/* Checkbox interativo no cabeçalho (visível encolhido ou expandido) */}
-              <button
-                type="button"
-                role="checkbox"
-                aria-checked={isChecked}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onToggleCheck(i);
-                }}
-                className={`px-2.5 py-1.5 rounded-lg border text-xs font-semibold flex items-center gap-1.5 shrink-0 transition-all select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
-                  isChecked
-                    ? 'bg-emerald-50 border-emerald-300 text-emerald-950'
-                    : 'bg-slate-50 border-slate-200 hover:bg-slate-100 text-slate-700'
-                }`}
-              >
-                <span
-                  aria-hidden="true"
-                  className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${
-                    isChecked ? 'bg-emerald-600 border-emerald-600 text-white' : 'border-slate-300 bg-white'
-                  }`}
-                >
-                  {isChecked && <Check size={12} strokeWidth={3} />}
-                </span>
-                <span className="text-[11px] font-medium">
-                  {isChecked ? 'Ciente' : 'Marcar'}
+                <span className="shrink-0 flex items-center gap-1.5 text-slate-400">
+                  <span className="text-[9px] font-bold uppercase tracking-wider">
+                    {isOpen ? 'Fechar' : 'Ver mais'}
+                  </span>
+                  <ChevronDown
+                    size={18}
+                    aria-hidden="true"
+                    className={`transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}
+                  />
                 </span>
               </button>
-
-              {/* Botão de expandir/recolher */}
-              <button
-                type="button"
-                onClick={() => onToggleOpen(i)}
-                aria-label={isOpen ? `Recolher ${authority.name}` : `Expandir ${authority.name}`}
-                className="p-1 text-slate-400 hover:text-slate-600 transition-colors focus-visible:outline-none"
-              >
-                <ChevronDown
-                  size={18}
-                  className={`transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}
-                />
-              </button>
-            </div>
+            </h3>
 
             <AnimatePresence initial={false}>
               {isOpen && (
@@ -153,16 +127,19 @@ export default function AuthorityAccordion({
                       <Play size={12} fill="currentColor" />
                       Assistir o trecho
                     </button>
-
-                    <AwarenessCheck
-                      label={authority.checkboxLabel}
-                      checked={isChecked}
-                      onToggle={() => onToggleCheck(i)}
-                    />
                   </div>
                 </motion.div>
               )}
             </AnimatePresence>
+
+            {/* Fora do AnimatePresence de proposito: a marcacao nunca some. */}
+            <div className="px-3 pb-3">
+              <AwarenessCheck
+                label={authority.checkboxLabel}
+                checked={isChecked}
+                onToggle={() => onToggleCheck(i)}
+              />
+            </div>
           </div>
         );
       })}
