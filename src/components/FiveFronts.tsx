@@ -26,7 +26,7 @@ export default function FiveFronts({ onWantStrategy }: { onWantStrategy?: () => 
   useEffect(() => {
     const verdict = resolveFirstFront({ hasNoWebsite, websiteScore });
     if (verdict === null) return;
-    const key = `${hasNoWebsite}:${websiteScore}`;
+    const key = String(verdict);
     if (applied.current === key) return;
     applied.current = key;
     if (frontsChecked[0] !== verdict) toggleFront(0);
