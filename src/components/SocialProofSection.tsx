@@ -66,13 +66,6 @@ export default function SocialProofSection() {
         </div>
       </div>
 
-      {/* Declaracoes publicas sobre IA em geral — nao endosso a RIA. Dizer isso
-          protege a marca e nao custa nada em conversao. */}
-      <p className="text-[10px] md:text-[11px] text-slate-500 text-center mt-5 max-w-2xl mx-auto leading-relaxed bg-white/80 rounded-lg px-3 py-2">
-        Declarações públicas sobre inteligência artificial no mercado brasileiro. Não constituem
-        endosso, parceria ou recomendação da RIA.
-      </p>
-
       <VideoModal
         isOpen={!!selected}
         onClose={() => setSelected(null)}
