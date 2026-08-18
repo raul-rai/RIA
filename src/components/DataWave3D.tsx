@@ -194,25 +194,21 @@ export default function DataWave3D({ progress }: DataWave3DProps) {
           const normalizedY = Math.min(1, Math.max(0, (-p.y - 40) / 650));
 
           if (fillQuads) {
-            // A onda e cenario, nao superficie de leitura (spec D-01). A agua fica
-            // em tons pastel e o alpha tem teto baixo, de forma que o pior caso —
-            // texto slate-600 sobre a crista mais escura — ainda passa de 5:1 em
-            // contraste. Escurecer estes numeros e reabrir o bug de legibilidade.
+            // Onda opaca: preenchimento solido com alpha 1.0 (respeitando apenas o fog de profundidade)
             const fillR = Math.floor(196 - normalizedY * 60);
             const fillG = Math.floor(226 - normalizedY * 40);
             const fillB = Math.floor(235 - normalizedY * 20);
-            const fillAlpha = Math.min(0.5, depthAlpha * 0.8);
+            const fillAlpha = Math.min(1.0, depthAlpha);
 
             ctx.fillStyle = `rgba(${fillR}, ${fillG}, ${fillB}, ${fillAlpha})`;
             ctx.fill();
           }
 
-          // Contorno batimetrico: teal mais fechado que a agua, para a estrutura
-          // da onda continuar visivel agora que o corpo dela e claro.
+          // Contorno opaco
           const lineR = Math.floor(120 - normalizedY * 92);
           const lineG = Math.floor(190 - normalizedY * 62);
           const lineB = Math.floor(205 - normalizedY * 42);
-          const lineAlpha = depthAlpha * (0.45 + normalizedY * 0.3);
+          const lineAlpha = Math.min(1.0, depthAlpha);
 
           ctx.lineWidth = 1.1;
           ctx.strokeStyle = `rgba(${lineR}, ${lineG}, ${lineB}, ${lineAlpha})`;
