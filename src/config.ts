@@ -19,6 +19,7 @@ export const config = {
     import.meta.env.VITE_N8N_DIAGNOSTIC_WEBHOOK_URL,
     'VITE_N8N_DIAGNOSTIC_WEBHOOK_URL'
   ),
+  bookingUrl: readEnv(import.meta.env.VITE_BOOKING_URL, 'VITE_BOOKING_URL'),
   pageSpeedApiUrl: 'https://www.googleapis.com/pagespeedonline/v5/runPagespeed',
   pageSpeedApiKey: import.meta.env.VITE_PAGESPEED_API_KEY || '',
 } as const;

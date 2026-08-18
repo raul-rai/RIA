@@ -28,4 +28,11 @@ describe('CONFIG: endpoints e contatos nao ficam cravados no codigo', () => {
       .filter((f) => /https?:\/\/[^\s'"]*(webhook|easypanel)/i.test(readFileSync(f, 'utf-8')));
     expect(offenders).toEqual([]);
   });
+
+  it('CONFIG-03: a URL da agenda so aparece em config.ts', () => {
+    const offenders = sourceFiles(SRC)
+      .filter((f) => f !== ALLOWED_WEBHOOK)
+      .filter((f) => /https?:\/\/[^\s'"]*cal\.com/i.test(readFileSync(f, 'utf-8')));
+    expect(offenders).toEqual([]);
+  });
 });
