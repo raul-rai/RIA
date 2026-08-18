@@ -20,6 +20,8 @@ export type WebVital = {
   score: number;
 };
 
+type DiagnosticDimension = { nome: string; pct: number; labelExtra?: string };
+
 type DiagnosticResult = {
   source: DiagnosticSource;
   score: number;
@@ -27,11 +29,14 @@ type DiagnosticResult = {
   nivel_nome: string;
   leitura: string;
   dimensoes: {
-    D1: { nome: string; pct: number };
-    D2: { nome: string; pct: number };
-    D3: { nome: string; pct: number };
-    D4: { nome: string; pct: number };
-    D5: { nome: string; pct: number; labelExtra?: string };
+    // labelExtra e opcional em todas as cinco: o cartao renderiza as dimensoes
+    // por um unico map, e sem a propriedade declarada aqui o TypeScript reduz o
+    // array ao formato comum e a leitura de m.labelExtra nao compila.
+    D1: DiagnosticDimension;
+    D2: DiagnosticDimension;
+    D3: DiagnosticDimension;
+    D4: DiagnosticDimension;
+    D5: DiagnosticDimension;
   };
   webVitals?: WebVital[];
 };
