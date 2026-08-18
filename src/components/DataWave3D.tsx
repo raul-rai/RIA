@@ -194,20 +194,20 @@ export default function DataWave3D({ progress }: DataWave3DProps) {
           const normalizedY = Math.min(1, Math.max(0, (-p.y - 40) / 650));
 
           if (fillQuads) {
-            // Onda opaca: preenchimento solido com alpha 1.0 (respeitando apenas o fog de profundidade)
-            const fillR = Math.floor(196 - normalizedY * 60);
-            const fillG = Math.floor(226 - normalizedY * 40);
-            const fillB = Math.floor(235 - normalizedY * 20);
+            // Onda opaca em tons de azul (azul cobalto no vale ate azul real eletrico na crista)
+            const fillR = Math.floor(10 + normalizedY * 30);
+            const fillG = Math.floor(60 + normalizedY * 85);
+            const fillB = Math.floor(180 + normalizedY * 70);
             const fillAlpha = Math.min(1.0, depthAlpha);
 
             ctx.fillStyle = `rgba(${fillR}, ${fillG}, ${fillB}, ${fillAlpha})`;
             ctx.fill();
           }
 
-          // Contorno opaco
-          const lineR = Math.floor(120 - normalizedY * 92);
-          const lineG = Math.floor(190 - normalizedY * 62);
-          const lineB = Math.floor(205 - normalizedY * 42);
+          // Linhas de grade em azul eletrico / ciano brilhante
+          const lineR = Math.floor(40 + normalizedY * 50);
+          const lineG = Math.floor(140 + normalizedY * 85);
+          const lineB = Math.floor(220 + normalizedY * 35);
           const lineAlpha = Math.min(1.0, depthAlpha);
 
           ctx.lineWidth = 1.1;
