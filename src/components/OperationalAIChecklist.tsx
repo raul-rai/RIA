@@ -48,10 +48,10 @@ interface OperationalAIChecklistProps {
 }
 
 export default function OperationalAIChecklist({ onWantStrategy }: OperationalAIChecklistProps) {
-  const { operationalAIChecks, toggleOperationalAICheck, vulnerabilityIndex, hasNoWebsite } =
+  const { frontsChecked, toggleFront, vulnerabilityIndex, hasNoWebsite } =
     useVulnerability();
 
-  const checkedCount = operationalAIChecks.filter(Boolean).length;
+  const checkedCount = frontsChecked.filter(Boolean).length;
   const score = vulnerabilityIndex;
 
   return (
@@ -77,11 +77,11 @@ export default function OperationalAIChecklist({ onWantStrategy }: OperationalAI
             ficava abaixo da dobra. */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-4 max-w-4xl mx-auto mb-6 md:mb-8">
           {OPERATIONAL_ITEMS.map((item, index) => {
-            const isChecked = operationalAIChecks[index];
+            const isChecked = frontsChecked[index];
             return (
               <motion.div
                 key={item.id}
-                onClick={() => { toggleOperationalAICheck(index); track('operational_check', { kind: 'pillar', index }); }}
+                onClick={() => { toggleFront(index); track('operational_check', { kind: 'pillar', index }); }}
                 initial={{ opacity: 0, x: -10 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.08 }}

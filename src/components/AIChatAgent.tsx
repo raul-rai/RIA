@@ -65,7 +65,7 @@ function parseRoiData(raw: unknown): RoiData | undefined {
 }
 
 export default function AIChatAgent({ webhookUrl = config.chatWebhook, onComplete }: AIChatAgentProps) {
-  const { vulnerabilityIndex, hasNoWebsite, operationalAIChecks, websiteScore } = useVulnerability();
+  const { vulnerabilityIndex, hasNoWebsite, frontsChecked, websiteScore } = useVulnerability();
 
   const [messages, setMessages] = useState<Message[]>([
     { role: 'assistant', content: hasNoWebsite ? NO_WEBSITE_GREETING : GREETING },
@@ -102,7 +102,7 @@ export default function AIChatAgent({ webhookUrl = config.chatWebhook, onComplet
 
   /** Mensagem de WhatsApp que carrega tudo que o visitante ja respondeu. */
   const handoffUrl = useMemo(() => {
-    const marcados = operationalAIChecks.filter(Boolean).length;
+    const marcados = frontsChecked.filter(Boolean).length;
     const linhas = [
       'Olá Raul, tentei falar com o agente no site e quero continuar por aqui.',
       '',
@@ -114,10 +114,10 @@ export default function AIChatAgent({ webhookUrl = config.chatWebhook, onComplet
         : websiteScore !== null
           ? `Site auditado: ${websiteScore}/100`
           : 'Site: não auditado',
-      `Pilares de IA em uso: ${marcados} de 5`,
+      `Frentes cobertas: ${marcados} de 5`,
     ];
     return whatsappWithMessage(linhas.join('\n'));
-  }, [vulnerabilityIndex, hasNoWebsite, websiteScore, operationalAIChecks]);
+  }, [vulnerabilityIndex, hasNoWebsite, websiteScore, frontsChecked]);
 
   const send = async (text: string) => {
     const currentInput = text.trim();
@@ -149,7 +149,7 @@ export default function AIChatAgent({ webhookUrl = config.chatWebhook, onComplet
             vulnerabilityIndex,
             hasNoWebsite,
             websiteScore,
-            operationalPillars: operationalAIChecks.filter(Boolean).length,
+            frontsCovered: frontsChecked.filter(Boolean).length,
           },
         }),
         signal: controller.signal,
