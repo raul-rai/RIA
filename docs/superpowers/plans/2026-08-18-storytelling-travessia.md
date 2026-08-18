@@ -1827,19 +1827,20 @@ export default function CredibilitySection({ onWantStrategy }: { onWantStrategy?
 }
 ```
 
-- [ ] **Step 4: Remove the two absorbed components**
+- [ ] **Step 4: Verify the tree still builds**
+
+`ProofSection.tsx` and `ConsultantSection.tsx` stay on disk for now. They are removed in Task 10, after `LandingPage` stops importing them — deleting them here would break the build for no gain.
 
 ```bash
-git rm src/components/ProofSection.tsx src/components/ConsultantSection.tsx
-grep -rn "ProofSection\|ConsultantSection" src/ tests/
+npm run lint && npm test
 ```
 
-Expected: apenas as linhas em `src/pages/LandingPage.tsx`, corrigidas na Task 10. Se `npm run lint` for rodado agora ele falha por isso — é esperado, e a Task 10 fecha.
+Expected: tsc sem erro; suíte passa. `CredibilitySection` ainda não é usado por ninguém; isso é esperado.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add -A src/components src/content/consultant.ts index.html
+git add src/components/CredibilitySection.tsx src/content/consultant.ts index.html
 git commit -m "feat: dobra 4 funde prova e consultor, com casos etiquetados por frente"
 ```
 
@@ -2010,13 +2011,16 @@ npm run lint && npm test && npm run build
 
 Expected: tsc sem erro; toda a suíte passa; build conclui.
 
-- [ ] **Step 5: Verify no stale references remain**
+- [ ] **Step 5: Remove the two absorbed components and verify no stale references remain**
+
+Now that `LandingPage` no longer imports them:
 
 ```bash
+git rm src/components/ProofSection.tsx src/components/ConsultantSection.tsx
 grep -rn "ProofSection\|ConsultantSection\|OperationalAIChecklist\|operationalAIChecks" src/ tests/
 ```
 
-Expected: nenhuma linha.
+Expected: nenhuma linha. Then re-run `npm run lint && npm test` to confirm the removal broke nothing.
 
 - [ ] **Step 6: Verify in the browser**
 
@@ -2025,7 +2029,7 @@ Start the dev server and walk the page: six chapters scroll in order; the diagno
 - [ ] **Step 7: Commit**
 
 ```bash
-git add src/pages/LandingPage.tsx src/components/OfferSection.tsx src/components/PotentialDiagnostic.tsx
+git add -u src/components src/pages/LandingPage.tsx src/components/OfferSection.tsx src/components/PotentialDiagnostic.tsx
 git commit -m "feat: pagina passa a seis dobras com fechamento unico no agente"
 ```
 
@@ -2052,4 +2056,4 @@ git commit -m "feat: pagina passa a seis dobras com fechamento unico no agente"
 
 **Lacuna herdada do spec:** os cinco campos não incluem o nome da pessoa — só o da empresa. A agenda recebe o nome da empresa no campo de convidado (Task 7, `name={qualification.company}`), o que é a leitura honesta do que foi coletado. Se o Raul quiser o nome de quem fala, é um sexto passo em `QUALIFICATION_STEPS` e o resto acompanha sozinho.
 
-**Ponto de atenção para quem executar:** a Task 9 deixa a árvore sem compilar de propósito (remove `ProofSection` e `ConsultantSection` antes de a Task 10 corrigir os imports). As duas são vizinhas na ordem; não pule a 10, e não tente rodar `npm run lint` esperando verde ao fim da 9.
+**Toda tarefa termina com a árvore verde.** A remoção de `ProofSection` e `ConsultantSection` acontece na Task 10, depois que a `LandingPage` para de importá-los — não na Task 9, que apenas cria o substituto. `npm run lint && npm test` deve passar ao fim de cada uma das dez tarefas.
