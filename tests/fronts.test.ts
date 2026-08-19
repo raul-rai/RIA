@@ -20,6 +20,17 @@ describe('FRONTS: o catalogo real da RIA', () => {
       expect(f.tag.trim().length).toBeGreaterThan(0);
     }
   });
+
+  it('FRONT-10: toda frente tem sondagem, formatada para entrar no meio de uma frase', () => {
+    for (const f of FRONTS) {
+      const probe = f.probe.trim();
+      expect(probe.length).toBeGreaterThan(0);
+      // Entra depois de "o que sua empresa faz, e ...?" — maiuscula ou ponto
+      // final quebrariam a frase do agente.
+      expect(probe).not.toMatch(/[.?!]$/);
+      expect(probe[0]).toBe(probe[0].toLowerCase());
+    }
+  });
 });
 
 describe('resolveFirstFront: a dobra 2 pre-resolve a frente 1', () => {
