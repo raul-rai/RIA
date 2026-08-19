@@ -61,15 +61,15 @@ export default function FiveFronts() {
           const isChecked = frontsChecked[i];
           const destacada = i === 0 && primeiraVazia && !isChecked;
           const tom = isChecked
-            ? 'bg-emerald-50/90 border-emerald-300'
+            ? 'glass-emerald glass-selected'
             : destacada
-              ? 'bg-red-50/90 border-red-300'
-              : 'bg-white/90 border-slate-200 hover:border-slate-300';
+              ? 'glass-red glass-selected'
+              : '';
           return (
             /* O cartao deixa de ser <button> porque passou a conter um: o
                toggle "ja cubro" e o atalho "falar sobre" sao irmaos, nunca
                aninhados — <button> dentro de <button> e HTML invalido. */
-            <div key={front.id} className={`flex flex-col rounded-2xl border transition-colors ${tom}`}>
+            <div key={front.id} className={`glass-card glass-hover flex flex-col rounded-2xl ${tom}`}>
               <motion.button
                 type="button"
                 onClick={() => {
@@ -82,7 +82,7 @@ export default function FiveFronts() {
               >
                 <span
                   className={`w-6 h-6 rounded-lg border-2 shrink-0 flex items-center justify-center mt-0.5 ${
-                    isChecked ? 'bg-emerald-500 border-emerald-500' : 'border-slate-300'
+                    isChecked ? 'bg-emerald-500 border-emerald-500' : 'border-slate-400/70 bg-white/50'
                   }`}
                 >
                   {isChecked && <Check size={14} className="text-white" strokeWidth={3} />}
