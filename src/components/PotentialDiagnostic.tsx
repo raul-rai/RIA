@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { config } from '../config';
 import { useVulnerability } from '../context/VulnerabilityContext';
+import { useAgentIntent } from '../context/AgentIntentContext';
 import { whatsappWithMessage } from '../constants/links';
 import { track } from '../lib/analytics';
 
@@ -153,19 +154,12 @@ function generateHeuristicDiagnostic(domain: string): DiagnosticResult {
   };
 }
 
-interface PotentialDiagnosticProps {
-  onWantStrategy?: () => void;
-  /** Declarar que nao tem site encerra o diagnostico: nao ha o que auditar.
-   *  O site e a primeira das cinco frentes, entao o proximo passo util e o
-   *  catalogo das frentes — a pagina leva o visitante ate la. */
-  onNoWebsite?: () => void;
-}
-
 /** Respiro entre o clique e a rolagem. Sem ele o visitante e teletransportado
  *  antes de ver o indice virar 101% — que e justamente o argumento. */
 const NO_WEBSITE_SCROLL_DELAY_MS = 900;
 
-export default function PotentialDiagnostic({ onWantStrategy, onNoWebsite }: PotentialDiagnosticProps) {
+export default function PotentialDiagnostic() {
+  const { requestIntent } = useAgentIntent();
   const {
     hasNoWebsite, setNoWebsite, setWebsiteAuditScore,
     socialChecks, toggleSocialCheck,
@@ -203,7 +197,7 @@ export default function PotentialDiagnostic({ onWantStrategy, onNoWebsite }: Pot
     setUrl('');
     track('diagnostic_no_website');
     if (scrollTimer.current) clearTimeout(scrollTimer.current);
-    scrollTimer.current = setTimeout(() => onNoWebsite?.(), NO_WEBSITE_SCROLL_DELAY_MS);
+    scrollTimer.current = setTimeout(() => requestIntent('diagnostic-no-website'), NO_WEBSITE_SCROLL_DELAY_MS);
   };
 
   const handleAnalyze = async () => {
@@ -422,13 +416,16 @@ export default function PotentialDiagnostic({ onWantStrategy, onNoWebsite }: Pot
             {/* Diz o que vai acontecer antes de acontecer: rolagem que o
                 visitante nao pediu, sem aviso, e sequestro de scroll. */}
             <p className="text-[10px] uppercase tracking-[0.18em] font-black text-red-500 mb-3">
-              Levando você às cinco frentes…
+              Levando você ao agente…
             </p>
             <button
-              onClick={() => { track('cta_click', { location: 'diagnostic_no_website' }); onWantStrategy?.(); }}
+              onClick={() => {
+                track('cta_click', { location: 'diagnostic_no_website' });
+                requestIntent('diagnostic-no-website');
+              }}
               className="px-6 py-3 bg-red-600 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-red-700 transition-all inline-flex items-center gap-2 shadow-md"
             >
-              <span>Ver as cinco frentes</span>
+              <span>Falar com o agente agora</span>
               <ArrowRight size={14} />
             </button>
           </motion.div>
@@ -602,17 +599,20 @@ export default function PotentialDiagnostic({ onWantStrategy, onNoWebsite }: Pot
                       {SOURCE_LABEL[result.source]}
                     </p>
                     {/* Ponte narrativa: o site que acabou de ser avaliado e a
-                        primeira das cinco frentes, nao um destino a parte. */}
+                        primeira das cinco frentes. O agente mostra as outras. */}
                     <p className="text-slate-700 text-[11px] md:text-xs leading-snug font-semibold mt-1.5">
-                      O site é a primeira das cinco frentes. Veja as outras quatro.
+                      O site é a primeira das cinco frentes. O agente te mostra as outras quatro.
                     </p>
                   </div>
                 </div>
                 <button
-                  onClick={() => { track('cta_click', { location: 'diagnostic_result' }); onWantStrategy?.(); }}
+                  onClick={() => {
+                    track('cta_click', { location: 'diagnostic_result' });
+                    requestIntent('diagnostic-result');
+                  }}
                   className="px-5 py-3 bg-slate-900 text-white rounded-lg text-xs font-black uppercase tracking-widest hover:bg-accent transition-all flex items-center gap-2 shadow-md shrink-0"
                 >
-                  <span>Ver as cinco frentes</span>
+                  <span>Falar com o agente</span>
                   <ArrowRight size={14} />
                 </button>
               </div>
