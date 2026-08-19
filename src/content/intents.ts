@@ -82,7 +82,7 @@ export const INTENTS: Record<IntentId, IntentDefinition> = {
         : 'Quero parar de rasgar dinheiro. Por onde eu começo?';
     },
     agentReply: () =>
-      'Começa por saber onde está o vazamento. Me diz em uma frase o que sua empresa faz e onde o tempo da equipe está indo — eu volto com a frente que paga mais rápido.',
+      'Começa por saber onde está o vazamento. Na maioria das operações ele está em três lugares: lead que não é respondido, rotina que consome hora de gente cara, e decisão tomada no achismo. Me diz o que sua empresa faz — eu volto com qual dos três está te custando mais.',
   },
 
   'diagnostic-result': {
