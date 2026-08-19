@@ -40,13 +40,13 @@ const TERMS = [
 
 export default function OfferSection() {
   return (
-    <div className="w-full bg-white/95 premium-glass rounded-2xl border border-slate-200 shadow-lg px-5 py-4 text-left">
+    <div className="glass-card w-full rounded-2xl px-5 py-4 text-left">
       <dl className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {TERMS.map((t) => {
           const Icon = t.icon;
           return (
             <div key={t.label} className="flex gap-2.5">
-              <div className="p-1.5 bg-accent/10 border border-accent/20 rounded-lg h-fit shrink-0">
+              <div className="glass-inset glass-accent p-1.5 rounded-lg h-fit shrink-0">
                 <Icon size={12} className="text-accent" />
               </div>
               <div className="min-w-0">

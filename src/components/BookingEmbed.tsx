@@ -68,7 +68,7 @@ export default function BookingEmbed({ name, email, notes, fallbackMessage }: Bo
       <div
         role="status"
         aria-live="polite"
-        className="mt-3 p-4 bg-white rounded-xl border border-accent/30 shadow-md text-left"
+        className="glass-raised glass-accent mt-3 p-4 rounded-xl text-left"
       >
         <p className="text-sm text-slate-900 font-semibold leading-snug mb-3">
           Tenho tudo que preciso. Vamos fechar o horário direto comigo.
@@ -90,9 +90,9 @@ export default function BookingEmbed({ name, email, notes, fallbackMessage }: Bo
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      className="mt-3 bg-white rounded-xl border border-accent/30 shadow-md overflow-hidden text-left"
+      className="glass-raised glass-accent mt-3 rounded-xl overflow-hidden text-left"
     >
-      <div className="flex items-center gap-2 px-4 py-2.5 border-b border-slate-200 bg-slate-50">
+      <div className="glass-rail flex items-center gap-2 px-4 py-2.5 border-b border-slate-900/10">
         <CalendarCheck size={14} className="text-accent" />
         <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-slate-600">
           Escolha o horário — 30 minutos

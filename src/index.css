@@ -17,6 +17,74 @@
   --radius-2xl: 2rem;
 }
 
+/* Registro das variaveis do vidro.
+
+   Duas coisas vem daqui, e a segunda e a que importa.
+
+   Tipo: um valor invalido cai no initial-value em vez de virar lixo herdado, e
+   a cor interpola de verdade quando o tom troca (marcar uma frente faz o
+   cartao ir de branco a verde, nao pular).
+
+   E, principalmente, PADRAO: o initial-value passa a ser o unico lugar onde o
+   tom neutro e declarado. Enquanto os defaults de --inset-* viviam numa regra
+   de classe, essa regra aparecia no arquivo DEPOIS de .glass-emerald e
+   .glass-red — mesma especificidade, ordem de fonte decide — e nenhuma
+   superficie interna conseguia mudar de tom: "glass-inset glass-emerald" saia
+   cinza. O initial-value nao disputa cascata com ninguem. */
+@property --glass-tint {
+  syntax: "<number>+";
+  inherits: true;
+  initial-value: 253 254 255;
+}
+
+@property --glass-alpha {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0.84;
+}
+
+@property --glass-edge {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: rgba(15, 23, 42, 0.10);
+}
+
+@property --glass-edge-hover {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: rgba(0, 131, 143, 0.42);
+}
+
+@property --glass-specular {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: rgba(255, 255, 255, 0.75);
+}
+
+@property --glass-sheen {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: rgba(0, 180, 216, 0.10);
+}
+
+@property --inset-tint {
+  syntax: "<number>+";
+  inherits: true;
+  initial-value: 15 23 42;
+}
+
+@property --inset-alpha {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0.045;
+}
+
+@property --inset-edge {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: rgba(15, 23, 42, 0.08);
+}
+
 @layer base {
   html {
     scroll-snap-type: y proximity;
@@ -82,36 +150,349 @@
     -webkit-overflow-scrolling: touch;
   }
 
+  /* ═══════════════════════════════════════════════════════════════════════
+     SISTEMA DE VIDRO
+
+     Um motor so — as classes .glass* — e modificadores. Todo cartao da pagina
+     passa por aqui, para que a translucidez seja a mesma em toda parte em vez
+     de cada componente inventar o seu proprio bg-white/9x.
+
+     Tres decisoes carregam o sistema:
+
+     1. PISO DE LEGIBILIDADE. O fundo desta pagina nao e branco: e um canvas
+        cuja onda fecha em azul-marinho OPACO (rgb(6,38,66), alpha 1.0) nas
+        ultimas dobras — underwaterStops preenche a tela inteira quando a
+        camera submerge. O pior caso nao e hipotetico: e o capitulo do agente.
+
+        Por isso a opacidade base e 0.84, e nao os 0.6–0.7 que dariam um vidro
+        mais espetacular. Sobre aquele marinho, 0.84 deixa slate-900 em 12.8:1,
+        slate-700 em 7.4:1 e slate-600 em 5.5:1 — todo o corpo de texto acima
+        do AA. A 0.74 o slate-600 caia para 4.4:1 e reprovava.
+
+        O que faz este vidro parecer vidro nao e a transparencia sozinha: e o
+        blur de 20px somado ao ganho de saturacao e ao reflexo da quina. Da
+        para ser opaco o bastante para ler e ainda assim inconfundivelmente
+        translucido.
+
+     2. ORCAMENTO DE BLUR. Cada camada com backdrop-filter obriga o compositor
+        a reler o fundo, e aqui o fundo redesenha a cada frame. Entao
+        backdrop-filter existe SO nas superficies que tocam o canvas
+        (.glass, .glass-panel, .glass-card, .glass-chip). Tudo que vive DENTRO
+        de um cartao usa .glass-inset / .glass-raised / .glass-field /
+        .glass-rail: sao translucidos, mas nao filtram nada. E o que mantem a
+        conta de camadas parecida com a de antes, com muito mais vidro.
+
+     3. A BORDA E FEITA DE DOIS INSETS, nao de uma cor so: um risco claro no
+        topo (o reflexo especular, onde a luz bate na quina do painel) e um
+        escuro embaixo. E esse par que separa vidro de div branca com
+        opacidade.
+
+     As cores vem de custom properties para que os modificadores de tom
+     (.glass-emerald, .glass-red, …) troquem so o pigmento, nunca a fisica.
+     ═══════════════════════════════════════════════════════════════════════ */
+
+  .glass,
+  .glass-panel,
+  .glass-card,
+  .glass-chip,
+  .reading-surface,
   .premium-glass {
-    @apply relative overflow-hidden;
-    background: rgba(255, 255, 255, 0.85);
-    border: 1px solid rgba(0, 0, 0, 0.08);
-    backdrop-filter: blur(16px);
-    box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.05);
-    transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    --glass-tint: 253 254 255;
+    --glass-alpha: 0.84;
+    --glass-blur: 20px;
+    --glass-sat: 170%;
+    --glass-edge: rgba(15, 23, 42, 0.10);
+    --glass-edge-hover: rgba(0, 131, 143, 0.42);
+    --glass-specular: rgba(255, 255, 255, 0.75);
+    --glass-sheen: rgba(0, 180, 216, 0.10);
+    --glass-lift: 0 1px 2px rgba(15, 23, 42, 0.04),
+      0 10px 24px -12px rgba(15, 23, 42, 0.18),
+      0 28px 56px -28px rgba(8, 47, 73, 0.20);
+
+    position: relative;
+    background-color: rgb(var(--glass-tint) / var(--glass-alpha));
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+    border: 1px solid var(--glass-edge);
+    box-shadow:
+      inset 0 1px 0 var(--glass-specular),
+      inset 0 -1px 0 rgba(15, 23, 42, 0.04),
+      var(--glass-lift);
+    /* transform fica FORA desta lista de proposito. Metade destes cartoes e
+       um motion.button, e o motion escreve transform inline a cada frame:
+       uma transicao CSS por cima interpola o que a mola ja interpolou e o
+       toque responde com meio segundo de atraso. Quem levanta e o
+       .glass-interactive, e e la que a transicao de transform mora. */
+    transition:
+      background-color 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+      border-color 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+      box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+      color 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   }
-  
-  /* O brilho cobre o cartao inteiro. Sem pointer-events:none ele vence o hit
-     test de todo filho que nao cria contexto de empilhamento proprio — foi o
-     que matou os botoes de "tenho / nao tenho site" e os checks de redes. */
+
+  /* O reflexo. Duas rampas cruzadas: a clara e a luz batendo na quina de
+     cima, a de accent e o ambiente atravessando o vidro por baixo.
+     border-radius: inherit faz o brilho respeitar a quina do cartao sem
+     obrigar cada call site a carregar overflow-hidden.
+
+     pointer-events: none e obrigatorio — sem ele o brilho vence o hit test de
+     todo filho que nao cria contexto de empilhamento proprio, e foi o que ja
+     matou os botoes de "tenho / nao tenho site" e os checks de redes. */
+  .glass::before,
+  .glass-panel::before,
+  .glass-card::before,
+  .glass-chip::before,
   .premium-glass::before {
     content: "";
     position: absolute;
     inset: 0;
+    border-radius: inherit;
     pointer-events: none;
-    background: linear-gradient(135deg, rgba(0, 180, 216, 0.08), transparent 60%);
-    opacity: 0;
+    background:
+      linear-gradient(135deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0) 44%),
+      linear-gradient(315deg, var(--glass-sheen) 0%, transparent 58%);
+    opacity: 0.6;
     transition: opacity 0.5s ease;
   }
 
-  /* Hover so onde ha ponteiro. No touch o :hover fica grudado depois do toque:
-     o cartao sobe 4px e nunca mais desce, ate o usuario tocar em outro lugar. */
+  /* Painel: o conteiner grande de uma dobra (o diagnostico, o chat, o cartao
+     do consultor). Mais opaco porque carrega texto corrido, e mais borrado
+     porque a area e grande o bastante para o desfoque virar profundidade. */
+  .glass-panel {
+    --glass-alpha: 0.88;
+    --glass-blur: 28px;
+    --glass-lift: 0 1px 2px rgba(15, 23, 42, 0.04),
+      0 18px 40px -18px rgba(15, 23, 42, 0.22),
+      0 48px 90px -40px rgba(8, 47, 73, 0.28);
+  }
+
+  /* Pilula. Texto de 9–11px em caixa alta nao perdoa fundo instavel: sobe a
+     opacidade e baixa o blur, que numa altura de 28px nem apareceria. */
+  .glass-chip {
+    --glass-alpha: 0.90;
+    --glass-blur: 12px;
+    --glass-lift: 0 1px 2px rgba(15, 23, 42, 0.05),
+      0 6px 16px -8px rgba(15, 23, 42, 0.16);
+  }
+
+  /* ── Tons ───────────────────────────────────────────────────────────────
+     Trocam so o pigmento e a quina. Combinam com qualquer superficie:
+     "glass-card glass-emerald", "glass-inset glass-red", etc. */
+  .glass-slate {
+    --glass-tint: 244 247 251;
+    --glass-edge: rgba(15, 23, 42, 0.10);
+    --glass-edge-hover: rgba(15, 23, 42, 0.20);
+    --glass-sheen: rgba(100, 116, 139, 0.10);
+    --inset-tint: 15 23 42;
+    --inset-alpha: 0.05;
+    --inset-edge: rgba(15, 23, 42, 0.08);
+  }
+
+  .glass-emerald {
+    --glass-tint: 228 250 240;
+    --glass-edge: rgba(16, 185, 129, 0.34);
+    --glass-edge-hover: rgba(16, 185, 129, 0.52);
+    --glass-sheen: rgba(16, 185, 129, 0.14);
+    --inset-tint: 16 185 129;
+    --inset-alpha: 0.12;
+    --inset-edge: rgba(16, 185, 129, 0.30);
+  }
+
+  .glass-red {
+    --glass-tint: 255 236 236;
+    --glass-edge: rgba(220, 38, 38, 0.32);
+    --glass-edge-hover: rgba(220, 38, 38, 0.50);
+    --glass-sheen: rgba(220, 38, 38, 0.12);
+    --inset-tint: 220 38 38;
+    --inset-alpha: 0.10;
+    --inset-edge: rgba(220, 38, 38, 0.28);
+  }
+
+  .glass-amber {
+    --glass-tint: 255 247 226;
+    --glass-edge: rgba(217, 119, 6, 0.32);
+    --glass-edge-hover: rgba(217, 119, 6, 0.50);
+    --glass-sheen: rgba(245, 158, 11, 0.14);
+    --inset-tint: 217 119 6;
+    --inset-alpha: 0.10;
+    --inset-edge: rgba(217, 119, 6, 0.28);
+  }
+
+  .glass-accent {
+    --glass-tint: 228 248 251;
+    --glass-edge: rgba(0, 131, 143, 0.30);
+    --glass-edge-hover: rgba(0, 131, 143, 0.48);
+    --glass-sheen: rgba(0, 180, 216, 0.18);
+    --inset-tint: 0 131 143;
+    --inset-alpha: 0.10;
+    --inset-edge: rgba(0, 131, 143, 0.28);
+  }
+
+  /* Vidro escuro — o modal de video, unica superficie sobre fundo preto. */
+  .glass-dark {
+    --glass-tint: 15 23 42;
+    --glass-alpha: 0.55;
+    --glass-blur: 24px;
+    --glass-sat: 140%;
+    --glass-edge: rgba(255, 255, 255, 0.14);
+    --glass-edge-hover: rgba(255, 255, 255, 0.26);
+    --glass-specular: rgba(255, 255, 255, 0.18);
+    --glass-sheen: rgba(0, 229, 255, 0.14);
+    /* O halo de accent do modal era um shadow-[…] do Tailwind na marcacao.
+       Aqui ele entra pela mesma variavel de elevacao do resto do sistema, e
+       para de disputar a propriedade box-shadow com o vidro. */
+    --glass-lift: 0 0 80px rgba(0, 229, 255, 0.20),
+      0 40px 80px -30px rgba(0, 0, 0, 0.7);
+  }
+
+  /* ── Superficies internas (sem backdrop-filter, por orcamento) ───────────
+     Vivem dentro de um cartao que ja filtrou o fundo. Filtrar de novo custa
+     uma releitura inteira do compositor e ainda embarra o resultado, porque o
+     que estaria sendo borrado ja e a propria camada de vidro. */
+  .glass-inset,
+  .glass-raised,
+  .glass-field,
+  .glass-rail {
+    /* Sem defaults de --inset-* aqui: eles moram no @property la em cima,
+       fora da cascata, para que os tons possam vencê-los. Ver o comentario
+       do registro. */
+    position: relative;
+    transition:
+      background-color 0.3s ease,
+      border-color 0.3s ease,
+      box-shadow 0.3s ease,
+      color 0.3s ease;
+  }
+
+  /* Rebaixada: citacoes, bolhas do agente, celulas de metrica. */
+  .glass-inset {
+    background-color: rgb(var(--inset-tint) / var(--inset-alpha));
+    border: 1px solid var(--inset-edge);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.5),
+      inset 0 1px 3px rgba(15, 23, 42, 0.04);
+  }
+
+  /* Elevada: o que era bg-white dentro de um cartao — o painel de ROI, o
+     agendamento, a qualificacao. Continua translucida, so que para cima. */
+  .glass-raised {
+    background-color: rgba(255, 255, 255, 0.72);
+    border: 1px solid var(--glass-edge, rgba(15, 23, 42, 0.08));
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.85),
+      0 1px 2px rgba(15, 23, 42, 0.04),
+      0 10px 24px -14px rgba(15, 23, 42, 0.22);
+  }
+
+  /* Campo: o input e a calha que o abriga. Cavado, nunca elevado. */
+  .glass-field {
+    background-color: rgba(255, 255, 255, 0.58);
+    border: 1px solid rgba(15, 23, 42, 0.10);
+    box-shadow: inset 0 1px 3px rgba(15, 23, 42, 0.07);
+  }
+
+  .glass-field:focus,
+  .glass-field:focus-within {
+    background-color: rgba(255, 255, 255, 0.82);
+    border-color: rgba(0, 131, 143, 0.55);
+  }
+
+  /* Faixa: cabecalho e rodape colados na quina de um painel de vidro. Sem
+     sombra propria — quem separa e o filete, nao a elevacao. */
+  .glass-rail {
+    background-color: rgba(255, 255, 255, 0.34);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  }
+
+  /* ── Estados ────────────────────────────────────────────────────────────
+     Hover so onde ha ponteiro. No touch o :hover fica grudado depois do
+     toque: o cartao sobe e nunca mais desce, ate o usuario tocar em outro
+     lugar.
+
+     Dois niveis de resposta, e a escolha entre eles nao e estetica:
+
+     .glass-interactive levanta 3px. So para elemento que o React renderiza
+     sem motion — ai ninguem mais escreve transform e a transicao CSS e dona
+     da propriedade.
+
+     .glass-hover so clareia o vidro e acende a quina. E o que os cartoes
+     animados por motion usam (as cinco frentes, os cartoes de autoridade):
+     ali o transform ja pertence a mola do motion, e disputar a propriedade
+     com ela e o que faz o whileTap responder com atraso. */
+  .glass-interactive,
+  .premium-glass {
+    transition:
+      background-color 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+      border-color 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+      box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+      color 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+      transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
   @media (hover: hover) and (pointer: fine) {
+    .glass-hover:hover {
+      --glass-alpha: 0.93;
+      --glass-edge: var(--glass-edge-hover);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.9),
+        inset 0 -1px 0 rgba(15, 23, 42, 0.04),
+        0 1px 2px rgba(15, 23, 42, 0.05),
+        0 16px 32px -14px rgba(0, 131, 143, 0.24),
+        0 36px 64px -32px rgba(8, 47, 73, 0.22);
+    }
+
+    .glass-hover:hover::before {
+      opacity: 1;
+    }
+
+    /* Cartao ja marcado guarda o anel no hover. Sem esta regra o box-shadow
+       do hover substitui a pilha inteira e o anel — que e informacao, nao
+       afordancia — desaparece justamente quando o ponteiro esta em cima. */
+    .glass-hover.glass-selected:hover,
+    .glass-interactive.glass-selected:hover {
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.9),
+        inset 0 -1px 0 rgba(15, 23, 42, 0.04),
+        0 0 0 3px var(--glass-sheen),
+        0 16px 32px -14px rgba(15, 23, 42, 0.20),
+        0 36px 64px -32px rgba(8, 47, 73, 0.22);
+    }
+
+    .glass-interactive:hover {
+      --glass-alpha: 0.93;
+      --glass-edge: var(--glass-edge-hover);
+      transform: translateY(-3px);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.9),
+        inset 0 -1px 0 rgba(15, 23, 42, 0.04),
+        0 1px 2px rgba(15, 23, 42, 0.05),
+        0 18px 36px -16px rgba(0, 131, 143, 0.28),
+        0 40px 72px -36px rgba(8, 47, 73, 0.24);
+    }
+
+    .glass-interactive:hover::before {
+      opacity: 1;
+    }
+
+    /* Superficie interna nao levanta: ela esta encaixada num painel, e um
+       cartao que sobe dentro de outro cartao denuncia que sao dois planos. */
+    .glass-inset.glass-interactive:hover,
+    .glass-raised.glass-interactive:hover,
+    .glass-field.glass-interactive:hover {
+      transform: none;
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.6),
+        inset 0 1px 3px rgba(15, 23, 42, 0.05);
+    }
+
+    .glass-inset.glass-interactive:hover {
+      --inset-alpha: 0.085;
+    }
+
     .premium-glass:hover {
-      @apply border-accent/40;
-      background: rgba(255, 255, 255, 0.95);
-      transform: translateY(-4px);
-      box-shadow: 0 15px 35px -5px rgba(0, 180, 216, 0.15);
+      --glass-alpha: 0.93;
+      --glass-edge: var(--glass-edge-hover);
+      transform: translateY(-3px);
     }
 
     .premium-glass:hover::before {
@@ -119,13 +500,93 @@
     }
   }
 
-  /* Orcamento de blur no celular. Cada camada com backdrop-filter forca o
-     compositor a reler o fundo — e o fundo aqui e um canvas que redesenha a
-     cada frame. Havia 15 camadas dessas em uma unica tela; a 16px o Android
-     intermediario perde frames rolando. A 8px o efeito continua legivel. */
-  @media (max-width: 767px) {
+  .glass-interactive:active {
+    transform: translateY(0);
+  }
+
+  /* O anel de um cartao marcado. Um ring-2 do Tailwind desenha por cima do
+     reflexo; este entra na mesma pilha de sombras do vidro. */
+  .glass-selected {
+    box-shadow:
+      inset 0 1px 0 var(--glass-specular),
+      inset 0 -1px 0 rgba(15, 23, 42, 0.04),
+      0 0 0 3px var(--glass-sheen),
+      var(--glass-lift);
+  }
+
+  /* ── Degradacoes ────────────────────────────────────────────────────────
+     Onde nao ha backdrop-filter (Firefox com a flag desligada, WebViews
+     antigas) o vidro vira um retangulo semi-transparente sobre um canvas em
+     movimento — ilegivel. Sem filtro, sem translucidez. */
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .glass,
+    .glass-panel,
+    .glass-card,
+    .glass-chip,
+    .reading-surface,
     .premium-glass {
-      backdrop-filter: blur(8px);
+      --glass-alpha: 0.97;
+    }
+
+    .glass-dark {
+      --glass-alpha: 0.92;
+    }
+  }
+
+  /* Quem pediu menos transparencia no sistema operacional pediu isso a serio:
+     costuma ser leitura com pouca visao, nao preferencia estetica. */
+  @media (prefers-reduced-transparency: reduce) {
+    .glass,
+    .glass-panel,
+    .glass-card,
+    .glass-chip,
+    .reading-surface,
+    .premium-glass {
+      --glass-alpha: 0.98;
+      --glass-blur: 0px;
+      --glass-sat: 100%;
+    }
+
+    .glass-dark {
+      --glass-alpha: 0.95;
+    }
+
+    .glass-raised {
+      background-color: rgba(255, 255, 255, 0.96);
+    }
+
+    .glass-field {
+      background-color: rgba(255, 255, 255, 0.92);
+    }
+
+    .glass::before,
+    .glass-panel::before,
+    .glass-card::before,
+    .glass-chip::before,
+    .premium-glass::before {
+      opacity: 0;
+    }
+  }
+
+  /* Orcamento de blur no celular. A 20px o Android intermediario perde frames
+     rolando sobre o canvas; a 10px o efeito continua legivel como vidro. */
+  @media (max-width: 767px) {
+    .glass,
+    .glass-panel,
+    .glass-card,
+    .glass-chip,
+    .reading-surface,
+    .premium-glass {
+      --glass-blur: 10px;
+      --glass-sat: 140%;
+    }
+
+    .glass-panel {
+      --glass-blur: 14px;
+    }
+
+    .glass-dark {
+      --glass-blur: 12px;
     }
   }
   
@@ -145,12 +606,39 @@
     @apply text-[30px] sm:text-[36px] md:text-[42px] lg:text-[52px] font-serif leading-[1.12];
   }
 
-  /* Superficie de leitura para titulo que cai sobre a onda. Mais leve que um
-     cartao: da contraste sem virar mais uma caixa na pilha. */
+  /* Superficie de leitura para titulo que cai sobre a onda. Herda o mesmo
+     vidro dos cartoes, mas devolve quina e elevacao: e um veu de contraste
+     atras do texto, nao mais uma caixa na pilha. */
   .reading-surface {
-    background: rgba(255, 255, 255, 0.82);
-    backdrop-filter: blur(8px);
+    --glass-alpha: 0.86;
+    border: 0;
     border-radius: 1rem;
+    box-shadow: none;
+  }
+
+  /* Desliga o vidro a partir do md.
+
+     Nao da para fazer isso com `md:bg-transparent`: as classes deste arquivo
+     entram na layer utilities DEPOIS das que o Tailwind gera, entao num
+     empate de especificidade quem vence e o vidro, e a utilitaria do Tailwind
+     nao tem efeito nenhum. O seletor composto abaixo resolve pela
+     especificidade, nao pela ordem. */
+  @media (min-width: 768px) {
+    .glass-md-none.glass,
+    .glass-md-none.glass-card,
+    .glass-md-none.glass-chip,
+    .glass-md-none.glass-panel,
+    .glass-md-none.reading-surface {
+      background-color: transparent;
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+      border-color: transparent;
+      box-shadow: none;
+    }
+
+    .glass-md-none::before {
+      display: none;
+    }
   }
 
   .heading-section {

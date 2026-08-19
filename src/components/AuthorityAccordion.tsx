@@ -43,10 +43,8 @@ export default function AuthorityAccordion({
         return (
           <div
             key={authority.name}
-            className={`rounded-2xl border bg-white overflow-hidden transition-colors duration-300 ${
-              isChecked
-                ? 'border-emerald-400 ring-1 ring-emerald-400/20'
-                : 'border-slate-200 shadow-sm'
+            className={`glass-card rounded-2xl overflow-hidden ${
+              isChecked ? 'glass-emerald glass-selected' : ''
             }`}
           >
             <h3 id={headerId} className="m-0">
@@ -115,14 +113,14 @@ export default function AuthorityAccordion({
                   className="overflow-hidden"
                 >
                   <div className="px-3 pb-3 flex flex-col gap-3">
-                    <blockquote className="text-slate-600 text-xs italic leading-relaxed bg-slate-50 p-3 rounded-xl border border-slate-100">
+                    <blockquote className="glass-inset text-slate-600 text-xs italic leading-relaxed p-3 rounded-xl">
                       "{authority.quote}"
                     </blockquote>
 
                     <button
                       type="button"
                       onClick={() => onPlay(authority)}
-                      className="self-start inline-flex items-center gap-2 px-4 py-3 min-h-11 rounded-lg border border-slate-200 bg-white text-slate-700 text-[11px] font-bold uppercase tracking-wider hover:border-accent hover:text-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                      className="glass-raised glass-interactive self-start inline-flex items-center gap-2 px-4 py-3 min-h-11 rounded-lg text-slate-700 text-[11px] font-bold uppercase tracking-wider hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                     >
                       <Play size={12} fill="currentColor" />
                       Assistir o trecho

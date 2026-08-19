@@ -52,8 +52,8 @@ export default function EliteHUD({ activeScene = 0 }: { activeScene?: number }) 
           paisagem, e no Android sob o recorte da camera. max() mantem o respiro
           de 1rem em aparelho sem recorte. */}
       <div
-        className={`absolute top-[max(1rem,env(safe-area-inset-top))] right-[max(1rem,env(safe-area-inset-right))] md:top-6 md:right-6 rounded-2xl bg-white/95 border shadow-[0_8px_24px_rgba(0,0,0,.07)] backdrop-blur-md transition-all duration-500 ${
-          hasNoWebsite ? 'border-red-300 ring-2 ring-red-400/20' : 'border-slate-200'
+        className={`glass-card absolute top-[max(1rem,env(safe-area-inset-top))] right-[max(1rem,env(safe-area-inset-right))] md:top-6 md:right-6 rounded-2xl ${
+          hasNoWebsite ? 'glass-red glass-selected' : ''
         }`}
       >
         {/* Mobile: so o numero. Tambem no celular deitado — ali a largura passa
@@ -112,7 +112,7 @@ export default function EliteHUD({ activeScene = 0 }: { activeScene?: number }) 
 
       {/* Timeline — so no hero, so no desktop */}
       <div
-        className="hidden lg:flex absolute bottom-8 left-8 flex-col gap-2 max-w-[240px] p-4 rounded-2xl bg-white/85 border border-slate-200/80 shadow-md backdrop-blur-md transition-opacity duration-700"
+        className="glass-card hidden lg:flex absolute bottom-8 left-8 flex-col gap-2 max-w-[240px] p-4 rounded-2xl transition-opacity duration-700"
         style={{ opacity: activeScene === 0 ? 1 : 0 }}
         aria-hidden="true"
       >

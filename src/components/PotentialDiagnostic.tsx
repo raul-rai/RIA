@@ -351,11 +351,11 @@ export default function PotentialDiagnostic({ onWantStrategy, onNoWebsite }: Pot
 
   return (
     <div className="w-full max-w-5xl mx-auto px-2 py-4 md:py-16 pointer-events-auto">
-      <div className="premium-glass rounded-[1.5rem] md:rounded-[2.5rem] border border-slate-200 p-4 md:p-12 relative overflow-hidden bg-white/95 shadow-xl">
+      <div className="glass-panel rounded-[1.5rem] md:rounded-[2.5rem] p-4 md:p-12 relative overflow-hidden">
         <div className="absolute -top-24 -right-24 w-64 h-64 bg-accent/10 blur-[120px]" />
 
         <div className="text-center mb-6 md:mb-10">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 border border-accent/20 mb-3">
+          <div className="glass-chip glass-accent inline-flex items-center gap-2 px-3 py-1 rounded-full mb-3">
             <Search size={12} className="text-accent" />
             <span className="text-accent-dark text-[10px] md:text-xs font-black uppercase tracking-[0.14em] md:tracking-[0.2em]">
               Diagnóstico de Presença Digital
@@ -378,10 +378,10 @@ export default function PotentialDiagnostic({ onWantStrategy, onNoWebsite }: Pot
           <button
             onClick={() => setNoWebsite(false)}
             aria-pressed={!hasNoWebsite}
-            className={`px-4 py-3 min-h-12 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 border ${
+            className={`px-4 py-3 min-h-12 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
               !hasNoWebsite
-                ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
-                : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                ? 'bg-slate-900 text-white border border-slate-900 shadow-sm'
+                : 'glass-inset glass-interactive text-slate-600'
             }`}
           >
             <Globe size={14} className="shrink-0" />
@@ -391,10 +391,10 @@ export default function PotentialDiagnostic({ onWantStrategy, onNoWebsite }: Pot
           <button
             onClick={declareNoWebsite}
             aria-pressed={hasNoWebsite}
-            className={`px-4 py-3 min-h-12 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 border ${
+            className={`px-4 py-3 min-h-12 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
               hasNoWebsite
-                ? 'bg-red-600 text-white border-red-600 shadow-md shadow-red-500/20'
-                : 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100'
+                ? 'bg-red-600 text-white border border-red-600 shadow-md shadow-red-500/20'
+                : 'glass-inset glass-red glass-interactive text-red-700'
             }`}
           >
             <AlertTriangle size={14} className="shrink-0" />
@@ -406,9 +406,9 @@ export default function PotentialDiagnostic({ onWantStrategy, onNoWebsite }: Pot
           <motion.div
             initial={{ opacity: 0, scale: 0.97 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="max-w-2xl mx-auto bg-red-50 border-2 border-red-200 rounded-2xl p-6 text-center text-red-950 mb-8 shadow-lg shadow-red-500/5"
+            className="glass-card glass-red max-w-2xl mx-auto rounded-2xl p-6 text-center text-red-950 mb-8"
           >
-            <div className="w-12 h-12 rounded-full bg-red-100 text-red-600 flex items-center justify-center mx-auto mb-3">
+            <div className="glass-inset glass-red w-12 h-12 rounded-full text-red-600 flex items-center justify-center mx-auto mb-3">
               <AlertTriangle size={24} />
             </div>
             <h3 className="text-base md:text-lg font-black uppercase tracking-wider text-red-900 mb-1">
@@ -434,7 +434,7 @@ export default function PotentialDiagnostic({ onWantStrategy, onNoWebsite }: Pot
           </motion.div>
         ) : !result && !failure ? (
           <div className="max-w-2xl mx-auto mb-8">
-            <div className="relative flex flex-col md:flex-row gap-2 p-1.5 bg-slate-50 rounded-xl border border-slate-200 shadow-inner">
+            <div className="glass-field relative flex flex-col md:flex-row gap-2 p-1.5 rounded-xl">
               <div className="relative flex-1">
                 <Globe className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
                 <input
@@ -463,7 +463,7 @@ export default function PotentialDiagnostic({ onWantStrategy, onNoWebsite }: Pot
                   <span>Varredura tecnica</span>
                   <span>{progress}%</span>
                 </div>
-                <div className="h-[2px] w-full bg-slate-200 rounded-full overflow-hidden">
+                <div className="h-[2px] w-full bg-slate-900/15 rounded-full overflow-hidden">
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${progress}%` }}
@@ -482,9 +482,9 @@ export default function PotentialDiagnostic({ onWantStrategy, onNoWebsite }: Pot
           <motion.div
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            className="max-w-2xl mx-auto mb-8 bg-amber-50 border border-amber-300 rounded-2xl p-6 text-center"
+            className="glass-card glass-amber max-w-2xl mx-auto mb-8 rounded-2xl p-6 text-center"
           >
-            <div className="w-11 h-11 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center mx-auto mb-3">
+            <div className="glass-inset glass-amber w-11 h-11 rounded-full text-amber-700 flex items-center justify-center mx-auto mb-3">
               <AlertTriangle size={20} />
             </div>
             <h3 className="text-sm font-black uppercase tracking-wider text-amber-900 mb-2">
@@ -500,7 +500,7 @@ export default function PotentialDiagnostic({ onWantStrategy, onNoWebsite }: Pot
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <button
                 onClick={reset}
-                className="px-5 py-3 bg-white text-slate-800 border border-slate-300 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-slate-50 transition-all inline-flex items-center justify-center gap-2"
+                className="glass-raised glass-interactive px-5 py-3 text-slate-800 rounded-xl text-xs font-black uppercase tracking-widest inline-flex items-center justify-center gap-2"
               >
                 <RotateCcw size={14} />
                 Tentar de novo
@@ -545,12 +545,12 @@ export default function PotentialDiagnostic({ onWantStrategy, onNoWebsite }: Pot
                 return (
                   <div
                     key={i}
-                    className="bg-slate-50 rounded-xl p-3 md:p-4 border border-slate-200 flex items-center md:flex-col gap-2.5 md:gap-3 shadow-xs relative"
+                    className="glass-inset rounded-xl p-3 md:p-4 flex items-center md:flex-col gap-2.5 md:gap-3 relative"
                   >
-                    <div className="p-1.5 bg-white rounded-lg border border-slate-200 shrink-0 flex items-center justify-between w-full md:w-auto">
+                    <div className="glass-raised p-1.5 rounded-lg shrink-0 flex items-center justify-between w-full md:w-auto">
                       <Icon size={14} className={tone.text} />
                       {m.labelExtra && (
-                        <span className="inline-flex items-center gap-1 text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
+                        <span className="glass-inset glass-emerald inline-flex items-center gap-1 text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-full text-emerald-800">
                           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
                           {m.labelExtra}
                         </span>
@@ -562,17 +562,17 @@ export default function PotentialDiagnostic({ onWantStrategy, onNoWebsite }: Pot
                         {m.nome}
                       </div>
                     </div>
-                    <div className="hidden md:block h-1.5 w-full bg-slate-200 rounded-full overflow-hidden">
+                    <div className="hidden md:block h-1.5 w-full bg-slate-900/15 rounded-full overflow-hidden">
                       <div className={`h-full ${tone.bar}`} style={{ width: `${m.pct}%` }} />
                     </div>
                   </div>
                 );
               })}
 
-              <div className="col-span-1 md:col-span-2 lg:col-span-4 p-4 bg-accent/10 border border-accent/20 rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="glass-inset glass-accent col-span-1 md:col-span-2 lg:col-span-4 p-4 rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="flex items-center gap-3 w-full md:w-auto">
                   <div
-                    className={`w-10 h-10 rounded-full border-2 flex items-center justify-center font-serif text-lg font-bold shrink-0 bg-white ${
+                    className={`w-10 h-10 rounded-full border-2 flex items-center justify-center font-serif text-lg font-bold shrink-0 bg-white/75 ${
                       result.score < 50
                         ? 'border-red-500 text-red-600'
                         : result.score < 80
@@ -618,14 +618,14 @@ export default function PotentialDiagnostic({ onWantStrategy, onNoWebsite }: Pot
               </div>
 
               {result.webVitals && (
-                <div className="col-span-1 md:col-span-2 lg:col-span-4 p-4 bg-slate-50 border border-slate-200 rounded-xl">
+                <div className="glass-inset col-span-1 md:col-span-2 lg:col-span-4 p-4 rounded-xl">
                   <h5 className="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-700 mb-2.5 flex items-center gap-1.5">
                     <Activity size={12} className="text-accent" />
                     <span>Métricas em Tempo Real (Core Web Vitals)</span>
                   </h5>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                     {result.webVitals.map((v) => (
-                      <div key={v.id} className="bg-white p-2.5 rounded-lg border border-slate-200/80 shadow-2xs">
+                      <div key={v.id} className="glass-raised p-2.5 rounded-lg">
                         <span className="text-[9.5px] font-mono font-bold uppercase text-slate-500 block mb-0.5">{v.name}</span>
                         <span className="text-sm md:text-base font-serif font-black text-slate-900">{v.value}</span>
                       </div>
@@ -638,7 +638,7 @@ export default function PotentialDiagnostic({ onWantStrategy, onNoWebsite }: Pot
         )}
 
         {/* Presenca em redes */}
-        <div className="mt-6 pt-6 border-t border-slate-200/80 max-w-2xl mx-auto">
+        <div className="mt-6 pt-6 border-t border-slate-900/10 max-w-2xl mx-auto">
           <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 mb-3 text-center flex items-center justify-center gap-2">
             <Share2 size={14} className="text-accent" />
             <span>Presença e tração nas redes sociais</span>
@@ -655,15 +655,15 @@ export default function PotentialDiagnostic({ onWantStrategy, onNoWebsite }: Pot
                   type="button"
                   aria-pressed={checked}
                   onClick={() => { toggleSocialCheck(item.index); track('operational_check', { kind: 'social', index: item.index }); }}
-                  className={`p-3 rounded-xl border cursor-pointer transition-all flex items-center gap-2.5 text-left ${
+                  className={`glass-inset p-3 rounded-xl cursor-pointer flex items-center gap-2.5 text-left ${
                     checked
-                      ? 'bg-emerald-50 border-emerald-300 text-emerald-950'
-                      : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
+                      ? 'glass-emerald text-emerald-950'
+                      : 'glass-interactive text-slate-700'
                   }`}
                 >
                   <div
                     className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 ${
-                      checked ? 'bg-emerald-600 border-emerald-600 text-white' : 'border-slate-300 bg-white'
+                      checked ? 'bg-emerald-600 border-emerald-600 text-white' : 'border-slate-400/70 bg-white/70'
                     }`}
                   >
                     {checked && <CheckCircle2 size={12} />}

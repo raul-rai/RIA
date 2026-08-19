@@ -23,16 +23,16 @@ export default function AwarenessCheck({ label, checked, onToggle, className = '
       role="checkbox"
       aria-checked={checked}
       onClick={onToggle}
-      className={`w-full p-3 rounded-xl border cursor-pointer select-none transition-all flex items-start gap-2.5 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 ${
+      className={`glass-inset w-full p-3 rounded-xl cursor-pointer select-none flex items-start gap-2.5 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 ${
         checked
-          ? 'bg-emerald-50 border-emerald-300 text-emerald-950'
-          : 'bg-slate-50 border-slate-200 hover:bg-slate-100 text-slate-700'
+          ? 'glass-emerald text-emerald-950'
+          : 'glass-interactive text-slate-700'
       } ${className}`}
     >
       <span
         aria-hidden="true"
         className={`w-5 h-5 rounded-md border flex items-center justify-center shrink-0 mt-0.5 transition-colors ${
-          checked ? 'bg-emerald-600 border-emerald-600 text-white' : 'border-slate-300 bg-white'
+          checked ? 'bg-emerald-600 border-emerald-600 text-white' : 'border-slate-400/70 bg-white/70'
         }`}
       >
         {checked && <Check size={14} strokeWidth={3} />}

@@ -68,7 +68,7 @@ export default function QualificationFlow({
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      className="mt-3 p-4 bg-white rounded-xl border border-accent/30 shadow-md text-left"
+      className="glass-raised glass-accent mt-3 p-4 rounded-xl text-left"
     >
       <div className="flex items-center justify-between mb-2.5">
         <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-slate-500">
@@ -105,10 +105,10 @@ export default function QualificationFlow({
                 type="button"
                 onClick={() => commit(option.value)}
                 aria-pressed={isSelected}
-                className={`text-left px-3.5 py-2.5 rounded-xl border active:scale-[0.99] transition-all text-xs font-semibold ${
+                className={`glass-inset text-left px-3.5 py-2.5 rounded-xl active:scale-[0.99] text-xs font-semibold ${
                   isSelected
-                    ? 'bg-emerald-50/90 border-emerald-300 text-emerald-950'
-                    : 'border-slate-200 bg-slate-50 text-slate-800 hover:border-accent hover:bg-accent/5'
+                    ? 'glass-emerald text-emerald-950'
+                    : 'glass-interactive text-slate-800'
                 }`}
               >
                 {option.label}
@@ -132,7 +132,7 @@ export default function QualificationFlow({
             inputMode={step.field === 'phone' ? 'tel' : step.field === 'email' ? 'email' : 'text'}
             aria-label={step.prompt}
             aria-invalid={error !== null}
-            className="flex-1 min-w-0 px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-accent"
+            className="glass-field flex-1 min-w-0 px-3.5 py-2.5 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none"
           />
           <button
             type="submit"

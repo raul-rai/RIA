@@ -39,7 +39,7 @@ export default function FiveFronts({ onWantStrategy }: { onWantStrategy?: () => 
   return (
     <div className="w-full max-w-5xl mx-auto px-4 flex flex-col justify-center pointer-events-auto">
       <div className="text-center mb-6 md:mb-8">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 mb-4">
+        <div className="glass-chip glass-accent inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full mb-4">
           <Layers size={14} className="text-cyan-700" />
           <span className="text-cyan-800 text-[10px] md:text-xs font-black uppercase tracking-[0.2em]">
             As cinco frentes
@@ -68,17 +68,17 @@ export default function FiveFronts({ onWantStrategy }: { onWantStrategy?: () => 
               }}
               whileTap={{ scale: 0.98 }}
               aria-pressed={isChecked}
-              className={`text-left flex gap-3.5 p-4 rounded-2xl border transition-colors ${
+              className={`glass-card glass-hover text-left flex gap-3.5 p-4 rounded-2xl ${
                 isChecked
-                  ? 'bg-emerald-50/90 border-emerald-300'
+                  ? 'glass-emerald glass-selected'
                   : destacada
-                    ? 'bg-red-50/90 border-red-300'
-                    : 'bg-white/90 border-slate-200 hover:border-slate-300'
+                    ? 'glass-red glass-selected'
+                    : ''
               }`}
             >
               <span
                 className={`w-6 h-6 rounded-lg border-2 shrink-0 flex items-center justify-center mt-0.5 ${
-                  isChecked ? 'bg-emerald-500 border-emerald-500' : 'border-slate-300'
+                  isChecked ? 'bg-emerald-500 border-emerald-500' : 'border-slate-400/70 bg-white/50'
                 }`}
               >
                 {isChecked && <Check size={14} className="text-white" strokeWidth={3} />}

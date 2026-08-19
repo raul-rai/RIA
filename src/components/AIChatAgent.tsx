@@ -354,11 +354,11 @@ export default function AIChatAgent({ webhookUrl = config.chatWebhook }: AIChatA
   const showSuggestions = messages.length === 1 && !isTyping;
 
   return (
-    <div className="w-full h-full flex flex-col premium-glass rounded-3xl border border-slate-200 overflow-hidden shadow-xl bg-white/95 text-left">
+    <div className="glass-panel w-full h-full flex flex-col rounded-3xl overflow-hidden text-left">
       {/* Cabecalho */}
-      <div className="p-4 md:p-6 border-b border-slate-200 flex items-center justify-between bg-slate-50/80">
+      <div className="glass-rail p-4 md:p-6 border-b border-slate-900/10 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="p-2.5 bg-accent/10 border border-accent/20 rounded-xl">
+          <div className="glass-inset glass-accent p-2.5 rounded-xl">
             <Bot size={18} className="text-accent" />
           </div>
           <div>
@@ -368,14 +368,14 @@ export default function AIChatAgent({ webhookUrl = config.chatWebhook }: AIChatA
             <p className="text-[10px] text-slate-500 font-medium">Diagnóstico de Inteligência Empresarial</p>
           </div>
         </div>
-        <div className="flex items-center gap-2 px-3 py-1 bg-accent/10 border border-accent/20 rounded-full">
+        <div className="glass-inset glass-accent flex items-center gap-2 px-3 py-1 rounded-full">
           <Sparkles size={12} className="text-accent animate-pulse" />
           <span className="text-[9px] font-bold uppercase tracking-widest text-accent-dark">Ativo</span>
         </div>
       </div>
 
       {/* Mensagens */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 md:p-6 space-y-5 scrollbar-hide bg-white/50">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 md:p-6 space-y-5 scrollbar-hide">
         <AnimatePresence initial={false}>
           {messages.map((msg, i) => (
             <motion.div
@@ -398,7 +398,7 @@ export default function AIChatAgent({ webhookUrl = config.chatWebhook }: AIChatA
                   className={`p-4 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap ${
                     msg.role === 'user'
                       ? 'bg-slate-900 text-white shadow-sm'
-                      : 'bg-slate-50 text-slate-800 border border-slate-200 shadow-sm'
+                      : 'glass-inset text-slate-800'
                   }`}
                 >
                   {msg.content}
@@ -407,7 +407,7 @@ export default function AIChatAgent({ webhookUrl = config.chatWebhook }: AIChatA
                     <motion.div
                       initial={{ opacity: 0, scale: 0.96 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      className="mt-4 p-4 bg-white rounded-xl border border-accent/30 shadow-md"
+                      className="glass-raised glass-accent mt-4 p-4 rounded-xl"
                     >
                       <div className="flex items-center gap-2 mb-2">
                         <TrendingUp size={14} className="text-accent" />
@@ -453,7 +453,7 @@ export default function AIChatAgent({ webhookUrl = config.chatWebhook }: AIChatA
               <div className="w-8 h-8 rounded-full bg-accent/10 border border-accent/30 flex items-center justify-center">
                 <Bot size={14} className="text-accent" />
               </div>
-              <div className="p-4 rounded-2xl bg-slate-100 border border-slate-200 flex items-center gap-1">
+              <div className="glass-inset p-4 rounded-2xl flex items-center gap-1">
                 <div className="w-1.5 h-1.5 bg-accent rounded-full animate-bounce [animation-delay:-0.3s]" />
                 <div className="w-1.5 h-1.5 bg-accent rounded-full animate-bounce [animation-delay:-0.15s]" />
                 <div className="w-1.5 h-1.5 bg-accent rounded-full animate-bounce" />
@@ -502,7 +502,7 @@ export default function AIChatAgent({ webhookUrl = config.chatWebhook }: AIChatA
               <button
                 key={s}
                 onClick={() => send(s)}
-                className="px-4 py-2.5 min-h-11 rounded-full border border-slate-300 bg-white text-slate-700 text-xs font-semibold hover:border-accent hover:text-accent hover:bg-accent/5 transition-colors"
+                className="glass-raised glass-interactive px-4 py-2.5 min-h-11 rounded-full text-slate-700 text-xs font-semibold hover:text-accent"
               >
                 {s}
               </button>
@@ -513,7 +513,7 @@ export default function AIChatAgent({ webhookUrl = config.chatWebhook }: AIChatA
 
       {/* Entrada */}
       {stage === 'chat' && (
-        <div className="p-4 bg-slate-50 border-t border-slate-200">
+        <div className="glass-rail p-4 border-t border-slate-900/10">
           <div className="relative flex items-center">
             <input
               value={input}
@@ -521,7 +521,7 @@ export default function AIChatAgent({ webhookUrl = config.chatWebhook }: AIChatA
               onKeyDown={(e) => e.key === 'Enter' && send(input)}
               aria-label="Mensagem para o agente de IA"
               placeholder="Digite sua resposta..."
-              className="w-full bg-white border border-slate-300 rounded-xl py-4 pl-4 pr-14 text-base md:text-sm text-slate-900 focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-all placeholder:text-slate-400 shadow-sm"
+              className="glass-field w-full rounded-xl py-4 pl-4 pr-14 text-base md:text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-accent/20 placeholder:text-slate-400"
             />
             {/* 44x44: o botao tinha 32px de lado, o menor alvo da pagina — e o
                 unico que envia a mensagem. */}

@@ -103,13 +103,13 @@ export default function VideoModal({ isOpen, onClose, videoUrl, title, bio, star
           initial={{ scale: 0.95, opacity: 0, y: 30 }}
           animate={{ scale: 1, opacity: 1, y: 0 }}
           exit={{ scale: 0.95, opacity: 0, y: 30 }}
-          className="relative w-full max-w-7xl bg-bg-base/60 rounded-3xl overflow-hidden shadow-[0_0_80px_rgba(0,229,255,0.2)] border border-white/10 flex flex-col md:flex-row h-fit max-h-[90vh]"
+          className="glass glass-dark w-full max-w-7xl rounded-3xl overflow-hidden flex flex-col md:flex-row h-fit max-h-[90vh]"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Close Button - Floats over video on mobile, top right on desktop */}
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 z-[110] p-3 rounded-full bg-black/50 text-white hover:bg-accent hover:text-black transition-all"
+            className="absolute top-4 right-4 z-[110] p-3 rounded-full bg-slate-950/55 backdrop-blur-md border border-white/15 text-white hover:bg-accent hover:text-black transition-all"
           >
             <X size={20} />
           </button>

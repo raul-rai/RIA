@@ -29,13 +29,13 @@ export default function CredibilitySection() {
   return (
     <div className="w-full max-w-6xl mx-auto px-4 flex flex-col justify-center pointer-events-auto">
       <div className="text-center mb-6 md:mb-8">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-accent/10 border border-accent/20 mb-3">
+        <div className="glass-chip glass-accent inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full mb-3">
           <LineChart size={14} className="text-accent" />
           <span className="text-accent-dark text-[10px] md:text-xs uppercase tracking-[0.2em] font-black">
             Já atravessei isso com outros
           </span>
         </div>
-        <h2 className="text-2xl md:text-4xl lg:text-5xl font-serif text-slate-900 leading-tight reading-surface md:bg-transparent md:backdrop-blur-none inline-block px-4 py-2">
+        <h2 className="text-2xl md:text-4xl lg:text-5xl font-serif text-slate-900 leading-tight reading-surface glass-md-none inline-block px-4 py-2">
           Cada frente, <span className="italic font-normal text-slate-500">com um caso atrás.</span>
         </h2>
       </div>
@@ -48,7 +48,7 @@ export default function CredibilitySection() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.3 }}
             transition={{ delay: i * 0.08 }}
-            className="bg-white/95 premium-glass rounded-2xl border border-slate-200 shadow-lg p-5 flex flex-col gap-2 text-left"
+            className="glass-card glass-hover rounded-2xl p-5 flex flex-col gap-2 text-left"
           >
             <div className="flex items-center gap-1.5">
               {c.kind === 'entrega' ? (
@@ -61,7 +61,7 @@ export default function CredibilitySection() {
               </span>
             </div>
 
-            <span className="self-start px-2 py-0.5 rounded-full bg-accent/10 border border-accent/20 text-[9px] font-black uppercase tracking-widest text-accent-dark">
+            <span className="glass-inset glass-accent self-start px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest text-accent-dark">
               Prova a frente {c.front} · {frontTag(c.front)}
             </span>
 
@@ -83,7 +83,7 @@ export default function CredibilitySection() {
             </dl>
 
             {c.measurement && (
-              <p className="text-[11px] text-slate-500 border-t border-slate-100 pt-2.5 mt-auto">
+              <p className="text-[11px] text-slate-500 border-t border-slate-900/10 pt-2.5 mt-auto">
                 {c.measurement}
               </p>
             )}
@@ -101,7 +101,7 @@ export default function CredibilitySection() {
             return (
               <div
                 key={m.title}
-                className="bg-white/90 rounded-2xl border border-slate-200 p-4 flex flex-col gap-1.5 text-left"
+                className="glass-card rounded-2xl p-4 flex flex-col gap-1.5 text-left"
               >
                 <Icon size={14} className="text-accent" />
                 <h4 className="text-xs md:text-sm font-bold text-slate-900 font-serif">{m.title}</h4>
@@ -112,7 +112,7 @@ export default function CredibilitySection() {
         </div>
       </div>
 
-      <div className="bg-white/95 premium-glass rounded-3xl border border-slate-200 shadow-xl p-6 md:p-8">
+      <div className="glass-panel rounded-3xl p-6 md:p-8">
         <div className="grid grid-cols-1 md:grid-cols-[auto_1fr] gap-6 md:gap-8 items-center">
           <div className="mx-auto md:mx-0">
             {PHOTO_SRC ? (
@@ -123,14 +123,14 @@ export default function CredibilitySection() {
                 className="w-28 h-28 md:w-36 md:h-36 rounded-2xl object-cover border border-slate-200 shadow-lg"
               />
             ) : (
-              <div className="w-28 h-28 md:w-36 md:h-36 rounded-2xl border border-slate-200 bg-slate-50 flex items-center justify-center">
+              <div className="glass-inset w-28 h-28 md:w-36 md:h-36 rounded-2xl flex items-center justify-center">
                 <span className="font-serif text-3xl text-slate-400">RV</span>
               </div>
             )}
           </div>
 
           <div className="flex flex-col text-center md:text-left">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100 border border-slate-200 mb-3 w-fit mx-auto md:mx-0">
+            <div className="glass-inset inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-3 w-fit mx-auto md:mx-0">
               <Award size={12} className="text-accent" />
               <span className="text-slate-600 text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em]">
                 Quem executa

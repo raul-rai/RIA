@@ -20,10 +20,8 @@ export default function AuthorityCard({ authority, index, checked, onToggle, onP
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.1 }}
-      className={`group relative flex flex-col justify-between rounded-2xl overflow-hidden border bg-white shadow-md transition-all duration-500 ${
-        checked
-          ? 'border-emerald-400 ring-2 ring-emerald-400/20 shadow-emerald-500/10'
-          : 'border-slate-200 hover:border-slate-300 hover:shadow-xl'
+      className={`glass-card glass-hover group flex flex-col justify-between rounded-2xl overflow-hidden ${
+        checked ? 'glass-emerald glass-selected' : ''
       }`}
     >
       {/* O nome fica fora do botao para continuar sendo um <h3> de verdade:
@@ -64,8 +62,8 @@ export default function AuthorityCard({ authority, index, checked, onToggle, onP
         </button>
       </div>
 
-      <div className="p-4 md:p-5 flex flex-col justify-between flex-1 bg-white">
-        <blockquote className="text-slate-600 text-xs italic mb-4 leading-relaxed bg-slate-50 p-3 rounded-xl border border-slate-100">
+      <div className="p-4 md:p-5 flex flex-col justify-between flex-1">
+        <blockquote className="glass-inset text-slate-600 text-xs italic mb-4 leading-relaxed p-3 rounded-xl">
           "{authority.quote}"
         </blockquote>
         <AwarenessCheck label={authority.checkboxLabel} checked={checked} onToggle={onToggle} />

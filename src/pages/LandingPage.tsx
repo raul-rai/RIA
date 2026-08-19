@@ -119,7 +119,7 @@ function SceneHero({ onUnderstandMore }: { onUnderstandMore: () => void }) {
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-slate-300 bg-white/95 backdrop-blur-md mb-5 md:mb-6 shadow-md"
+        className="glass-chip inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-5 md:mb-6"
       >
         <Target className="text-accent animate-pulse" size={16} />
         <span className="text-slate-900 font-sans tracking-[0.1em] md:tracking-[0.15em] uppercase text-[10px] md:text-xs font-black whitespace-nowrap">
@@ -140,7 +140,7 @@ function SceneHero({ onUnderstandMore }: { onUnderstandMore: () => void }) {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.6, duration: 1 }}
-        className="text-[15px] md:text-xl text-slate-800 max-w-2xl mb-8 md:mb-10 font-sans font-medium leading-relaxed px-4 py-3 bg-white/80 backdrop-blur-md rounded-2xl md:border md:border-slate-200/60 md:shadow-sm"
+        className="glass text-[15px] md:text-xl text-slate-800 max-w-2xl mb-8 md:mb-10 font-sans font-medium leading-relaxed px-4 py-3 rounded-2xl"
       >
         Se você ainda não utiliza inteligência artificial em <strong className="font-bold text-slate-950">TODOS OS SEUS PROJETOS</strong>, você está rasgando dinheiro.
       </motion.p>
@@ -164,7 +164,7 @@ function SceneHero({ onUnderstandMore }: { onUnderstandMore: () => void }) {
 
         <MagneticButton
           onClick={onUnderstandMore}
-          className="w-full sm:w-auto group px-7 py-4 bg-white/90 text-slate-900 border border-slate-300 hover:border-accent hover:text-accent rounded-xl font-black text-xs uppercase tracking-widest transition-all duration-300 shadow-md backdrop-blur-md flex items-center justify-center gap-2.5 min-h-[52px]"
+          className="glass glass-hover w-full sm:w-auto group px-7 py-4 text-slate-900 hover:text-accent rounded-xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2.5 min-h-[52px]"
         >
           <span>Entenda melhor</span>
           <ChevronDown size={16} className="group-hover:translate-y-0.5 transition-transform duration-300" />
@@ -183,13 +183,13 @@ function SceneCTA() {
   return (
     <div className="w-full max-w-4xl mx-auto px-2 md:px-4 flex flex-col justify-center items-center text-center pointer-events-auto">
       <div className="w-full mb-4 md:mb-5">
-        <h2 className="text-2xl md:text-5xl font-serif text-slate-900 mb-2 bg-white/80 rounded-2xl px-4 py-2 inline-block">
+        <h2 className="reading-surface text-2xl md:text-5xl font-serif text-slate-900 mb-2 px-4 py-2 inline-block">
           Trinta minutos, <span className="italic font-normal text-slate-500">e você sai com um mapa.</span>
         </h2>
         {/* reading-surface e obrigatorio aqui: nesta dobra a onda ja fechou
             sobre a camera e o fundo do canvas e azul profundo. Sem a superficie
             clara, este e o unico texto do capitulo que ficaria escuro sobre
-            escuro — os demais ja vivem dentro de cartoes bg-white/95. */}
+            escuro — os demais ja vivem dentro de cartoes de vidro. */}
         <p className="reading-surface inline-block px-4 py-2 text-slate-700 text-[13px] md:text-base max-w-xl mx-auto font-sans leading-relaxed">
           Conte ao agente o que sua empresa faz. Ele já sabe o que você respondeu até aqui, e marca
           a sessão comigo.
@@ -280,7 +280,7 @@ export default function LandingPage() {
           transition={{ delay: 1.5 }}
           className="hidden md:block fixed top-6 left-6 z-30 pointer-events-none"
         >
-          <div className="flex items-center gap-3 px-4 py-2 rounded-full bg-white/95 border border-slate-200 shadow-md backdrop-blur-md">
+          <div className="glass-chip flex items-center gap-3 px-4 py-2 rounded-full">
             <div className="w-2 h-2 rounded-full bg-accent animate-pulse" />
             <span className="text-slate-900 text-xs tracking-[0.35em] uppercase font-black">RIA</span>
           </div>

@@ -18,7 +18,7 @@ export default function SocialProofSection() {
     <div className="w-full max-w-6xl mx-auto px-4 py-8 md:py-16 pointer-events-auto flex flex-col justify-center">
       {/* Header */}
       <div className="mb-6 md:mb-10 text-center">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-amber-500/20 bg-amber-500/10 mb-3">
+        <div className="glass-chip glass-amber inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full mb-3">
           <ShieldAlert size={14} className="text-amber-600" />
           <span className="text-amber-800 text-[10px] md:text-xs uppercase tracking-[0.2em] font-black">
             Vozes do mercado
