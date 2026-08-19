@@ -1,10 +1,14 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Send, User, Bot, Sparkles, TrendingUp, ArrowRight, MessageCircle } from 'lucide-react';
+import { Send, User, Bot, Sparkles, TrendingUp, ArrowRight, MessageCircle, CalendarCheck } from 'lucide-react';
 import { config } from '../config';
 import { useVulnerability } from '../context/VulnerabilityContext';
 import { whatsappWithMessage } from '../constants/links';
 import { track } from '../lib/analytics';
+import QualificationFlow from './QualificationFlow';
+import BookingEmbed from './BookingEmbed';
+import { buildQualificationPayload, type Qualification } from '../lib/qualification';
+import { FRONTS } from '../content/fronts';
 
 interface RoiData {
   roi: number;
@@ -24,7 +28,6 @@ interface Message {
 
 interface AIChatAgentProps {
   webhookUrl?: string;
-  onComplete: (data: RoiData) => void;
 }
 
 const SUGGESTIONS = [
@@ -64,7 +67,7 @@ function parseRoiData(raw: unknown): RoiData | undefined {
   };
 }
 
-export default function AIChatAgent({ webhookUrl = config.chatWebhook, onComplete }: AIChatAgentProps) {
+export default function AIChatAgent({ webhookUrl = config.chatWebhook }: AIChatAgentProps) {
   const { vulnerabilityIndex, hasNoWebsite, frontsChecked, websiteScore } = useVulnerability();
 
   const [messages, setMessages] = useState<Message[]>([
@@ -73,6 +76,15 @@ export default function AIChatAgent({ webhookUrl = config.chatWebhook, onComplet
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  /**
+   * Tres estagios. A transicao para 'qualifying' e sempre por clique do
+   * visitante — deixar o modelo decidir quando pedir telefone e faturamento
+   * transformaria o gatilho da conversao em algo que muda de humor a cada
+   * resposta do LLM.
+   */
+  const [stage, setStage] = useState<'chat' | 'qualifying' | 'booking'>('chat');
+  const [qualification, setQualification] = useState<Qualification | null>(null);
 
   /**
    * O agente e montado junto com a pagina, muito antes de o visitante declarar
@@ -118,6 +130,27 @@ export default function AIChatAgent({ webhookUrl = config.chatWebhook, onComplet
     ];
     return whatsappWithMessage(linhas.join('\n'));
   }, [vulnerabilityIndex, hasNoWebsite, websiteScore, frontsChecked]);
+
+  /** As frentes que sobraram: a pauta que o Raul le antes da chamada. */
+  const pauta = useMemo(
+    () => FRONTS.filter((_, i) => !frontsChecked[i]).map((f) => f.tag).join(', '),
+    [frontsChecked]
+  );
+
+  const bookingFallbackMessage = useMemo(() => {
+    if (!qualification) return '';
+    return [
+      'Olá Raul, completei a qualificação no site e quero marcar a sessão de 30 minutos.',
+      '',
+      `Empresa: ${qualification.company}`,
+      `E-mail: ${qualification.email}`,
+      `Telefone: ${qualification.phone}`,
+      `Faturamento: ${qualification.revenue}`,
+      `Budget de IA: ${qualification.aiBudget}`,
+      '',
+      pauta ? `Frentes descobertas: ${pauta}` : 'Frentes descobertas: nenhuma',
+    ].join('\n');
+  }, [qualification, pauta]);
 
   const send = async (text: string) => {
     const currentInput = text.trim();
@@ -213,6 +246,32 @@ export default function AIChatAgent({ webhookUrl = config.chatWebhook, onComplet
     }
   };
 
+  const handleQualified = async (data: Qualification) => {
+    setQualification(data);
+    setStage('booking');
+
+    if (!webhookUrl) return;
+    try {
+      await fetch(webhookUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(
+          buildQualificationPayload({
+            sessionId,
+            qualification: data,
+            vulnerabilityIndex,
+            hasNoWebsite,
+            websiteScore,
+            frontsChecked,
+          })
+        ),
+      });
+    } catch {
+      // A agenda ja esta na tela. Falhar o registro nao pode custar o
+      // agendamento — o lead chega pelo proprio Cal.com de qualquer forma.
+    }
+  };
+
   const showSuggestions = messages.length === 1 && !isTyping;
 
   return (
@@ -283,11 +342,12 @@ export default function AIChatAgent({ webhookUrl = config.chatWebhook, onComplet
                       <button
                         onClick={() => {
                           track('cta_click', { location: 'agent_roi_card' });
-                          onComplete(msg.data!);
+                          setStage('qualifying');
+                          track('qualification_started', { source: 'roi_card' });
                         }}
                         className="w-full py-3 bg-slate-900 hover:bg-accent text-white text-xs md:text-sm font-bold uppercase tracking-widest rounded-lg flex items-center justify-center gap-2 shadow-md transition-colors"
                       >
-                        Ver detalhes <ArrowRight size={12} />
+                        Agendar minha sessão <ArrowRight size={12} />
                       </button>
                     </motion.div>
                   )}
@@ -323,6 +383,32 @@ export default function AIChatAgent({ webhookUrl = config.chatWebhook, onComplet
           )}
         </AnimatePresence>
 
+        {stage === 'chat' && messages.length > 1 && !isTyping && (
+          <div className="pt-1">
+            <button
+              type="button"
+              onClick={() => {
+                setStage('qualifying');
+                track('qualification_started', { vulnerability_index: vulnerabilityIndex });
+              }}
+              className="w-full px-4 py-3 bg-slate-900 text-white rounded-xl font-black text-[11px] uppercase tracking-widest hover:bg-accent active:scale-[0.99] transition-all inline-flex items-center justify-center gap-2"
+            >
+              <CalendarCheck size={14} /> Agendar minha sessão de 30 min
+            </button>
+          </div>
+        )}
+
+        {stage === 'qualifying' && <QualificationFlow onComplete={handleQualified} />}
+
+        {stage === 'booking' && qualification && (
+          <BookingEmbed
+            name={qualification.company}
+            email={qualification.email}
+            notes={pauta ? `Frentes descobertas: ${pauta}` : undefined}
+            fallbackMessage={bookingFallbackMessage}
+          />
+        )}
+
         {/* Sugestoes de primeira mensagem — o vazio de 350px sai daqui */}
         {showSuggestions && (
           <motion.div
@@ -345,40 +431,42 @@ export default function AIChatAgent({ webhookUrl = config.chatWebhook, onComplet
       </div>
 
       {/* Entrada */}
-      <div className="p-4 bg-slate-50 border-t border-slate-200">
-        <div className="relative flex items-center">
-          <input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && send(input)}
-            aria-label="Mensagem para o agente de IA"
-            placeholder="Digite sua resposta..."
-            className="w-full bg-white border border-slate-300 rounded-xl py-4 pl-4 pr-14 text-base md:text-sm text-slate-900 focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-all placeholder:text-slate-400 shadow-sm"
-          />
-          {/* 44x44: o botao tinha 32px de lado, o menor alvo da pagina — e o
-              unico que envia a mensagem. */}
-          <button
-            onClick={() => send(input)}
-            disabled={!input.trim() || isTyping}
-            aria-label="Enviar mensagem"
-            className="absolute right-2 w-11 h-11 flex items-center justify-center bg-slate-900 text-white rounded-lg md:hover:bg-accent md:hover:scale-110 active:scale-95 disabled:opacity-50 disabled:scale-100 transition-all shadow-md"
-          >
-            <Send size={16} />
-          </button>
+      {stage === 'chat' && (
+        <div className="p-4 bg-slate-50 border-t border-slate-200">
+          <div className="relative flex items-center">
+            <input
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && send(input)}
+              aria-label="Mensagem para o agente de IA"
+              placeholder="Digite sua resposta..."
+              className="w-full bg-white border border-slate-300 rounded-xl py-4 pl-4 pr-14 text-base md:text-sm text-slate-900 focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-all placeholder:text-slate-400 shadow-sm"
+            />
+            {/* 44x44: o botao tinha 32px de lado, o menor alvo da pagina — e o
+                unico que envia a mensagem. */}
+            <button
+              onClick={() => send(input)}
+              disabled={!input.trim() || isTyping}
+              aria-label="Enviar mensagem"
+              className="absolute right-2 w-11 h-11 flex items-center justify-center bg-slate-900 text-white rounded-lg md:hover:bg-accent md:hover:scale-110 active:scale-95 disabled:opacity-50 disabled:scale-100 transition-all shadow-md"
+            >
+              <Send size={16} />
+            </button>
+          </div>
+          <p className="mt-2 text-center text-[10px] md:text-xs text-slate-500">
+            Prefere falar direto?{' '}
+            <a
+              href={handoffUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => track('whatsapp_click', { location: 'agent_footer' })}
+              className="inline-block py-2 text-accent font-semibold underline underline-offset-2 hover:text-accent-dark"
+            >
+              Chame o Raul no WhatsApp
+            </a>
+          </p>
         </div>
-        <p className="mt-2 text-center text-[10px] md:text-xs text-slate-500">
-          Prefere falar direto?{' '}
-          <a
-            href={handoffUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={() => track('whatsapp_click', { location: 'agent_footer' })}
-            className="inline-block py-2 text-accent font-semibold underline underline-offset-2 hover:text-accent-dark"
-          >
-            Chame o Raul no WhatsApp
-          </a>
-        </p>
-      </div>
+      )}
     </div>
   );
 }

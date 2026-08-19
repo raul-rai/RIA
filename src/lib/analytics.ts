@@ -19,6 +19,7 @@ export type RiaEvent =
   | 'agent_replied'
   | 'agent_failed'
   | 'whatsapp_click'
+  | 'qualification_started'
   | 'qualification_step'
   | 'qualification_completed';
 

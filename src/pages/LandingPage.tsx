@@ -13,7 +13,6 @@ import ProofSection from '../components/ProofSection';
 import SocialProofSection from '../components/SocialProofSection';
 import ConsultantSection from '../components/ConsultantSection';
 import WhatsAppFab from '../components/WhatsAppFab';
-import { whatsappWithMessage } from '../constants/links';
 import { prefersReducedMotion } from '../lib/canvas-quality';
 import { track } from '../lib/analytics';
 import { VulnerabilityProvider } from '../context/VulnerabilityContext';
@@ -180,7 +179,7 @@ function SceneHero({ onStopWastingMoney, onUnderstandMore }: {
 }
 
 // ─── Capitulo 6: A OFERTA + O AGENTE ─────────────────────────────────────────
-function SceneCTA({ onFinalContact }: { onFinalContact: (data: { roi: number; name?: string; revenue?: number; efficiency?: number }) => void }) {
+function SceneCTA() {
   return (
     <div className="w-full max-w-6xl mx-auto px-2 md:px-4 flex flex-col justify-center items-center text-center pointer-events-auto">
       <div className="w-full mb-5 md:mb-8">
@@ -204,7 +203,7 @@ function SceneCTA({ onFinalContact }: { onFinalContact: (data: { roi: number; na
             propria dentro de uma pagina que ja rola. 78svh da a altura de um
             chat de verdade sem esconder a proposta logo abaixo. */}
         <div className="order-1 lg:order-2 h-[78svh] lg:h-auto lg:min-h-[560px]">
-          <AIChatAgent onComplete={onFinalContact} />
+          <AIChatAgent />
         </div>
       </div>
     </div>
@@ -247,21 +246,6 @@ export default function LandingPage() {
   const goToCta = useCallback(() => goToChapter(CTA_CHAPTER), [goToChapter]);
   const goToMarketVoices = useCallback(() => goToChapter(1), [goToChapter]);
 
-  const handleFinalContact = useCallback((data: { roi: number; name?: string; revenue?: number; efficiency?: number }) => {
-    const message = [
-      'Olá! Realizei o diagnóstico via chat RIA.',
-      '',
-      data.name ? `Nome: ${data.name}` : null,
-      data.revenue ? `Faturamento: R$ ${data.revenue.toLocaleString('pt-BR')}/mês` : null,
-      `ROI projetado: R$ ${data.roi.toLocaleString('pt-BR')}/ano`,
-      data.efficiency ? `Eficiência: +${data.efficiency}%` : null,
-      '',
-      'Quero agendar minha sessão estratégica.',
-    ].filter(Boolean).join('\n');
-    track('whatsapp_click', { location: 'agent_complete' });
-    window.open(whatsappWithMessage(message), '_blank', 'noopener,noreferrer');
-  }, []);
-
   const chapterContent = useMemo(() => [
     <SceneHero onStopWastingMoney={goToCta} onUnderstandMore={goToMarketVoices} />,
     <SocialProofSection />,
@@ -269,8 +253,8 @@ export default function LandingPage() {
     <ProofSection onWantStrategy={goToCta} />,
     <FiveFronts onWantStrategy={goToCta} />,
     <ConsultantSection onStrategyClick={goToCta} />,
-    <SceneCTA onFinalContact={handleFinalContact} />,
-  ], [goToCta, goToMarketVoices, handleFinalContact]);
+    <SceneCTA />,
+  ], [goToCta, goToMarketVoices]);
 
   return (
     <VulnerabilityProvider>
