@@ -7,7 +7,7 @@ import { whatsappWithMessage } from '../constants/links';
 import { track } from '../lib/analytics';
 import QualificationFlow from './QualificationFlow';
 import BookingEmbed from './BookingEmbed';
-import { buildQualificationPayload, type Qualification } from '../lib/qualification';
+import { buildQualificationPayload, labelFor, type Qualification } from '../lib/qualification';
 import { FRONTS } from '../content/fronts';
 
 interface RoiData {
@@ -68,7 +68,11 @@ function parseRoiData(raw: unknown): RoiData | undefined {
 }
 
 export default function AIChatAgent({ webhookUrl = config.chatWebhook }: AIChatAgentProps) {
-  const { vulnerabilityIndex, hasNoWebsite, frontsChecked, websiteScore } = useVulnerability();
+  const { vulnerabilityIndex, assessed, hasNoWebsite, frontsChecked, websiteScore } = useVulnerability();
+  /** O indice so significa algo depois que o visitante tocou em algo. Sem
+   *  isso, quem pula direto para o agente reporta "100% vulneravel" quando
+   *  na verdade e "nunca avaliado" — os dois nao podem chegar identicos. */
+  const assessedVulnerabilityIndex = assessed ? vulnerabilityIndex : null;
 
   const [messages, setMessages] = useState<Message[]>([
     { role: 'assistant', content: hasNoWebsite ? NO_WEBSITE_GREETING : GREETING },
@@ -104,7 +108,7 @@ export default function AIChatAgent({ webhookUrl = config.chatWebhook }: AIChatA
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages, isTyping]);
+  }, [messages, isTyping, stage]);
 
   const [sessionId] = useState(() =>
     typeof crypto !== 'undefined' && crypto.randomUUID
@@ -118,9 +122,9 @@ export default function AIChatAgent({ webhookUrl = config.chatWebhook }: AIChatA
     const linhas = [
       'Olá Raul, tentei falar com o agente no site e quero continuar por aqui.',
       '',
-      vulnerabilityIndex === null
+      assessedVulnerabilityIndex === null
         ? 'Índice de Vulnerabilidade: não avaliado'
-        : `Índice de Vulnerabilidade: ${vulnerabilityIndex}%`,
+        : `Índice de Vulnerabilidade: ${assessedVulnerabilityIndex}%`,
       hasNoWebsite
         ? 'Site: ainda não tenho'
         : websiteScore !== null
@@ -129,7 +133,7 @@ export default function AIChatAgent({ webhookUrl = config.chatWebhook }: AIChatA
       `Frentes cobertas: ${marcados} de 5`,
     ];
     return whatsappWithMessage(linhas.join('\n'));
-  }, [vulnerabilityIndex, hasNoWebsite, websiteScore, frontsChecked]);
+  }, [assessedVulnerabilityIndex, hasNoWebsite, websiteScore, frontsChecked]);
 
   /** As frentes que sobraram: a pauta que o Raul le antes da chamada. */
   const pauta = useMemo(
@@ -145,8 +149,8 @@ export default function AIChatAgent({ webhookUrl = config.chatWebhook }: AIChatA
       `Empresa: ${qualification.company}`,
       `E-mail: ${qualification.email}`,
       `Telefone: ${qualification.phone}`,
-      `Faturamento: ${qualification.revenue}`,
-      `Budget de IA: ${qualification.aiBudget}`,
+      `Faturamento: ${labelFor('revenue', qualification.revenue)}`,
+      `Budget de IA: ${labelFor('aiBudget', qualification.aiBudget)}`,
       '',
       pauta ? `Frentes descobertas: ${pauta}` : 'Frentes descobertas: nenhuma',
     ].join('\n');
@@ -259,7 +263,7 @@ export default function AIChatAgent({ webhookUrl = config.chatWebhook }: AIChatA
           buildQualificationPayload({
             sessionId,
             qualification: data,
-            vulnerabilityIndex,
+            vulnerabilityIndex: assessedVulnerabilityIndex,
             hasNoWebsite,
             websiteScore,
             frontsChecked,
@@ -398,7 +402,9 @@ export default function AIChatAgent({ webhookUrl = config.chatWebhook }: AIChatA
           </div>
         )}
 
-        {stage === 'qualifying' && <QualificationFlow onComplete={handleQualified} />}
+        {stage === 'qualifying' && (
+          <QualificationFlow onComplete={handleQualified} onCancel={() => setStage('chat')} />
+        )}
 
         {stage === 'booking' && qualification && (
           <BookingEmbed

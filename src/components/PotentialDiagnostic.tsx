@@ -155,8 +155,9 @@ function generateHeuristicDiagnostic(domain: string): DiagnosticResult {
 
 interface PotentialDiagnosticProps {
   onWantStrategy?: () => void;
-  /** Declarar que nao tem site encerra o diagnostico: nao ha o que auditar,
-   *  e o unico proximo passo util e o agente. A pagina leva o visitante ate la. */
+  /** Declarar que nao tem site encerra o diagnostico: nao ha o que auditar.
+   *  O site e a primeira das cinco frentes, entao o proximo passo util e o
+   *  catalogo das frentes — a pagina leva o visitante ate la. */
   onNoWebsite?: () => void;
 }
 
@@ -421,7 +422,7 @@ export default function PotentialDiagnostic({ onWantStrategy, onNoWebsite }: Pot
             {/* Diz o que vai acontecer antes de acontecer: rolagem que o
                 visitante nao pediu, sem aviso, e sequestro de scroll. */}
             <p className="text-[10px] uppercase tracking-[0.18em] font-black text-red-500 mb-3">
-              Levando você ao agente…
+              Levando você às cinco frentes…
             </p>
             <button
               onClick={() => { track('cta_click', { location: 'diagnostic_no_website' }); onWantStrategy?.(); }}
@@ -600,13 +601,18 @@ export default function PotentialDiagnostic({ onWantStrategy, onNoWebsite }: Pot
                     <p className="text-slate-400 text-[9px] md:text-[10px] uppercase tracking-[0.15em] font-bold mt-1.5">
                       {SOURCE_LABEL[result.source]}
                     </p>
+                    {/* Ponte narrativa: o site que acabou de ser avaliado e a
+                        primeira das cinco frentes, nao um destino a parte. */}
+                    <p className="text-slate-700 text-[11px] md:text-xs leading-snug font-semibold mt-1.5">
+                      O site é a primeira das cinco frentes. Veja as outras quatro.
+                    </p>
                   </div>
                 </div>
                 <button
                   onClick={() => { track('cta_click', { location: 'diagnostic_result' }); onWantStrategy?.(); }}
                   className="px-5 py-3 bg-slate-900 text-white rounded-lg text-xs font-black uppercase tracking-widest hover:bg-accent transition-all flex items-center gap-2 shadow-md shrink-0"
                 >
-                  <span>Otimizar com IA</span>
+                  <span>Ver as cinco frentes</span>
                   <ArrowRight size={14} />
                 </button>
               </div>

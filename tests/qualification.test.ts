@@ -4,6 +4,7 @@ import {
   validateField,
   isComplete,
   buildQualificationPayload,
+  labelFor,
 } from '../src/lib/qualification';
 
 describe('QUALIFICATION_STEPS: cinco passos, na ordem do spec', () => {
@@ -129,5 +130,25 @@ describe('buildQualificationPayload', () => {
     });
     expect(payload.context.hasNoWebsite).toBe(true);
     expect(payload.context.websiteScore).toBeNull();
+  });
+});
+
+describe('labelFor', () => {
+  it('QUAL-12: faixa de faturamento conhecida vira o texto legivel', () => {
+    expect(labelFor('revenue', '100k-500k')).toBe('R$ 100 mil a R$ 500 mil/mês');
+  });
+
+  it('QUAL-13: faixa de budget de IA conhecida vira o texto legivel', () => {
+    expect(labelFor('aiBudget', '1k-5k')).toBe('R$ 1.000 a R$ 5.000/mês');
+  });
+
+  it('QUAL-14: campo de texto livre passa direto, sem opcoes para traduzir', () => {
+    expect(labelFor('company', 'Nexa Interiores')).toBe('Nexa Interiores');
+    expect(labelFor('email', 'contato@nexa.com.br')).toBe('contato@nexa.com.br');
+  });
+
+  it('QUAL-15: chave desconhecida degrada para o proprio valor, nao para vazio', () => {
+    expect(labelFor('revenue', 'inventado')).toBe('inventado');
+    expect(labelFor('aiBudget', 'inventado')).toBe('inventado');
   });
 });

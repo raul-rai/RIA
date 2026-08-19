@@ -17,8 +17,12 @@ import { track } from '../lib/analytics';
  */
 export default function QualificationFlow({
   onComplete,
+  onCancel,
 }: {
   onComplete: (q: Qualification) => void;
+  /** Escape do passo 1: sem ele o visitante que abre a qualificacao e desiste
+   *  no primeiro campo fica preso — "Voltar" so existe a partir do passo 2. */
+  onCancel?: () => void;
 }) {
   const [index, setIndex] = useState(0);
   const [answers, setAnswers] = useState<Partial<Qualification>>({});
@@ -70,7 +74,7 @@ export default function QualificationFlow({
         <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-slate-500">
           {index + 1} de {QUALIFICATION_STEPS.length}
         </span>
-        {index > 0 && (
+        {index > 0 ? (
           <button
             type="button"
             onClick={back}
@@ -78,7 +82,15 @@ export default function QualificationFlow({
           >
             <ArrowLeft size={11} /> Voltar
           </button>
-        )}
+        ) : onCancel ? (
+          <button
+            type="button"
+            onClick={onCancel}
+            className="text-[10px] font-bold uppercase tracking-wider text-slate-500 hover:text-slate-900 inline-flex items-center gap-1"
+          >
+            <ArrowLeft size={11} /> Voltar à conversa
+          </button>
+        ) : null}
       </div>
 
       <p className="text-sm text-slate-900 font-semibold leading-snug mb-3">{step.prompt}</p>

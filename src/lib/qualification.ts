@@ -50,6 +50,20 @@ export const AI_BUDGET_OPTIONS: QualificationOption[] = [
   { value: 'acima-5k', label: 'Acima de R$ 5.000/mês' },
 ];
 
+/**
+ * Slug -> texto legivel. Existe porque o slug de banco de dados ('100k-500k')
+ * nao pode chegar a uma tela que um humano le — nem no WhatsApp do prospect,
+ * que le a propria mensagem antes de envia-la. Campos de texto livre (company,
+ * email, phone) nao tem opcoes: passam direto. Slug desconhecido tambem passa
+ * direto — degrada para algo legivel em vez de sumir.
+ */
+export function labelFor(field: QualificationField, value: string): string {
+  const options =
+    field === 'revenue' ? REVENUE_OPTIONS : field === 'aiBudget' ? AI_BUDGET_OPTIONS : null;
+  if (!options) return value;
+  return options.find((o) => o.value === value)?.label ?? value;
+}
+
 export const QUALIFICATION_STEPS: QualificationStep[] = [
   {
     field: 'company',
