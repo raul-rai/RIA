@@ -13,9 +13,13 @@ export interface TierSpec {
 export const TIERS: Record<QualityTier, TierSpec> = {
   high: { cols: 45, rows: 55, fill: true },
   medium: { cols: 32, rows: 40, fill: true },
-  // Sem fill: no nivel baixo a onda vira desenho batimetrico em arame puro.
-  // Metade do custo por frame e, num fundo branco, continua legivel.
-  low: { cols: 24, rows: 30, fill: false },
+  // O nivel baixo tambem preenche. Antes ele desligava o fill para economizar
+  // meio frame, e o resultado era a onda perder a COR — que e a narrativa — em
+  // vez de perder densidade. Pior: `downgrade` nunca promove de volta, entao
+  // uma unica queda de FPS deixava a pagina inteira em arame branco ate o
+  // recarregamento. Com 24x30 sao ~700 quadrilateros contra ~2400 do nivel
+  // alto: preencher aqui ainda custa um quarto do frame cheio.
+  low: { cols: 24, rows: 30, fill: true },
 };
 
 /** Telas com DPR 3+ quadruplicam a area de desenho sem ganho visivel. */

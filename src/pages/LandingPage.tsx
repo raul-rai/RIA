@@ -192,7 +192,11 @@ function SceneCTA() {
         <h2 className="text-2xl md:text-5xl font-serif text-slate-900 mb-2 bg-white/80 rounded-2xl px-4 py-2 inline-block">
           Trinta minutos, <span className="italic font-normal text-slate-500">e você sai com um mapa.</span>
         </h2>
-        <p className="text-slate-700 text-[13px] md:text-base max-w-xl mx-auto font-sans leading-relaxed">
+        {/* reading-surface e obrigatorio aqui: nesta dobra a onda ja fechou
+            sobre a camera e o fundo do canvas e azul profundo. Sem a superficie
+            clara, este e o unico texto do capitulo que ficaria escuro sobre
+            escuro — os demais ja vivem dentro de cartoes bg-white/95. */}
+        <p className="reading-surface inline-block px-4 py-2 text-slate-700 text-[13px] md:text-base max-w-xl mx-auto font-sans leading-relaxed">
           Conte ao agente o que sua empresa faz. Ele já sabe o que você respondeu até aqui, e marca
           a sessão comigo.
         </p>

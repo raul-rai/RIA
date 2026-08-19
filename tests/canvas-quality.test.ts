@@ -23,10 +23,12 @@ describe('TIERS', () => {
     expect(TIERS.high).toEqual({ cols: 45, rows: 55, fill: true });
   });
 
-  it('QUAL-05: os niveis decrescem em custo', () => {
+  it('QUAL-05: os niveis decrescem em custo, nunca em cor', () => {
     expect(TIERS.medium.cols).toBeLessThan(TIERS.high.cols);
     expect(TIERS.low.cols).toBeLessThan(TIERS.medium.cols);
-    expect(TIERS.low.fill).toBe(false);
+    // O rebaixamento por FPS custa densidade, nunca o preenchimento: a onda sem
+    // cor e a pagina sem narrativa, e downgrade() nunca promove de volta.
+    for (const t of [TIERS.high, TIERS.medium, TIERS.low]) expect(t.fill).toBe(true);
   });
 });
 

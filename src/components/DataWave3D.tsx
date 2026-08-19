@@ -4,6 +4,9 @@ import {
   resolveDpr, TIERS, downgrade, pickInitialTier, createFpsMeter, prefersReducedMotion,
   type QualityTier,
 } from '../lib/canvas-quality';
+import {
+  resolveWaveCamera, surfaceY, projectPoint, quadDepthAlpha, underwaterStops, SPACING,
+} from '../lib/wave-scene';
 
 interface DataWave3DProps {
   /** Progresso 0 → 1. MotionValue para nao disparar re-render a cada frame. */
@@ -59,8 +62,6 @@ export default function DataWave3D({ progress }: DataWave3DProps) {
     let rows = TIERS[tier].rows;
     let fillQuads = TIERS[tier].fill;
 
-    const spacing = 150; // Adjusted for better perspective at depth
-
     // Smooth internal scroll progress (lerps toward waveProgressRef)
     let currentScroll = 0;
 
@@ -74,8 +75,8 @@ export default function DataWave3D({ progress }: DataWave3DProps) {
       for (let z = 0; z < rows; z++) {
         for (let x = 0; x < cols; x++) {
           points.push({
-            x: (x - cols / 2) * spacing,
-            z: z * spacing,
+            x: (x - cols / 2) * SPACING,
+            z: z * SPACING,
             y: 0,
             px: 0, py: 0, scale: 0,
           });
@@ -103,61 +104,33 @@ export default function DataWave3D({ progress }: DataWave3DProps) {
         time += 0.012 + currentScroll * 0.008;
       }
 
-      const focalLength = 800;
-      const cameraZ = -400 + (currentScroll * 200);
-      const cameraY = -320 + (currentScroll * 120);
+      const camera = resolveWaveCamera(currentScroll);
 
-      // Wave starts at 3600 on fold 0 so the 3D wave is ALREADY right front & center!
-      const tsunamiZ = 3600 - (currentScroll * 3400);
-
-      const halfW = width / 2;
-      const halfH = height * 0.54; 
+      /**
+       * A agua vista por dentro, pintada antes da malha.
+       *
+       * Este bloco e o que garante que a ultima dobra nunca volte ao branco: a
+       * cobertura do fundo deixa de depender de a malha estar enquadrada. Sem
+       * ele, assim que a crista passava pela camera nao sobrava nenhum
+       * quadrilatero dentro do viewport, e a dobra de conversao — o agente e a
+       * agenda — aparecia sobre branco puro.
+       */
+      const stops = underwaterStops(camera.submersion);
+      if (stops) {
+        const water = ctx.createLinearGradient(0, 0, 0, height);
+        for (const s of stops) water.addColorStop(s.offset, s.color);
+        ctx.fillStyle = water;
+        ctx.fillRect(0, 0, width, height);
+      }
 
       // 1. Update point positions
       for (let i = 0; i < points.length; i++) {
         const p = points[i];
-
-        // Organic liquid movement
-        const noiseX = Math.sin(p.x * 0.005 + time * 1.5);
-        const noiseZ = Math.cos(p.z * 0.005 - time * 1.2);
-        let y = (noiseX + noiseZ) * 25;
-
-        // ─── WAVE MODELING V3 ────────────────────────
-        const curvature = (p.x * p.x) * 0.0002;
-        const curvedTsunamiZ = tsunamiZ + curvature;
-        
-        const distToTsunami = p.z - curvedTsunamiZ;
-
-        if (distToTsunami > -600 && distToTsunami < 1500) {
-          let waveHeight = 0;
-          if (distToTsunami > 0) {
-            waveHeight = Math.cos((distToTsunami / 1500) * (Math.PI / 2));
-          } else {
-            waveHeight = Math.sqrt(Math.cos((distToTsunami / -600) * (Math.PI / 2)));
-          }
-
-          // Initial max amplitude starts at 750 for 3D volume on fold 0, grows as submerged
-          const maxAmplitude = 750 + (currentScroll * 1250); 
-
-          const edgeRatio = Math.abs(p.x) / 3800;
-          const edgeTaper = Math.pow(Math.max(0, 1 - edgeRatio), 1.6);
-
-          const currentAmplitude = waveHeight * maxAmplitude * edgeTaper;
-          y -= currentAmplitude;
-
-          // Organic chaotic foam at the crest
-          if (waveHeight > 0.6) {
-            const crestNoise = (Math.sin(p.x * 0.01 + time * 4) + Math.cos(p.z * 0.01 - time * 3)) * (50 + currentScroll * 50);
-            y -= crestNoise * (waveHeight - 0.6) * 4;
-          }
-        }
-
-        p.y = y;
-
-        const scale = focalLength / (p.z - cameraZ);
-        p.scale = scale;
-        p.px = p.x * scale + halfW;
-        p.py = (p.y - cameraY) * scale + halfH;
+        p.y = surfaceY(p.x, p.z, camera, time);
+        const projected = projectPoint(p.x, p.y, p.z, camera, width, height);
+        p.scale = projected.scale;
+        p.px = projected.px;
+        p.py = projected.py;
       }
 
       ctx.lineWidth = 1.5;
@@ -172,16 +145,9 @@ export default function DataWave3D({ progress }: DataWave3DProps) {
           const pBottom = points[idx + cols];
           const pBottomRight = points[idx + cols + 1];
 
-          if (p.scale < 0 || p.z < cameraZ) continue;
+          if (p.scale < 0 || p.z < camera.cameraZ) continue;
 
-          let depthAlpha = Math.max(0, 1.2 - ((p.z - cameraZ) / (rows * spacing * 0.8)));
-
-          const distBehindPeak = p.z - tsunamiZ;
-          if (distBehindPeak > 0) {
-            const fadeOutDist = 2000 - (currentScroll * 1500);
-            depthAlpha *= Math.max(0, 1 - (distBehindPeak / fadeOutDist));
-          }
-
+          const depthAlpha = quadDepthAlpha(p.z, camera, rows);
           if (depthAlpha <= 0) continue;
 
           ctx.beginPath();
@@ -204,10 +170,13 @@ export default function DataWave3D({ progress }: DataWave3DProps) {
             ctx.fill();
           }
 
-          // Linhas da malha em Ciano / Azul Elétrico brilhante
-          const lineR = Math.floor(56 + normalizedY * 40);
-          const lineG = Math.floor(189 + normalizedY * 40);
-          const lineB = Math.floor(248);
+          // Linhas da malha em Ciano / Azul Elétrico brilhante. Submersa, a
+          // superficie e vista de baixo contra a luz: o arame clareia para
+          // continuar legivel sobre o azul escuro da agua.
+          const lift = camera.submersion * 60;
+          const lineR = Math.floor(56 + normalizedY * 40 + lift);
+          const lineG = Math.floor(189 + normalizedY * 40 + lift * 0.4);
+          const lineB = 248;
           const lineAlpha = Math.min(0.95, depthAlpha);
 
           ctx.lineWidth = 1.2;
