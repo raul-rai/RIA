@@ -23,6 +23,13 @@ O workflow responde normalmente. A resposta é lida de `output`, `response`,
 `message` ou `text` — na raiz do objeto ou no primeiro item de um array.
 Resposta vazia conta como falha e o lead recebe o desvio para o WhatsApp.
 
+Aqui `context.vulnerabilityIndex` é **sempre número**, nunca `null` — é o
+índice cru, calculado a partir do que foi respondido até agora. Para quem
+ainda não interagiu com nenhum diagnóstico ele vale `100`, o pior caso por
+definição. Isso significa que `100` neste campo pode significar tanto "o
+visitante está totalmente exposto" quanto "o visitante ainda não avaliou
+nada" — o valor sozinho não distingue os dois casos.
+
 ## 2. `action: "intent"` — o lead clicou num CTA
 
 ```json
@@ -55,6 +62,18 @@ algo invisível.
 `intentId` é um de: `hero-cold`, `diagnostic-result`, `diagnostic-no-website`,
 `front-pick`, `fronts-agenda`, `credibility`. Ele diz de qual dobra o lead
 veio e serve para o prompt do agente ajustar o tom.
+
+Aqui `context.vulnerabilityIndex` **pode ser `null`** — diferente do que
+acontece em `sendMessage`. `null` significa "o visitante ainda não interagiu
+com nenhum diagnóstico" — nunca "zero vulnerabilidade". Só vira número depois
+que o visitante toca em algo (marca uma frente, roda o diagnóstico do site,
+declara não ter site).
+
+**Recomendação para o workflow:** trate `null` sempre como "sem dado", nunca
+como zero. Como `100` aparece tanto em `sendMessage` sem avaliação quanto em
+avaliação real de exposição total, a única leitura confiável de "ainda não
+avaliado" é o `null` que chega em `intent` — não um valor numérico específico
+em nenhum dos dois payloads.
 
 ## 3. `action: "qualification"` — os cinco campos
 
