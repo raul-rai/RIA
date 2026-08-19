@@ -4,6 +4,7 @@ import { Check, Layers, ArrowRight } from 'lucide-react';
 import { FRONTS } from '../content/fronts';
 import { resolveFirstFront, countChecked } from '../lib/fronts';
 import { useVulnerability } from '../context/VulnerabilityContext';
+import { useAgentIntent } from '../context/AgentIntentContext';
 import { track } from '../lib/analytics';
 
 /**
@@ -14,7 +15,8 @@ import { track } from '../lib/analytics';
  * pelo diagnostico da dobra 2: e a mesma coisa que aquela dobra mediu, e deixar
  * o visitante remarcar do zero era perder a costura entre as duas.
  */
-export default function FiveFronts({ onWantStrategy }: { onWantStrategy?: () => void }) {
+export default function FiveFronts() {
+  const { requestIntent } = useAgentIntent();
   const { frontsChecked, toggleFront, hasNoWebsite, websiteScore } = useVulnerability();
 
   /**
@@ -58,54 +60,72 @@ export default function FiveFronts({ onWantStrategy }: { onWantStrategy?: () => 
         {FRONTS.map((front, i) => {
           const isChecked = frontsChecked[i];
           const destacada = i === 0 && primeiraVazia && !isChecked;
+          const tom = isChecked
+            ? 'bg-emerald-50/90 border-emerald-300'
+            : destacada
+              ? 'bg-red-50/90 border-red-300'
+              : 'bg-white/90 border-slate-200 hover:border-slate-300';
           return (
-            <motion.button
-              key={front.id}
-              type="button"
-              onClick={() => {
-                toggleFront(i);
-                track('front_toggle', { id: front.id, checked: !isChecked });
-              }}
-              whileTap={{ scale: 0.98 }}
-              aria-pressed={isChecked}
-              className={`glass-card glass-hover text-left flex gap-3.5 p-4 rounded-2xl ${
-                isChecked
-                  ? 'glass-emerald glass-selected'
-                  : destacada
-                    ? 'glass-red glass-selected'
-                    : ''
-              }`}
-            >
-              <span
-                className={`w-6 h-6 rounded-lg border-2 shrink-0 flex items-center justify-center mt-0.5 ${
-                  isChecked ? 'bg-emerald-500 border-emerald-500' : 'border-slate-400/70 bg-white/50'
-                }`}
+            /* O cartao deixa de ser <button> porque passou a conter um: o
+               toggle "ja cubro" e o atalho "falar sobre" sao irmaos, nunca
+               aninhados — <button> dentro de <button> e HTML invalido. */
+            <div key={front.id} className={`flex flex-col rounded-2xl border transition-colors ${tom}`}>
+              <motion.button
+                type="button"
+                onClick={() => {
+                  toggleFront(i);
+                  track('front_toggle', { id: front.id, checked: !isChecked });
+                }}
+                whileTap={{ scale: 0.98 }}
+                aria-pressed={isChecked}
+                className="text-left flex gap-3.5 p-4"
               >
-                {isChecked && <Check size={14} className="text-white" strokeWidth={3} />}
-              </span>
-              <span className="flex-1">
-                <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-500 block mb-0.5">
-                  Frente {front.id}
-                </span>
                 <span
-                  className={`block text-xs md:text-sm font-bold leading-snug mb-1 ${
-                    isChecked ? 'text-emerald-950' : 'text-slate-900'
+                  className={`w-6 h-6 rounded-lg border-2 shrink-0 flex items-center justify-center mt-0.5 ${
+                    isChecked ? 'bg-emerald-500 border-emerald-500' : 'border-slate-300'
                   }`}
                 >
-                  {front.label}
+                  {isChecked && <Check size={14} className="text-white" strokeWidth={3} />}
                 </span>
-                <span className="block text-[11px] md:text-xs text-slate-600 leading-snug">
-                  {front.promise}
-                </span>
-                {destacada && (
-                  <span className="block mt-2 text-[11px] font-bold text-red-800 leading-snug">
-                    {hasNoWebsite
-                      ? 'Você acabou de dizer que ainda não tem site. Esta é a primeira.'
-                      : `Seu site tirou ${websiteScore}/100 no diagnóstico. Esta é a primeira.`}
+                <span className="flex-1">
+                  <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-500 block mb-0.5">
+                    Frente {front.id}
                   </span>
-                )}
-              </span>
-            </motion.button>
+                  <span
+                    className={`block text-xs md:text-sm font-bold leading-snug mb-1 ${
+                      isChecked ? 'text-emerald-950' : 'text-slate-900'
+                    }`}
+                  >
+                    {front.label}
+                  </span>
+                  <span className="block text-[11px] md:text-xs text-slate-600 leading-snug">
+                    {front.promise}
+                  </span>
+                  {destacada && (
+                    <span className="block mt-2 text-[11px] font-bold text-red-800 leading-snug">
+                      {hasNoWebsite
+                        ? 'Você acabou de dizer que ainda não tem site. Esta é a primeira.'
+                        : `Seu site tirou ${websiteScore}/100 no diagnóstico. Esta é a primeira.`}
+                    </span>
+                  )}
+                </span>
+              </motion.button>
+
+              {/* So nos cartoes vazios: pedir uma frente que voce acabou de
+                  declarar coberta nao e um estado que precise existir. */}
+              {!isChecked && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    track('cta_click', { location: 'front_card', front_id: front.id });
+                    requestIntent('front-pick', front.id);
+                  }}
+                  className="self-start mx-4 mb-3 py-2.5 inline-flex items-center gap-1.5 text-[11px] font-bold text-accent hover:text-accent-dark underline underline-offset-2"
+                >
+                  Falar sobre esta frente <ArrowRight size={12} />
+                </button>
+              )}
+            </div>
           );
         })}
       </div>
@@ -120,7 +140,10 @@ export default function FiveFronts({ onWantStrategy }: { onWantStrategy?: () => 
           )}
         </p>
         <button
-          onClick={() => { track('cta_click', { location: 'five_fronts' }); onWantStrategy?.(); }}
+          onClick={() => {
+            track('cta_click', { location: 'five_fronts' });
+            requestIntent('fronts-agenda');
+          }}
           className="px-6 py-3.5 bg-slate-900 text-white rounded-xl font-black text-xs uppercase tracking-widest hover:bg-accent active:scale-95 transition-all inline-flex items-center gap-2 shadow-lg"
         >
           Montar minha pauta <ArrowRight size={14} />
