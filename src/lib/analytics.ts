@@ -7,6 +7,8 @@
 export type RiaEvent =
   | 'chapter_view'
   | 'cta_click'
+  /** Um CTA levou o lead ao agente carregando intencao. Ver content/intents.ts. */
+  | 'agent_intent'
   | 'awareness_check'
   | 'operational_check'
   | 'front_toggle'
