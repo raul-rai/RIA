@@ -4,6 +4,7 @@ import { CASES } from '../content/cases';
 import { FRONTS } from '../content/fronts';
 import { CONSULTANT, PHOTO_SRC, PHOTO_ALT } from '../content/consultant';
 import { track } from '../lib/analytics';
+import { useAgentIntent } from '../context/AgentIntentContext';
 
 /**
  * Dobra 4 — a prova e quem executa, na mesma dobra.
@@ -23,7 +24,8 @@ const METHOD = [
 
 const frontTag = (id: number) => FRONTS.find((f) => f.id === id)?.tag ?? '';
 
-export default function CredibilitySection({ onWantStrategy }: { onWantStrategy?: () => void }) {
+export default function CredibilitySection() {
+  const { requestIntent } = useAgentIntent();
   return (
     <div className="w-full max-w-6xl mx-auto px-4 flex flex-col justify-center pointer-events-auto">
       <div className="text-center mb-6 md:mb-8">
@@ -154,7 +156,10 @@ export default function CredibilitySection({ onWantStrategy }: { onWantStrategy?
 
             <div className="flex justify-center md:justify-start">
               <button
-                onClick={() => { track('cta_click', { location: 'credibility' }); onWantStrategy?.(); }}
+                onClick={() => {
+                  track('cta_click', { location: 'credibility' });
+                  requestIntent('credibility');
+                }}
                 className="px-6 py-3.5 w-full md:w-auto bg-slate-900 text-white rounded-xl font-black text-xs uppercase tracking-widest hover:bg-accent active:scale-95 transition-all inline-flex items-center justify-center gap-2 shadow-lg"
               >
                 Falar com o agente <ArrowUpRight size={14} />

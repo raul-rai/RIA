@@ -14,14 +14,13 @@ import WhatsAppFab from '../components/WhatsAppFab';
 import { prefersReducedMotion } from '../lib/canvas-quality';
 import { track } from '../lib/analytics';
 import { VulnerabilityProvider } from '../context/VulnerabilityContext';
+import { AgentIntentProvider, useAgentIntent } from '../context/AgentIntentContext';
+import { REF_LABEL } from '../content/intents';
 import FiveFronts from '../components/FiveFronts';
 import CredibilitySection from '../components/CredibilitySection';
 
 /** Capitulo que concentra a oferta e o agente. Todo CTA aponta para ca. */
 const CTA_CHAPTER = 5;
-
-/** Dobra do catalogo. O diagnostico entrega o visitante aqui, nao no fim. */
-const FRONTS_CHAPTER = 3;
 
 function MagneticButton({ children, onClick, className }: { children: React.ReactNode, onClick: () => void, className?: string }) {
   const x = useMotionValue(0);
@@ -52,18 +51,10 @@ function MagneticButton({ children, onClick, className }: { children: React.Reac
 }
 
 // ─── Capitulo 0: A AMEACA ────────────────────────────────────────────────────
-function SceneHero({ onStopWastingMoney, onUnderstandMore }: {
-  onStopWastingMoney: () => void;
-  onUnderstandMore: () => void;
-}) {
+function SceneHero({ onUnderstandMore }: { onUnderstandMore: () => void }) {
+  const { requestIntent } = useAgentIntent();
   const searchParams = new URLSearchParams(window.location.search);
   const ref = searchParams.get('ref')?.toLowerCase();
-
-  const REF_LABEL: Record<string, string> = {
-    industria: 'Indústria',
-    servicos: 'Serviços',
-    varejo: 'Varejo',
-  };
 
   /**
    * Cada palavra anima sozinha, mas o espaco entre elas e um no de texto real —
@@ -161,7 +152,10 @@ function SceneHero({ onStopWastingMoney, onUnderstandMore }: {
         className="flex flex-col sm:flex-row items-center justify-center gap-3.5 md:gap-4 w-full sm:w-auto pointer-events-auto"
       >
         <MagneticButton
-          onClick={onStopWastingMoney}
+          onClick={() => {
+            track('cta_click', { location: 'hero' });
+            requestIntent('hero-cold');
+          }}
           className="w-full sm:w-auto group px-7 py-4 bg-slate-950 text-white rounded-xl font-black text-xs uppercase tracking-widest transition-all duration-300 hover:bg-accent shadow-2xl flex items-center justify-center gap-2.5 min-h-[52px]"
         >
           <span>Pare de rasgar dinheiro</span>
@@ -247,20 +241,20 @@ export default function LandingPage() {
 
   const goToCta = useCallback(() => goToChapter(CTA_CHAPTER), [goToChapter]);
   const goToMarketVoices = useCallback(() => goToChapter(1), [goToChapter]);
-  const goToFronts = useCallback(() => goToChapter(FRONTS_CHAPTER), [goToChapter]);
 
   const chapterContent = useMemo(() => [
-    <SceneHero onStopWastingMoney={goToCta} onUnderstandMore={goToMarketVoices} />,
+    <SceneHero onUnderstandMore={goToMarketVoices} />,
     <SocialProofSection />,
-    <PotentialDiagnostic onWantStrategy={goToFronts} onNoWebsite={goToFronts} />,
-    <FiveFronts onWantStrategy={goToCta} />,
-    <CredibilitySection onWantStrategy={goToCta} />,
+    <PotentialDiagnostic />,
+    <FiveFronts />,
+    <CredibilitySection />,
     <SceneCTA />,
-  ], [goToCta, goToMarketVoices, goToFronts]);
+  ], [goToMarketVoices]);
 
   return (
     <VulnerabilityProvider>
-      <div className="bg-white text-slate-900 font-sans selection:bg-accent/20 selection:text-slate-900">
+      <AgentIntentProvider onReachAgent={goToCta}>
+        <div className="bg-white text-slate-900 font-sans selection:bg-accent/20 selection:text-slate-900">
         <a
           href={`#capitulo-${CTA_CHAPTER}`}
           className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-slate-900 focus:text-white focus:rounded-lg focus:text-xs focus:font-bold"
@@ -293,7 +287,8 @@ export default function LandingPage() {
         </motion.div>
 
         <WhatsAppFab hideOnChapter={CTA_CHAPTER} />
-      </div>
+        </div>
+      </AgentIntentProvider>
     </VulnerabilityProvider>
   );
 }
