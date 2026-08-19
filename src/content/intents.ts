@@ -91,10 +91,15 @@ export const INTENTS: Record<IntentId, IntentDefinition> = {
       ctx.websiteScore === null
         ? 'Fiz o diagnóstico do meu site e quero entender o que ele me custa.'
         : `Meu site tirou ${ctx.websiteScore}/100 no diagnóstico. Quero entender o que isso me custa.`,
-    agentReply: (ctx) =>
-      ctx.websiteScore === null
-        ? 'Sem a nota eu não chuto o tamanho do buraco. Me diz o que sua empresa vende e pra quem — e, se puder, roda a auditoria do site aqui em cima que eu leio o resultado com você.'
-        : `${scoreBand(ctx.websiteScore)}. A nota é sintoma — o custo está nas buscas e nas citações de IA que passam longe de você. Me diz o que sua empresa vende e pra quem.`,
+    agentReply: (ctx) => {
+      if (ctx.websiteScore === null)
+        return 'Sem a nota eu não chuto o tamanho do buraco. Me diz o que sua empresa vende e pra quem — e, se puder, roda a auditoria do site aqui em cima que eu leio o resultado com você.';
+      const cauda =
+        ctx.websiteScore >= 80
+          ? 'Então o gargalo não está na vitrine: está no que acontece depois que o lead chega. Me diz o que sua empresa vende e pra quem.'
+          : 'A nota é sintoma — o custo está nas buscas e nas citações de IA que passam longe de você. Me diz o que sua empresa vende e pra quem.';
+      return `${scoreBand(ctx.websiteScore)}. ${cauda}`;
+    },
   },
 
   'diagnostic-no-website': {
