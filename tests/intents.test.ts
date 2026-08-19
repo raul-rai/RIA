@@ -80,6 +80,12 @@ describe('hero-cold: o lead frio, com ou sem campanha', () => {
       'Tenho uma indústria e quero parar de rasgar dinheiro. Por onde eu começo?'
     );
   });
+
+  it('INT-24: a resposta para de ecoar a saudacao do balao 1', () => {
+    expect(INTENTS['hero-cold'].agentReply(base)).toBe(
+      'Começa por saber onde está o vazamento. Na maioria das operações ele está em três lugares: lead que não é respondido, rotina que consome hora de gente cara, e decisão tomada no achismo. Me diz o que sua empresa faz — eu volto com qual dos três está te custando mais.'
+    );
+  });
 });
 
 describe('diagnostic-result: a nota entra na fala', () => {
@@ -99,6 +105,18 @@ describe('diagnostic-result: a nota entra na fala', () => {
     const r = (score: number) => INTENTS['diagnostic-result'].agentReply({ ...base, websiteScore: score });
     expect(r(30)).not.toBe(r(63));
     expect(r(63)).not.toBe(r(90));
+  });
+
+  it('INT-22: nota abaixo de 80, a cauda fala do custo que passa longe', () => {
+    expect(INTENTS['diagnostic-result'].agentReply({ ...base, websiteScore: 63 })).toBe(
+      'Essa nota quer dizer que o site funciona, mas não compete. A nota é sintoma — o custo está nas buscas e nas citações de IA que passam longe de você. Me diz o que sua empresa vende e pra quem.'
+    );
+  });
+
+  it('INT-23: nota 80 ou mais, a cauda para de contradizer a nota boa', () => {
+    expect(INTENTS['diagnostic-result'].agentReply({ ...base, websiteScore: 95 })).toBe(
+      'Essa nota é boa — o site sustenta, e o gargalo está em outra frente. Então o gargalo não está na vitrine: está no que acontece depois que o lead chega. Me diz o que sua empresa vende e pra quem.'
+    );
   });
 });
 
@@ -133,6 +151,24 @@ describe('fronts-agenda: a pauta muda com o que foi marcado', () => {
     );
   });
 
+  it('INT-20: resta uma frente, o verbo concorda no singular ("Falta")', () => {
+    const texto = INTENTS['fronts-agenda'].userMessage({
+      ...base,
+      frontsChecked: [true, true, true, true, false],
+    });
+    expect(texto).toBe('Marquei 4 de 5. Falta Dados e decisão. Quero montar minha pauta.');
+  });
+
+  it('INT-21: restam duas frentes, o verbo concorda no plural ("Faltam")', () => {
+    const texto = INTENTS['fronts-agenda'].userMessage({
+      ...base,
+      frontsChecked: [true, true, true, false, false],
+    });
+    expect(texto).toBe(
+      'Marquei 3 de 5. Faltam Sistema sob medida e Dados e decisão. Quero montar minha pauta.'
+    );
+  });
+
   it('INT-13: cinco marcadas viram conversa de otimizacao, nao de pauta', () => {
     const ctx = { ...base, frontsChecked: [true, true, true, true, true] };
     expect(INTENTS['fronts-agenda'].userMessage(ctx)).toBe(
@@ -151,8 +187,12 @@ describe('fronts-agenda: a pauta muda com o que foi marcado', () => {
 });
 
 describe('diagnostic-no-website: quem nao tem onde ser encontrado', () => {
-  it('INT-15: a resposta reusa a saudacao de quem nao tem site', () => {
-    expect(INTENTS['diagnostic-no-website'].agentReply(base)).toBe(NO_WEBSITE_GREETING);
+  it('INT-15: a resposta e o texto proprio da intencao, nao a saudacao do balao 1', () => {
+    const resposta = INTENTS['diagnostic-no-website'].agentReply(base);
+    expect(resposta).toBe(
+      'Isso muda a ordem das coisas: antes de automatizar qualquer processo, você precisa existir para quem procura o que você vende. Me diz o que sua empresa faz e para quem — eu volto com o que precisa estar no ar primeiro, e em quanto tempo.'
+    );
+    expect(resposta).not.toBe(NO_WEBSITE_GREETING);
   });
 });
 
