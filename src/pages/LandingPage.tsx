@@ -9,17 +9,19 @@ import EliteHUD from '../components/EliteHUD';
 import AIChatAgent from '../components/AIChatAgent';
 import OfferSection from '../components/OfferSection';
 import PotentialDiagnostic from '../components/PotentialDiagnostic';
-import ProofSection from '../components/ProofSection';
 import SocialProofSection from '../components/SocialProofSection';
-import ConsultantSection from '../components/ConsultantSection';
 import WhatsAppFab from '../components/WhatsAppFab';
 import { prefersReducedMotion } from '../lib/canvas-quality';
 import { track } from '../lib/analytics';
 import { VulnerabilityProvider } from '../context/VulnerabilityContext';
 import FiveFronts from '../components/FiveFronts';
+import CredibilitySection from '../components/CredibilitySection';
 
 /** Capitulo que concentra a oferta e o agente. Todo CTA aponta para ca. */
-const CTA_CHAPTER = 6;
+const CTA_CHAPTER = 5;
+
+/** Dobra do catalogo. O diagnostico entrega o visitante aqui, nao no fim. */
+const FRONTS_CHAPTER = 3;
 
 function MagneticButton({ children, onClick, className }: { children: React.ReactNode, onClick: () => void, className?: string }) {
   const x = useMotionValue(0);
@@ -178,51 +180,47 @@ function SceneHero({ onStopWastingMoney, onUnderstandMore }: {
   );
 }
 
-// ─── Capitulo 6: A OFERTA + O AGENTE ─────────────────────────────────────────
+// ─── Capitulo 5: O AGENTE E A AGENDA ─────────────────────────────────────────
+// Um caminho so. Antes eram tres saidas competindo — cartao de oferta, chat e
+// FAB — e a conversao real era um link de WhatsApp com dados parciais. A oferta
+// vira faixa de contexto acima do agente: informacao disponivel, sem disputar
+// o clique.
 function SceneCTA() {
   return (
-    <div className="w-full max-w-6xl mx-auto px-2 md:px-4 flex flex-col justify-center items-center text-center pointer-events-auto">
-      <div className="w-full mb-5 md:mb-8">
-        <h2 className="text-2xl md:text-5xl font-serif text-slate-900 mb-2 md:mb-3 bg-white/80 rounded-2xl px-4 py-2 inline-block">
-          Você vai surfar ou <span className="italic font-normal text-slate-500">se afogar?</span>
+    <div className="w-full max-w-4xl mx-auto px-2 md:px-4 flex flex-col justify-center items-center text-center pointer-events-auto">
+      <div className="w-full mb-4 md:mb-5">
+        <h2 className="text-2xl md:text-5xl font-serif text-slate-900 mb-2 bg-white/80 rounded-2xl px-4 py-2 inline-block">
+          Trinta minutos, <span className="italic font-normal text-slate-500">e você sai com um mapa.</span>
         </h2>
-        {/* Sem "esquerda" e "direita": no celular a proposta e o agente ficam
-            empilhados, e o texto mandava o visitante olhar para um lado que nao
-            existe. A frase agora descreve as duas pecas, nao a grade. */}
         <p className="text-slate-700 text-[13px] md:text-base max-w-xl mx-auto font-sans leading-relaxed">
-          Dois caminhos: fale com o agente — ele já sabe o que você respondeu até aqui — ou leia a
-          proposta inteira.
+          Conte ao agente o que sua empresa faz. Ele já sabe o que você respondeu até aqui, e marca
+          a sessão comigo.
         </p>
       </div>
 
-      <div className="w-full grid grid-cols-1 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] gap-4 md:gap-6 items-stretch">
-        <div className="order-2 lg:order-1 min-h-[420px]">
-          <OfferSection />
-        </div>
-        {/* 65svh no celular deixava a conversa numa janelinha com rolagem
-            propria dentro de uma pagina que ja rola. 78svh da a altura de um
-            chat de verdade sem esconder a proposta logo abaixo. */}
-        <div className="order-1 lg:order-2 h-[78svh] lg:h-auto lg:min-h-[560px]">
-          <AIChatAgent />
-        </div>
+      <div className="w-full mb-4">
+        <OfferSection />
+      </div>
+
+      <div className="w-full h-[78svh] lg:h-auto lg:min-h-[560px]">
+        <AIChatAgent />
       </div>
     </div>
   );
 }
 
 // ─── Pagina ──────────────────────────────────────────────────────────────────
-// O diagnostico ocupa a terceira dobra de proposito: e a primeira coisa da
-// pagina que exige uma resposta do visitante, e a unica que devolve um numero
-// sobre a empresa dele. Ceder esse lugar a um diagrama do que a RIA vende era
-// gastar a dobra de maior atencao falando de nos.
+// Seis dobras. A ordem e a espinha narrativa: ameaca -> validacao externa ->
+// tensao pessoal (a nota do site) -> o caminho (o catalogo) -> confianca ->
+// acao. O que quebrava antes era o degrau entre tensao e caminho: a pagina
+// subia a tensao e respondia com metodologia de ROI.
 const CHAPTERS = [
   { label: 'A ameaça silenciosa', title: 'RIA — A Ameaça Silenciosa' },
   { label: 'Vozes do mercado', title: 'RIA — Vozes do Mercado' },
   { label: 'Diagnóstico de saúde digital', title: 'RIA — Diagnóstico de Saúde Digital' },
-  { label: 'Como medimos retorno', title: 'RIA — Retorno Auditável' },
-  { label: 'IA operacional na prática', title: 'RIA — IA Operacional na Prática' },
-  { label: 'Seu consultor', title: 'RIA — Seu Consultor' },
-  { label: 'A proposta e o agente', title: 'RIA — A Proposta' },
+  { label: 'As cinco frentes', title: 'RIA — As Cinco Frentes' },
+  { label: 'Prova e quem executa', title: 'RIA — Prova e Quem Executa' },
+  { label: 'O agente e a agenda', title: 'RIA — Agende sua Sessão' },
 ];
 
 export default function LandingPage() {
@@ -245,16 +243,16 @@ export default function LandingPage() {
 
   const goToCta = useCallback(() => goToChapter(CTA_CHAPTER), [goToChapter]);
   const goToMarketVoices = useCallback(() => goToChapter(1), [goToChapter]);
+  const goToFronts = useCallback(() => goToChapter(FRONTS_CHAPTER), [goToChapter]);
 
   const chapterContent = useMemo(() => [
     <SceneHero onStopWastingMoney={goToCta} onUnderstandMore={goToMarketVoices} />,
     <SocialProofSection />,
-    <PotentialDiagnostic onWantStrategy={goToCta} onNoWebsite={goToCta} />,
-    <ProofSection onWantStrategy={goToCta} />,
+    <PotentialDiagnostic onWantStrategy={goToFronts} onNoWebsite={goToFronts} />,
     <FiveFronts onWantStrategy={goToCta} />,
-    <ConsultantSection onStrategyClick={goToCta} />,
+    <CredibilitySection onWantStrategy={goToCta} />,
     <SceneCTA />,
-  ], [goToCta, goToMarketVoices]);
+  ], [goToCta, goToMarketVoices, goToFronts]);
 
   return (
     <VulnerabilityProvider>

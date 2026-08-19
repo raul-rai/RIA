@@ -427,7 +427,7 @@ export default function PotentialDiagnostic({ onWantStrategy, onNoWebsite }: Pot
               onClick={() => { track('cta_click', { location: 'diagnostic_no_website' }); onWantStrategy?.(); }}
               className="px-6 py-3 bg-red-600 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-red-700 transition-all inline-flex items-center gap-2 shadow-md"
             >
-              <span>Resolver com a RIA</span>
+              <span>Ver as cinco frentes</span>
               <ArrowRight size={14} />
             </button>
           </motion.div>
