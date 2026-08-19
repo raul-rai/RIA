@@ -9,6 +9,17 @@ import QualificationFlow from './QualificationFlow';
 import BookingEmbed from './BookingEmbed';
 import { buildQualificationPayload, labelFor, type Qualification } from '../lib/qualification';
 import { FRONTS } from '../content/fronts';
+import {
+  INTENTS,
+  readCampaignRef,
+  GREETING,
+  NO_WEBSITE_GREETING,
+  type IntentContext,
+  type IntentId,
+} from '../content/intents';
+import { useAgentIntent } from '../context/AgentIntentContext';
+import { shouldInject } from '../lib/agent-intent';
+import { missingFronts } from '../lib/fronts';
 
 interface RoiData {
   roi: number;
@@ -44,12 +55,6 @@ const NO_WEBSITE_SUGGESTIONS = [
   'Como a IA vai passar a me indicar?',
 ];
 
-const GREETING =
-  'Olá. Sou o Agente de Inteligência da RIA. Me conte em uma frase o que sua empresa faz e onde o tempo da equipe está indo — eu volto com onde a IA paga mais rápido.';
-
-const NO_WEBSITE_GREETING =
-  'Você ainda nem tem um site para surfar a era da inteligência artificial. Por isso seu índice bateu 101%: não existe página para o ChatGPT, o Gemini ou o Perplexity citarem quando alguém procura o que você vende. Me diga em uma frase o que sua empresa faz — eu volto com o que precisa estar no ar primeiro.';
-
 /**
  * O n8n pode devolver qualquer coisa. Um payload sem `roi` numerico nao pode
  * chegar ao render — `toLocaleString()` num undefined derruba a tela inteira.
@@ -73,6 +78,8 @@ export default function AIChatAgent({ webhookUrl = config.chatWebhook }: AIChatA
    *  isso, quem pula direto para o agente reporta "100% vulneravel" quando
    *  na verdade e "nunca avaliado" — os dois nao podem chegar identicos. */
   const assessedVulnerabilityIndex = assessed ? vulnerabilityIndex : null;
+
+  const { pending, consume } = useAgentIntent();
 
   const [messages, setMessages] = useState<Message[]>([
     { role: 'assistant', content: hasNoWebsite ? NO_WEBSITE_GREETING : GREETING },
@@ -155,6 +162,74 @@ export default function AIChatAgent({ webhookUrl = config.chatWebhook }: AIChatA
       pauta ? `Frentes descobertas: ${pauta}` : 'Frentes descobertas: nenhuma',
     ].join('\n');
   }, [qualification, pauta]);
+
+  /**
+   * Registro da intencao no n8n. Nao e pergunta: a resposta ja esta na tela.
+   * O workflow trata action: 'intent' gravando as duas falas na memoria da
+   * sessao e devolvendo 200 sem gerar resposta do LLM — ver
+   * docs/n8n-contrato-agente.md.
+   */
+  const postIntent = async (intentId: IntentId, chatInput: string, agentReply: string) => {
+    if (!webhookUrl) return;
+    try {
+      await fetch(webhookUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId,
+          action: 'intent',
+          intentId,
+          chatInput,
+          agentReply,
+          context: {
+            vulnerabilityIndex: assessedVulnerabilityIndex,
+            hasNoWebsite,
+            websiteScore,
+            frontsCovered: frontsChecked.filter(Boolean).length,
+            frontsMissing: missingFronts(frontsChecked, FRONTS.map((f) => f.id)),
+          },
+        }),
+      });
+    } catch {
+      // A conversa ja esta na tela e funcionando. Falhar o registro nao pode
+      // custar nada ao lead — por isso a resposta de abertura e local.
+    }
+  };
+
+  /**
+   * Ja tratado: o efeito roda de novo quando `messages` muda, e sem esta trava
+   * a mesma intencao seria injetada em loop.
+   */
+  const handledNonce = useRef(0);
+
+  useEffect(() => {
+    if (!pending || pending.nonce === handledNonce.current) return;
+    handledNonce.current = pending.nonce;
+    consume();
+
+    const definition = INTENTS[pending.id];
+    const ctx: IntentContext = {
+      ref: readCampaignRef(typeof window === 'undefined' ? '' : window.location.search),
+      websiteScore,
+      hasNoWebsite,
+      frontsChecked,
+      front: pending.frontId ? FRONTS.find((f) => f.id === pending.frontId) : undefined,
+    };
+
+    const userMessage = definition.userMessage(ctx);
+    if (!shouldInject({ stage, isTyping, messages, candidateUserMessage: userMessage })) return;
+
+    const agentReply = definition.agentReply(ctx);
+    setMessages((prev) => [
+      ...prev,
+      { role: 'user', content: userMessage },
+      { role: 'assistant', content: agentReply },
+    ]);
+    void postIntent(pending.id, userMessage, agentReply);
+    // postIntent e recriado a cada render e le o estado atual quando chamado.
+    // Fora das deps de proposito: incluir a funcao faria o efeito rodar em
+    // todo render, e a trava do handledNonce ja garante uma injecao por pedido.
+  }, [pending, consume, stage, isTyping, messages, websiteScore, hasNoWebsite, frontsChecked]);
 
   const send = async (text: string) => {
     const currentInput = text.trim();
