@@ -101,7 +101,8 @@ export const INTENTS: Record<IntentId, IntentDefinition> = {
     id: 'diagnostic-no-website',
     userMessage: () =>
       'Ainda não tenho site. Quero saber o que preciso pra existir na era da IA.',
-    agentReply: () => NO_WEBSITE_GREETING,
+    agentReply: () =>
+      'Isso muda a ordem das coisas: antes de automatizar qualquer processo, você precisa existir para quem procura o que você vende. Me diz o que sua empresa faz e para quem — eu volto com o que precisa estar no ar primeiro, e em quanto tempo.',
   },
 
   'front-pick': {
