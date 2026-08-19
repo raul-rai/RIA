@@ -52,4 +52,10 @@ describe('scoreBand: a leitura da nota do site', () => {
       expect(scoreBand(score).trim().length).toBeGreaterThan(0);
     }
   });
+
+  it('FMT-10: a copy de cada faixa e a aprovada, nao so tres textos distintos', () => {
+    expect(scoreBand(30)).toBe('Essa nota quer dizer que o site trava antes de convencer alguém');
+    expect(scoreBand(63)).toBe('Essa nota quer dizer que o site funciona, mas não compete');
+    expect(scoreBand(90)).toBe('Essa nota é boa — o site sustenta, e o gargalo está em outra frente');
+  });
 });
