@@ -1074,8 +1074,9 @@ Adicionar logo depois do bloco `postIntent`:
       { role: 'assistant', content: agentReply },
     ]);
     void postIntent(pending.id, userMessage, agentReply);
-    // postIntent le estado atual a cada chamada e nao precisa entrar nas deps.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // postIntent e recriado a cada render e le o estado atual quando chamado.
+    // Fora das deps de proposito: incluir a funcao faria o efeito rodar em
+    // todo render, e a trava do handledNonce ja garante uma injecao por pedido.
   }, [pending, consume, stage, isTyping, messages, websiteScore, hasNoWebsite, frontsChecked]);
 ```
 
