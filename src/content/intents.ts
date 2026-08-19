@@ -130,7 +130,8 @@ export const INTENTS: Record<IntentId, IntentDefinition> = {
       if (marcadas === 0) return 'Não cubro nenhuma das cinco frentes. Quero montar minha pauta.';
       if (faltando.length === 0)
         return 'Marquei as cinco frentes. Quero saber o que ainda dá pra melhorar.';
-      return `Marquei ${marcadas} de 5. Faltam ${formatList(
+      const verbo = faltando.length === 1 ? 'Falta' : 'Faltam';
+      return `Marquei ${marcadas} de 5. ${verbo} ${formatList(
         faltando.map((f) => f.tag)
       )}. Quero montar minha pauta.`;
     },
