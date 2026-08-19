@@ -370,7 +370,10 @@ export default function PotentialDiagnostic() {
             justamente na escolha que abre o diagnostico. */}
         <div className="max-w-2xl mx-auto mb-6 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-2.5 sm:gap-3">
           <button
-            onClick={() => setNoWebsite(false)}
+            onClick={() => {
+              if (scrollTimer.current) clearTimeout(scrollTimer.current);
+              setNoWebsite(false);
+            }}
             aria-pressed={!hasNoWebsite}
             className={`px-4 py-3 min-h-12 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
               !hasNoWebsite
