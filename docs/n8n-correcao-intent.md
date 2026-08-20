@@ -2,8 +2,8 @@
 
 **Workflow:** `spPSvr1rXOouVZWq` — ativo, path `ria-agente`
 **Versão antes da mudança:** `6cc9202a-11ae-4f03-b160-7ea077abd7b6` (counter 2)
-**Estado:** preparada e validada (`validateOnly` → `valid: true`), **não aplicada**.
-A escrita foi bloqueada pelo classificador do modo automático.
+**Estado:** **aplicada e verificada em produção** em 2026-08-19. 13 operações,
+o workflow foi de 8 para 11 nós. Ver "Verificação pós-aplicação" no final.
 
 ## Os três defeitos encontrados
 
@@ -93,3 +93,59 @@ campo `output`. Se vier `output` preenchido e ~3,5 s, a ramificação não pegou
 
 `n8n_workflow_versions` com `mode: rollback` para a versão
 `6cc9202a-11ae-4f03-b160-7ea077abd7b6`.
+
+---
+
+## Verificação pós-aplicação — 2026-08-19
+
+Quatro chamadas contra o webhook de produção. Todas passaram.
+
+### 1. A rota de intenção não chama mais o modelo
+
+```
+POST action=intent  →  {"ok":true,"stored":true}   HTTP 200, 0,70 s
+```
+
+Antes: `{"output":"Entendi que você está buscando montar uma pauta…"}` em 3,56 s.
+Sem campo `output` e sem tempo de inferência — a ramificação pegou.
+
+### 2. A memória guardou as duas falas
+
+Na mesma sessão, perguntei ao agente o que ele lembrava:
+
+> **Pergunta:** "quantas frentes eu disse que marquei, e qual falta?"
+> **Agente:** "Você disse que marcou 4 de 5. A frente que falta é Dados e decisão."
+
+Esses dados chegaram **apenas** no payload de `intent`, nunca num `sendMessage`.
+É a prova de que `Gravar na Memoria` escreve no mesmo histórico que o
+`Consultor RIA` lê.
+
+### 3. A rota normal segue intacta
+
+```
+POST action=sendMessage  →  {"output":"Entendi. Qual o processo específico…"}  2,26 s
+```
+
+### 4. O contexto do diagnóstico finalmente chega
+
+Sessão nova, frentes informadas **só** no bloco `context` (nada no texto):
+
+> **Agente:** "Você já cobre 2 das 5 frentes. As frentes que ainda não foram
+> descobertas são: Automação de processos, Sistema sob medida e Dados e decisão."
+
+Confirma a correção de `operationalPillars` → `frontsCovered` e a leitura nova
+de `frontsMissing`. Antes desta mudança o agente não tinha acesso a nenhum dos
+dois.
+
+## Nota sobre `n8n_validate_workflow`
+
+O validador reporta um erro que é **falso positivo**: diz que
+`@n8n/n8n-nodes-langchain.memoryManager` é sub-nó de IA e não pode ter conexão
+`main`. O Chat Memory Manager é nó de fluxo principal (categoria `transform`)
+que *recebe* a memória por `ai_memory` — que é exatamente a montagem usada
+aqui, e os testes acima provam que funciona.
+
+Outros avisos do validador também são ruído: ele afirma que o `Consultor RIA`
+não tem `systemMessage` (tem, e é extenso), trata o ramo `false` do nó If como
+saída de erro, e marca os sub-nós de IA como "inalcançáveis a partir do
+trigger" — o que vale para todo sub-nó, por construção.
