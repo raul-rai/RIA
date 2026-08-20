@@ -126,6 +126,37 @@
   }
 }
 
+/* ── O contexto de posicionamento do vidro ────────────────────────────────────
+   Toda superficie de vidro precisa ser um contexto de posicionamento, porque o
+   ::before que desenha o reflexo especular usa `inset: 0`. Mas essa declaracao
+   NAO pode morar junto com o resto da fisica do vidro, la embaixo em
+   @layer utilities: aquele bloco vem depois do @import "tailwindcss", entao
+   `position: relative` ganhava de `.absolute` e `.fixed` por ordem de origem.
+
+   O sintoma era mudo e caro. O cartao do indice de vulnerabilidade e a linha do
+   tempo da IA (EliteHUD) declaram `absolute top-6 right-6` e `absolute bottom-8
+   left-8`, mas viravam blocos `relative` de largura total: o indice esticava por
+   toda a tela e a timeline subia do rodape para o topo, uma em cima da outra.
+   Como `position: relative` aceita `top`/`right` como deslocamento, nada
+   quebrava visivelmente o suficiente para parecer um erro de CSS.
+
+   Em @layer components a mesma regra perde para qualquer utilitario de posicao —
+   que e exatamente a precedencia que se espera de uma classe de componente. */
+@layer components {
+  .glass,
+  .glass-panel,
+  .glass-card,
+  .glass-chip,
+  .reading-surface,
+  .premium-glass,
+  .glass-inset,
+  .glass-raised,
+  .glass-field,
+  .glass-rail {
+    position: relative;
+  }
+}
+
 @layer utilities {
   /* Estas duas classes ja eram usadas pelo carrossel de depoimentos e pelo
      chat, mas nunca existiram — as barras de rolagem apareciam por dentro dos
@@ -209,7 +240,8 @@
       0 10px 24px -12px rgba(15, 23, 42, 0.18),
       0 28px 56px -28px rgba(8, 47, 73, 0.20);
 
-    position: relative;
+    /* position: relative vive em @layer components, no topo do arquivo — daqui
+       ele vencia os utilitarios .absolute/.fixed. Ver o comentario de la. */
     background-color: rgb(var(--glass-tint) / var(--glass-alpha));
     backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
     -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
@@ -356,7 +388,7 @@
     /* Sem defaults de --inset-* aqui: eles moram no @property la em cima,
        fora da cascata, para que os tons possam vencê-los. Ver o comentario
        do registro. */
-    position: relative;
+    /* position: relative vive em @layer components, no topo do arquivo. */
     transition:
       background-color 0.3s ease,
       border-color 0.3s ease,
