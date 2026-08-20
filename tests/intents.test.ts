@@ -71,13 +71,13 @@ describe('INTENTS: as seis intencoes cobrem todos os estados', () => {
 describe('hero-cold: o lead frio, com ou sem campanha', () => {
   it('INT-05: sem ref, a frase nao menciona segmento', () => {
     expect(INTENTS['hero-cold'].userMessage(base)).toBe(
-      'Quero parar de rasgar dinheiro. Por onde eu começo?'
+      'Quero me adaptar primeiro — antes do meu concorrente. Por onde eu começo?'
     );
   });
 
   it('INT-06: com ref, o segmento abre a frase', () => {
     expect(INTENTS['hero-cold'].userMessage({ ...base, ref: 'industria' })).toBe(
-      'Tenho uma indústria e quero parar de rasgar dinheiro. Por onde eu começo?'
+      'Tenho uma indústria e quero me adaptar primeiro — antes do meu concorrente. Por onde eu começo?'
     );
   });
 

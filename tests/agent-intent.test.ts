@@ -58,7 +58,7 @@ describe('shouldInject: quando a mensagem do botao entra na conversa', () => {
       shouldInject({
         ...base,
         messages: [
-          { role: 'user', content: 'Quero parar de rasgar dinheiro. Por onde eu começo?' },
+          { role: 'user', content: 'Quero me adaptar primeiro — antes do meu concorrente. Por onde eu começo?' },
           { role: 'assistant', content: 'Começa por saber onde está o vazamento.' },
         ],
       })

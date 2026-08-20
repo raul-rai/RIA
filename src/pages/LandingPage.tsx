@@ -5,6 +5,7 @@ import DataWave3D from '../components/DataWave3D';
 import ChapterSection from '../components/ChapterSection';
 import { useActiveChapter } from '../hooks/useActiveChapter';
 import EliteHUD from '../components/EliteHUD';
+import BrandMark from '../components/BrandMark';
 
 import AIChatAgent from '../components/AIChatAgent';
 import OfferSection from '../components/OfferSection';
@@ -86,8 +87,8 @@ function SceneHero({ onUnderstandMore }: { onUnderstandMore: () => void }) {
 
   let headline = (
     <>
-      <span className="block pb-2">{animatedText('O Tsunami da IA está chegando!')}</span>{' '}
-      <span className="block pb-4">{animatedText('É o fim da ineficiência humana.', true)}</span>
+      <span className="block pb-2">{animatedText('A inteligência artificial não é o futuro.')}</span>{' '}
+      <span className="block pb-4">{animatedText('Ela já é o presente — e o presente cobra.', true)}</span>
     </>
   );
 
@@ -115,7 +116,21 @@ function SceneHero({ onUnderstandMore }: { onUnderstandMore: () => void }) {
   }
 
   return (
-    <div className="w-full max-w-4xl mx-auto px-4 flex flex-col items-center text-center pointer-events-auto relative z-10">
+    /**
+     * Dois grupos empurrados para os extremos, com a onda no meio.
+     *
+     * Antes isto era um bloco unico centrado verticalmente — e o painel de
+     * vidro do subtexto pousava exatamente sobre a crista, que no scroll 0
+     * desenha a faixa dos ~45% aos ~65% da viewport (ver projectPoint em
+     * lib/wave-scene). A cena que sustenta a narrativa da pagina inteira ficava
+     * tapada por uma caixa opaca na unica dobra em que ela aparece inteira.
+     *
+     * A altura desconta o padding que ChapterSection ja reserva (pt-20 pb-24 =
+     * 11rem; md:pt-28 md:pb-20 = 12rem). Nao sao numeros escolhidos: se aquele
+     * padding mudar, estes mudam junto.
+     */
+    <div className="w-full max-w-4xl mx-auto px-4 flex flex-col items-center text-center pointer-events-auto relative z-10 min-h-[calc(100svh-11rem)] md:min-h-[calc(100svh-12rem)] justify-between">
+      <div className="flex flex-col items-center">
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -131,18 +146,41 @@ function SceneHero({ onUnderstandMore }: { onUnderstandMore: () => void }) {
         initial="hidden"
         animate="visible"
         variants={{ visible: { transition: { staggerChildren: 0.12, delayChildren: 0.1 } }, hidden: {} }}
-        className="heading-hero mb-5 md:mb-6 text-slate-950 font-bold tracking-tight"
+        className="heading-hero text-slate-950 font-bold tracking-tight"
       >
         {headline}
       </motion.h1>
+      </div>
 
+      {/*
+        O vao. E `flex-1` com piso, nao altura fixa: em monitor alto ele absorve
+        toda a folga e a onda fica com mais de um terco da tela; num celular de
+        640px ele recolhe ate 8svh e o CTA secundario continua acima da dobra.
+        Vazio de proposito — o leitor de tela salta do H1 direto para o subtexto.
+
+        O piso de 18svh e o do `md:`, que liga pela LARGURA — e num celular
+        deitado a largura passa de 768px com 375px de altura sobrando. Ali o
+        criterio tem que ser a altura, senao o vao abre 68px numa tela que nao
+        tem 68px para dar. Mesma regra que ChapterSection e EliteHUD ja usam.
+
+        Abaixo de 600px de altura o piso some de vez: numa tela dessas nao ha
+        folga para revelar onda nenhuma, e reservar espaco para uma revelacao
+        que nao acontece so empurra o CTA para fora da dobra. O `flex-1`
+        continua ali e volta a abrir sozinho assim que houver sobra.
+      */}
+      <div
+        aria-hidden="true"
+        className="flex-1 min-h-[8svh] md:min-h-[18svh] [@media(max-height:600px)]:min-h-0"
+      />
+
+      <div className="flex flex-col items-center w-full">
       <motion.p
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.6, duration: 1 }}
-        className="glass text-[15px] md:text-xl text-slate-800 max-w-2xl mb-8 md:mb-10 font-sans font-medium leading-relaxed px-4 py-3 rounded-2xl"
+        className="glass text-[15px] md:text-xl text-slate-800 max-w-2xl mb-6 md:mb-10 font-sans font-medium leading-relaxed px-4 py-3 rounded-2xl"
       >
-        Se você ainda não utiliza inteligência artificial em <strong className="font-bold text-slate-950">TODOS OS SEUS PROJETOS</strong>, você está rasgando dinheiro.
+        Nenhuma mudança ambiental poupou o maior nem o mais forte — só quem se adaptou primeiro. Hoje, adaptar-se é usar IA em <strong className="font-bold text-slate-950">todos os seus projetos</strong>.
       </motion.p>
 
       <motion.div
@@ -158,7 +196,7 @@ function SceneHero({ onUnderstandMore }: { onUnderstandMore: () => void }) {
           }}
           className="w-full sm:w-auto group px-7 py-4 bg-slate-950 text-white rounded-xl font-black text-xs uppercase tracking-widest transition-all duration-300 hover:bg-accent shadow-2xl flex items-center justify-center gap-2.5 min-h-[52px]"
         >
-          <span>Pare de rasgar dinheiro</span>
+          <span>Quero me adaptar primeiro</span>
           <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform duration-300" />
         </MagneticButton>
 
@@ -170,6 +208,7 @@ function SceneHero({ onUnderstandMore }: { onUnderstandMore: () => void }) {
           <ChevronDown size={16} className="group-hover:translate-y-0.5 transition-transform duration-300" />
         </MagneticButton>
       </motion.div>
+      </div>
     </div>
   );
 }
@@ -274,17 +313,7 @@ export default function LandingPage() {
         </main>
 
         {/* Marca — recolhida no mobile, onde competia com o indice pelo topo. */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.5 }}
-          className="hidden md:block fixed top-6 left-6 z-30 pointer-events-none"
-        >
-          <div className="glass-chip flex items-center gap-3 px-4 py-2 rounded-full">
-            <div className="w-2 h-2 rounded-full bg-accent animate-pulse" />
-            <span className="text-slate-900 text-xs tracking-[0.35em] uppercase font-black">RIA</span>
-          </div>
-        </motion.div>
+        <BrandMark />
 
         <WhatsAppFab hideOnChapter={CTA_CHAPTER} />
         </div>
