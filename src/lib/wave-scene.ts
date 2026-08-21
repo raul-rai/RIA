@@ -26,10 +26,10 @@ export const FOCAL_LENGTH = 800;
  *
  * Medicao atual (ago/2026, layout de 7 dobras, viewport de desktop):
  *
- *   LAST_DARK_TEXT_EXIT  O ultimo texto escuro SEM FUNDO PROPRIO da pagina e o
- *                        h3 "Como o numero e apurado", no capitulo 5. Ele sai
- *                        pelo topo da viewport aqui. Escurecer o canvas antes
- *                        disso apagaria a leitura.
+ *   LAST_DARK_TEXT_EXIT  Ate onde ainda existe texto escuro SEM FUNDO PROPRIO.
+ *                        Escurecer o canvas antes disso apagaria a leitura, e
+ *                        por isso o valor e um PISO: pode sobrar folga, nunca
+ *                        pode faltar.
  *
  *   CTA_CHAPTER_START    Onde comeca a ultima dobra (o agente e a agenda). A
  *                        agua precisa ter fechado ANTES, para o agente receber
@@ -39,6 +39,21 @@ export const FOCAL_LENGTH = 800;
  * a busca pelo ultimo elemento de texto que NAO esteja dentro de .glass-* nem
  * de .reading-surface, dividindo seu `bottom` absoluto por
  * (scrollHeight - innerHeight).
+ *
+ * REMEDICAO (ago/2026, 1280x800 sobre o build):
+ *
+ *   O ancora antigo era o h3 "Como o numero e apurado", no capitulo 5, medido
+ *   em 0.8278. Esse h3 saiu junto com a grade de metodo, e o capitulo 5 hoje e
+ *   inteiro de vidro (.glass-*): o ultimo texto escuro solto passou a ser o
+ *   paragrafo "Tres frentes, e e isso que eu implanto...", no capitulo 4, que
+ *   sai em 0.6996. O capitulo 6 comeca em 0.9860.
+ *
+ *   Os dois numeros abaixo NAO foram baixados para esses valores, de proposito.
+ *   Como sao um piso e um teto, 0.8278 e 0.9353 continuam validos — a agua so
+ *   fecha com mais folga do que o estritamente necessario. Refaze-los moveria
+ *   a rampa de ~0.07 para ~0.25 de largura, ou seja, trocaria a sensacao da
+ *   cena por uma economia que ninguem pediu. Quem quiser reapertar a folga que
+ *   reajuste tambem as margens de SUBMERSION_*, olhando a onda rodar.
  */
 export const LAST_DARK_TEXT_EXIT = 0.8278;
 export const CTA_CHAPTER_START = 0.9353;
