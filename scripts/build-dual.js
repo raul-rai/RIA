@@ -178,6 +178,50 @@ check(!/content="noindex/.test(home), 'home: indexável');
 check(v2.includes('/v2/assets/'), '/v2: assets com o prefixo certo');
 check(existsSync(resolve(outDir, 'v2/privacidade.html')), '/v2/privacidade existe');
 
+// ─── Saída pré-construída da Vercel (Build Output API v3) ───────────────────
+//
+// `vercel deploy dist-site` NÃO serve: passar um caminho faz o CLI criar um
+// PROJETO NOVO com o nome do diretório, em vez de publicar no projeto já
+// ligado em .vercel/project.json. Aprendido do jeito difícil — nasceu um
+// projeto "dist-site" com proteção de autenticação, que teve de ser removido.
+//
+// O formato abaixo é o que `vercel deploy --prebuilt` espera, e ele respeita
+// o vínculo do projeto.
+const vercelOut = resolve(root, '.vercel/output');
+rmSync(vercelOut, { recursive: true, force: true });
+mkdirSync(resolve(vercelOut, 'static'), { recursive: true });
+cpSync(outDir, resolve(vercelOut, 'static'), { recursive: true });
+
+/**
+ * Roteamento em formato Build Output API.
+ *
+ * `handle: filesystem` primeiro: arquivo real sempre ganha do fallback. Sem
+ * ele, /v2/assets/index.js cairia no index.html e o navegador receberia HTML
+ * onde esperava JavaScript.
+ *
+ * Depois, cada SPA com o próprio fallback — /v2 ANTES da coringa, senão uma
+ * rota interna do /v2 abriria a home antiga sob a URL da nova.
+ */
+writeFileSync(
+  resolve(vercelOut, 'config.json'),
+  JSON.stringify(
+    {
+      version: 3,
+      routes: [
+        // cleanUrls do /v2, explícito porque a saída pré-construída não herda
+        // o cleanUrls do vercel.json do projeto.
+        { src: '^/v2/privacidade/?$', dest: '/v2/privacidade.html' },
+        { handle: 'filesystem' },
+        { src: '^/v2(?:/.*)?$', dest: '/v2/index.html' },
+        { src: '/.*', dest: '/index.html' },
+      ],
+    },
+    null,
+    2
+  ) + '\n'
+);
+console.log('    .vercel/output pronto para `vercel deploy --prebuilt`');
+
 console.log(`\n✓ Site combinado em dist-site/`);
 console.log(`    /     home congelada em ${legacyShort}`);
 console.log(`    /v2   versão nova, prerenderizada e noindex\n`);
