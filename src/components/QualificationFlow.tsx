@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { ArrowRight, ArrowLeft } from 'lucide-react';
 import {
@@ -149,6 +150,31 @@ export default function QualificationFlow({
           {error}
         </p>
       )}
+
+      {/*
+        Aviso de tratamento (LGPD art. 9º).
+
+        Este é o ponto exato em que a página deixa de ser anônima: daqui saem
+        e-mail, telefone e faixa de faturamento para o webhook do n8n. Até
+        ago/2026 não havia uma palavra sobre isso em lugar nenhum do site — nem
+        aviso, nem política, nem base legal.
+
+        Fica em todos os passos, não só no primeiro: quem entra no fluxo pelo
+        meio (voltando de um erro, por exemplo) precisa ver a mesma informação.
+      */}
+      <p className="mt-3 pt-2.5 border-t border-slate-900/10 text-[10px] leading-snug text-slate-500">
+        Estes dados vão para o meu sistema de atendimento e servem só para eu preparar e marcar a
+        sessão — não são vendidos nem usados para anúncios. Você pode pedir a exclusão a qualquer
+        momento.{' '}
+        <Link
+          to="/privacidade"
+          target="_blank"
+          className="text-accent font-semibold underline underline-offset-2 hover:text-accent-dark"
+        >
+          Política de privacidade
+        </Link>
+        .
+      </p>
     </motion.div>
   );
 }

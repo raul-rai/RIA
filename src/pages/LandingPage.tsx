@@ -1,4 +1,4 @@
-import { Fragment, useCallback, useEffect, useMemo } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
 import { motion, useScroll, useMotionValue, useSpring } from 'motion/react';
 import { ArrowRight, Target, ChevronDown } from 'lucide-react';
 import DataWave3D from '../components/DataWave3D';
@@ -10,18 +10,20 @@ import BrandMark from '../components/BrandMark';
 import AIChatAgent from '../components/AIChatAgent';
 import OfferSection from '../components/OfferSection';
 import PotentialDiagnostic from '../components/PotentialDiagnostic';
-import SocialProofSection from '../components/SocialProofSection';
+import MarketEvidenceSection from '../components/MarketEvidenceSection';
+import MarketVoicesSection from '../components/MarketVoicesSection';
 import WhatsAppFab from '../components/WhatsAppFab';
 import { prefersReducedMotion } from '../lib/canvas-quality';
 import { track } from '../lib/analytics';
 import { VulnerabilityProvider } from '../context/VulnerabilityContext';
 import { AgentIntentProvider, useAgentIntent } from '../context/AgentIntentContext';
 import { REF_LABEL } from '../content/intents';
-import FiveFronts from '../components/FiveFronts';
+import FrontsSection from '../components/FrontsSection';
 import CredibilitySection from '../components/CredibilitySection';
+import SiteFooter from '../components/SiteFooter';
 
 /** Capitulo que concentra a oferta e o agente. Todo CTA aponta para ca. */
-const CTA_CHAPTER = 5;
+const CTA_CHAPTER = 6;
 
 function MagneticButton({ children, onClick, className }: { children: React.ReactNode, onClick: () => void, className?: string }) {
   const x = useMotionValue(0);
@@ -54,8 +56,25 @@ function MagneticButton({ children, onClick, className }: { children: React.Reac
 // ─── Capitulo 0: A AMEACA ────────────────────────────────────────────────────
 function SceneHero({ onUnderstandMore }: { onUnderstandMore: () => void }) {
   const { requestIntent } = useAgentIntent();
-  const searchParams = new URLSearchParams(window.location.search);
-  const ref = searchParams.get('ref')?.toLowerCase();
+  /**
+   * O segmento da campanha entra DEPOIS da montagem, não durante o render.
+   *
+   * Este era o único acesso a `window` no corpo de um render em toda a
+   * aplicação (todo o resto já vivia dentro de useEffect), e por causa dele o
+   * prerender do build quebrava. Mas só guardar com `typeof window` não
+   * bastava: o HTML prerenderizado é sempre a variante genérica, e se o
+   * primeiro render do cliente já lesse `?ref=industria` a hidratação
+   * divergiria do servidor justamente no H1.
+   *
+   * Então o primeiro render do cliente é idêntico ao do servidor — genérico — e
+   * a variante de campanha entra no efeito seguinte. Custo: um quadro com o
+   * título genérico em URLs de campanha. Ganho: o crawler recebe sempre a
+   * página canônica, e a hidratação nunca briga com ela.
+   */
+  const [ref, setRef] = useState<string | undefined>(undefined);
+  useEffect(() => {
+    setRef(new URLSearchParams(window.location.search).get('ref')?.toLowerCase());
+  }, []);
 
   /**
    * Cada palavra anima sozinha, mas o espaco entre elas e um no de texto real —
@@ -85,32 +104,48 @@ function SceneHero({ onUnderstandMore }: { onUnderstandMore: () => void }) {
     );
   };
 
+  /**
+   * REPOSICIONAMENTO (ago/2026).
+   *
+   * O H1 anterior era "A inteligência artificial não é o futuro. Ela já é o
+   * presente — e o presente cobra." Ameaça genérica: qualquer um dos mil
+   * vendedores de IA poderia assiná-la, e em 2026 o comprador já ouviu essa
+   * frase de todos eles. O que diferencia o Raul não é o alarme, é o método —
+   * engenharia de produção: medir o processo, achar o ponto que trava, atacar
+   * o de maior custo por hora. Isso estava enterrado num parágrafo de bio na
+   * quinta dobra. Agora é a primeira coisa que se lê.
+   *
+   * As variantes de campanha viraram PERGUNTAS. As antigas afirmavam defeitos
+   * que ninguém mediu ("Sua produção manual é o gargalo que vai te afogar"),
+   * o que insulta um industrial que talvez rode lean há vinte anos. Pergunta
+   * abre conversa; acusação fecha aba.
+   */
   let headline = (
     <>
-      <span className="block pb-2">{animatedText('A inteligência artificial não é o futuro.')}</span>{' '}
-      <span className="block pb-4">{animatedText('Ela já é o presente — e o presente cobra.', true)}</span>
+      <span className="block pb-2">{animatedText('Antes de escolher a ferramenta de IA,')}</span>{' '}
+      <span className="block pb-4">{animatedText('alguém precisa achar o gargalo.', true)}</span>
     </>
   );
 
   if (ref === 'industria') {
     headline = (
       <>
-        <span className="block pb-2">{animatedText('Sua produção manual')}</span>{' '}
-        <span className="block pb-4">{animatedText('é o gargalo que vai te afogar.', true)}</span>
+        <span className="block pb-2">{animatedText('Qual etapa da sua produção')}</span>{' '}
+        <span className="block pb-4">{animatedText('custa mais hora do que deveria?', true)}</span>
       </>
     );
   } else if (ref === 'servicos') {
     headline = (
       <>
-        <span className="block pb-2">{animatedText('Vender horas humanas')}</span>{' '}
-        <span className="block pb-4">{animatedText('é um modelo com os dias contados.', true)}</span>
+        <span className="block pb-2">{animatedText('Quantas horas da sua equipe')}</span>{' '}
+        <span className="block pb-4">{animatedText('vão para o que não é o serviço?', true)}</span>
       </>
     );
   } else if (ref === 'varejo') {
     headline = (
       <>
-        <span className="block pb-2">{animatedText('O estoque parado')}</span>{' '}
-        <span className="block pb-4">{animatedText('não é seu único custo.', true)}</span>
+        <span className="block pb-2">{animatedText('Quanto do seu atendimento')}</span>{' '}
+        <span className="block pb-4">{animatedText('acontece depois que você fecha?', true)}</span>
       </>
     );
   }
@@ -138,7 +173,7 @@ function SceneHero({ onUnderstandMore }: { onUnderstandMore: () => void }) {
       >
         <Target className="text-accent animate-pulse" size={16} />
         <span className="text-slate-900 font-sans tracking-[0.1em] md:tracking-[0.15em] uppercase text-[10px] md:text-xs font-black whitespace-nowrap">
-          {ref && REF_LABEL[ref] ? `Estratégia para ${REF_LABEL[ref]}` : 'Conhecimento relevante para todo empresário'}
+          {ref && REF_LABEL[ref] ? `Estratégia para ${REF_LABEL[ref]}` : 'Engenharia de produção aplicada a IA'}
         </span>
       </motion.div>
 
@@ -180,7 +215,16 @@ function SceneHero({ onUnderstandMore }: { onUnderstandMore: () => void }) {
         transition={{ delay: 0.6, duration: 1 }}
         className="glass text-[15px] md:text-xl text-slate-800 max-w-2xl mb-6 md:mb-10 font-sans font-medium leading-relaxed px-4 py-3 rounded-2xl"
       >
-        Nenhuma mudança ambiental poupou o maior nem o mais forte — só quem se adaptou primeiro. Hoje, adaptar-se é usar IA em <strong className="font-bold text-slate-950">todos os seus projetos</strong>.
+        {/*
+          O texto anterior era a citação pseudo-darwiniana ("nenhuma mudança
+          ambiental poupou o maior nem o mais forte"), que Darwin nunca
+          escreveu — é do Leon Megginson, 1963, e distorce seleção natural.
+          Numa página que se apoia em evidência com fonte, abrir com um clichê
+          factualmente falso custava mais do que rendia.
+        */}
+        <strong className="font-bold text-slate-950">95% dos projetos de IA em empresas não devolvem nada</strong>{' '}
+        — quase sempre porque automatizaram a rotina errada. O trabalho começa medindo qual rotina
+        custa mais, e só então escolhendo a ferramenta.
       </motion.p>
 
       <motion.div
@@ -196,7 +240,10 @@ function SceneHero({ onUnderstandMore }: { onUnderstandMore: () => void }) {
           }}
           className="w-full sm:w-auto group px-7 py-4 bg-slate-950 text-white rounded-xl font-black text-xs uppercase tracking-widest transition-all duration-300 hover:bg-accent shadow-2xl flex items-center justify-center gap-2.5 min-h-[52px]"
         >
-          <span>Quero me adaptar primeiro</span>
+          {/* Se este rótulo mudar, a userMessage de 'hero-cold' em
+              content/intents.ts muda junto — é a repetição literal que faz o
+              chat parecer continuação do clique, e não um formulário novo. */}
+          <span>Quero achar o meu gargalo</span>
           <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform duration-300" />
         </MagneticButton>
 
@@ -252,10 +299,11 @@ function SceneCTA() {
 // acao. O que quebrava antes era o degrau entre tensao e caminho: a pagina
 // subia a tensao e respondia com metodologia de ROI.
 const CHAPTERS = [
-  { label: 'A ameaça silenciosa', title: 'RIA — A Ameaça Silenciosa' },
+  { label: 'Onde está o gargalo', title: 'RIA — Onde Está o Gargalo' },
+  { label: 'O que os dados dizem', title: 'RIA — O Que os Dados Dizem' },
   { label: 'Vozes do mercado', title: 'RIA — Vozes do Mercado' },
   { label: 'Diagnóstico de saúde digital', title: 'RIA — Diagnóstico de Saúde Digital' },
-  { label: 'As cinco frentes', title: 'RIA — As Cinco Frentes' },
+  { label: 'As três frentes', title: 'RIA — As Três Frentes' },
   { label: 'Prova e quem executa', title: 'RIA — Prova e Quem Executa' },
   { label: 'O agente e a agenda', title: 'RIA — Agende sua Sessão' },
 ];
@@ -279,16 +327,17 @@ export default function LandingPage() {
   }, []);
 
   const goToCta = useCallback(() => goToChapter(CTA_CHAPTER), [goToChapter]);
-  const goToMarketVoices = useCallback(() => goToChapter(1), [goToChapter]);
+  const goToEvidence = useCallback(() => goToChapter(1), [goToChapter]);
 
   const chapterContent = useMemo(() => [
-    <SceneHero onUnderstandMore={goToMarketVoices} />,
-    <SocialProofSection />,
+    <SceneHero onUnderstandMore={goToEvidence} />,
+    <MarketEvidenceSection />,
+    <MarketVoicesSection />,
     <PotentialDiagnostic />,
-    <FiveFronts />,
+    <FrontsSection />,
     <CredibilitySection />,
     <SceneCTA />,
-  ], [goToMarketVoices]);
+  ], [goToEvidence]);
 
   return (
     <VulnerabilityProvider>
@@ -311,6 +360,8 @@ export default function LandingPage() {
             </ChapterSection>
           ))}
         </main>
+
+        <SiteFooter />
 
         {/* Marca — recolhida no mobile, onde competia com o indice pelo topo. */}
         <BrandMark />

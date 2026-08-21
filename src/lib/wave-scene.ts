@@ -16,24 +16,47 @@ export const SPACING = 150;
 export const FOCAL_LENGTH = 800;
 
 /**
+ * ────────────────────────────────────────────────────────────────────────────
+ * POSICOES DE CONTEUDO MEDIDAS  (nao sao preferencias — sao fatos do layout)
+ * ────────────────────────────────────────────────────────────────────────────
+ *
+ * Estes dois valores descrevem ONDE o conteudo esta na rolagem. Eles mudam
+ * sempre que um capitulo entra, sai ou muda de altura, e a unica forma honesta
+ * de obte-los e MEDINDO no build, nunca estimando.
+ *
+ * Medicao atual (ago/2026, layout de 7 dobras, viewport de desktop):
+ *
+ *   LAST_DARK_TEXT_EXIT  O ultimo texto escuro SEM FUNDO PROPRIO da pagina e o
+ *                        h3 "Como o numero e apurado", no capitulo 5. Ele sai
+ *                        pelo topo da viewport aqui. Escurecer o canvas antes
+ *                        disso apagaria a leitura.
+ *
+ *   CTA_CHAPTER_START    Onde comeca a ultima dobra (o agente e a agenda). A
+ *                        agua precisa ter fechado ANTES, para o agente receber
+ *                        o degrade limpo, sem onda aparecendo por tras.
+ *
+ * Como remedir depois de mexer nos capitulos: sirva o build e rode no console
+ * a busca pelo ultimo elemento de texto que NAO esteja dentro de .glass-* nem
+ * de .reading-surface, dividindo seu `bottom` absoluto por
+ * (scrollHeight - innerHeight).
+ */
+export const LAST_DARK_TEXT_EXIT = 0.8278;
+export const CTA_CHAPTER_START = 0.9353;
+
+/**
  * Rolagem em que a agua comeca a fechar sobre a camera, e em que ela termina
  * de fechar.
  *
- * Os dois numeros sao medidos, nao escolhidos. O capitulo 4 tem textos escuros
- * sem fundo proprio ("E o numero da para auditar" e a lista de criterios); o
- * ultimo deles sai pelo topo da viewport em 0.846 do progresso. Escurecer o
- * canvas antes disso apagaria a leitura.
+ * Derivados das medicoes acima, com as MESMAS margens que a calibracao original
+ * de 6 dobras usava (+0.004 na entrada, -0.031 na saida). Manter as margens em
+ * vez dos numeros absolutos e o que preserva a sensacao da cena quando o
+ * conteudo se move: a rampa continua com ~0.07 de largura, como antes.
  *
- * O fim em 0.93 e o que fecha a travessia: e nele que a agua chega a opacidade
- * total e a malha termina de se dissolver. Precisa acontecer ANTES de 0.961,
- * onde comeca a ultima dobra, para o agente e a agenda receberem o degrade
- * limpo, sem a onda aparecendo por tras.
- *
- * Reveja estes valores se a altura de algum capitulo mudar: sao posicoes de
- * conteudo disfarcadas de constantes.
+ * tests/wave-scene.test.ts falha se a relacao com as medicoes se romper — que
+ * e o aviso que nao existia quando estes numeros eram literais soltos.
  */
-export const SUBMERSION_START = 0.85;
-export const SUBMERSION_FULL = 0.93;
+export const SUBMERSION_START = LAST_DARK_TEXT_EXIT + 0.004;
+export const SUBMERSION_FULL = CTA_CHAPTER_START - 0.031;
 
 export interface WaveCamera {
   /** Posicao da camera no eixo de profundidade. */

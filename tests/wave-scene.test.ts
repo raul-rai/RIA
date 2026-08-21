@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   resolveWaveCamera, smoothstep, surfaceY, projectPoint, quadDepthAlpha,
   underwaterStops, SPACING, SUBMERSION_START, SUBMERSION_FULL,
+  LAST_DARK_TEXT_EXIT, CTA_CHAPTER_START,
 } from '../src/lib/wave-scene';
 import { TIERS, type QualityTier } from '../src/lib/canvas-quality';
 
@@ -110,21 +111,23 @@ describe('smoothstep', () => {
 
 describe('resolveWaveCamera', () => {
   it('ONDA-02: a submersao so comeca depois dos capitulos de leitura', () => {
-    // Medido no DOM: o ultimo texto escuro sem fundo proprio do capitulo 4 sai
-    // pela borda de cima da viewport em 0.846 do progresso.
-    for (let s = 0; s <= 0.84; s += 0.04) {
-      expect(resolveWaveCamera(s).submersion).toBe(0);
+    // A agua nao pode escurecer o canvas enquanto houver texto escuro sem
+    // fundo proprio na tela. LAST_DARK_TEXT_EXIT e uma POSICAO MEDIDA no DOM;
+    // se um capitulo entrar, sair ou mudar de altura, remeça-la (ver a nota em
+    // lib/wave-scene.ts) — este teste existe para exigir isso.
+    for (let s = 0; s <= LAST_DARK_TEXT_EXIT; s += 0.04) {
+      expect(resolveWaveCamera(s).submersion, `submersao @ ${s}`).toBe(0);
     }
-    expect(SUBMERSION_START).toBeGreaterThanOrEqual(0.846);
-    // ...e precisa ter fechado antes da ultima dobra, que comeca em ~0.961.
-    expect(SUBMERSION_FULL).toBeLessThanOrEqual(0.97);
+    expect(SUBMERSION_START).toBeGreaterThanOrEqual(LAST_DARK_TEXT_EXIT);
+    // ...e precisa ter fechado ANTES de a ultima dobra comecar.
+    expect(SUBMERSION_FULL).toBeLessThan(CTA_CHAPTER_START);
   });
 
   it('ONDA-03: a agua fecha por completo antes do fim da pagina', () => {
     expect(resolveWaveCamera(SUBMERSION_FULL).submersion).toBe(1);
     expect(resolveWaveCamera(1).submersion).toBe(1);
-    // A ultima dobra comeca em ~0.961 do progresso total.
-    expect(resolveWaveCamera(0.961).submersion).toBeGreaterThan(0.7);
+    // Na abertura da ultima dobra a agua ja fechou por completo.
+    expect(resolveWaveCamera(CTA_CHAPTER_START).submersion).toBe(1);
   });
 
   /**
@@ -135,7 +138,7 @@ describe('resolveWaveCamera', () => {
    */
   it('ONDA-10: fechada a travessia, nao sobra nenhum pedaco de onda desenhado', () => {
     const { rows } = TIERS.high;
-    for (const s of [SUBMERSION_FULL, 0.961, 1]) {
+    for (const s of [SUBMERSION_FULL, CTA_CHAPTER_START, 1]) {
       const camera = resolveWaveCamera(s);
       expect(camera.meshOpacity, `meshOpacity @ ${s}`).toBe(0);
       for (let z = 0; z < rows * SPACING; z += SPACING) {

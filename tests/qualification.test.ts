@@ -95,7 +95,7 @@ describe('buildQualificationPayload', () => {
       vulnerabilityIndex: 72,
       hasNoWebsite: false,
       websiteScore: 41,
-      frontsChecked: [false, true, false, false, false],
+      frontsChecked: [false, true, false],
     });
 
     expect(payload.action).toBe('qualification');
@@ -104,7 +104,7 @@ describe('buildQualificationPayload', () => {
     expect(payload.context.vulnerabilityIndex).toBe(72);
     expect(payload.context.websiteScore).toBe(41);
     expect(payload.context.frontsCovered).toBe(1);
-    expect(payload.context.frontsMissing).toEqual([1, 3, 4, 5]);
+    expect(payload.context.frontsMissing).toEqual([1, 3]);
   });
 
   it('QUAL-10: o telefone sai so com digitos, pronto para discar', () => {

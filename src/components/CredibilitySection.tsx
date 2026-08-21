@@ -35,8 +35,15 @@ export default function CredibilitySection() {
             Já atravessei isso com outros
           </span>
         </div>
+        {/*
+          Era "Cada frente, com um caso atrás." Deixou de ser verdade quando as
+          frentes caíram para três e a Automação ficou sem caso — e um título
+          que promete cobertura total sobre uma seção que não a tem é
+          exatamente o tipo de exagero pequeno que o comprador cético usa para
+          descontar todo o resto da página.
+        */}
         <h2 className="text-2xl md:text-4xl lg:text-5xl font-serif text-slate-900 leading-tight reading-surface glass-md-none inline-block px-4 py-2">
-          Cada frente, <span className="italic font-normal text-slate-500">com um caso atrás.</span>
+          Três operações, <span className="italic font-normal text-slate-500">o mesmo método.</span>
         </h2>
       </div>
 
@@ -61,9 +68,18 @@ export default function CredibilitySection() {
               </span>
             </div>
 
-            <span className="glass-inset glass-accent self-start px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest text-accent-dark">
-              Prova a frente {c.front} · {frontTag(c.front)}
-            </span>
+            {/* Etiqueta só quando o caso de fato aponta para uma frente
+                vendida hoje. Antes ela era incondicional e imprimia "Prova a
+                frente undefined" para qualquer caso sem mapa. */}
+            {c.front !== undefined ? (
+              <span className="glass-inset glass-accent self-start px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest text-accent-dark">
+                Prova a frente {c.front} · {frontTag(c.front)}
+              </span>
+            ) : (
+              <span className="glass-inset self-start px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest text-slate-500">
+                Entrega em parceria
+              </span>
+            )}
 
             <p className="text-lg md:text-xl font-serif text-slate-900 leading-tight">{c.headline}</p>
 
@@ -82,18 +98,30 @@ export default function CredibilitySection() {
               </div>
             </dl>
 
-            {c.measurement && (
+            {/*
+              A linha de apuração é o que separa "resultado" de "alegação".
+              Antes ela simplesmente sumia quando ausente — e o cartão ficava
+              com um número grande, sem nenhum sinal de que ninguém o auditou.
+              Era o pior dos mundos: a seção anunciava rigor no cabeçalho
+              ("Como o número é apurado") e omitia a ausência em silêncio.
+              Agora a falta é declarada. Some assim que `measurement` existir.
+            */}
+            {c.measurement ? (
               <p className="text-[11px] text-slate-500 border-t border-slate-900/10 pt-2.5 mt-auto">
                 {c.measurement}
               </p>
-            )}
+            ) : c.kind === 'resultado' ? (
+              <p className="text-[11px] text-amber-800/90 border-t border-slate-900/10 pt-2.5 mt-auto">
+                Número informado pelo cliente, ainda sem apuração independente publicada.
+              </p>
+            ) : null}
           </motion.article>
         ))}
       </div>
 
       <div className="mb-8">
         <h3 className="text-center text-xs md:text-sm font-bold uppercase tracking-[0.18em] text-slate-700 mb-5">
-          E o número dá para auditar
+          Como o número é apurado
         </h3>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {METHOD.map((m) => {

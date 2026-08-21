@@ -98,59 +98,18 @@ function parseWebhookResult(raw: unknown): DiagnosticResult | null {
       D2: readDim('D2', 'Acessibilidade'),
       D3: readDim('D3', 'Práticas recomendadas'),
       D4: readDim('D4', 'SEO'),
-      D5: { nome: 'Navegação agêntica', pct: toNumber(dim?.['D5']?.pct, 100), labelExtra: '3/3' },
+      // Default 0, não 100. Quando o n8n omite D5, a leitura correta é "não
+      // medido" — antes o default era nota máxima com etiqueta "3/3" fixa, ou
+      // seja, a ausência de medição virava aprovação perfeita na tela.
+      D5: (() => {
+        const pct = toNumber(dim?.['D5']?.pct, 0);
+        return {
+          nome: 'Navegação agêntica',
+          pct,
+          labelExtra: `${Math.round((pct / 100) * 3)}/3`,
+        };
+      })(),
     },
-  };
-}
-
-/** Fallback Heurístico determinístico RIA quando APIs externas excedem cota ou expiram */
-function generateHeuristicDiagnostic(domain: string): DiagnosticResult {
-  const cleanDomain = domain.replace(/^https?:\/\//, '').replace(/\/.*$/, '').toLowerCase();
-
-  let hash = 0;
-  for (let i = 0; i < cleanDomain.length; i++) {
-    hash = (hash << 5) - hash + cleanDomain.charCodeAt(i);
-    hash |= 0;
-  }
-  const posHash = Math.abs(hash);
-
-  const isHttps = domain.startsWith('https://');
-  const baseBonus = isHttps ? 25 : 10;
-
-  const d1 = Math.min(99, Math.max(65, 60 + baseBonus + (posHash % 20)));
-  const d2 = Math.min(100, Math.max(75, 72 + baseBonus + ((posHash >> 2) % 15)));
-  const d3 = Math.min(100, Math.max(75, 72 + baseBonus + ((posHash >> 4) % 15)));
-  const d4 = Math.min(100, Math.max(70, 68 + baseBonus + ((posHash >> 6) % 20)));
-  const d5 = d4 >= 80 ? 100 : 67;
-
-  const overall = Math.round(d1 * 0.35 + d2 * 0.25 + d3 * 0.15 + d4 * 0.15 + d5 * 0.1);
-
-  const [nivel, nivel_nome, leitura] =
-    overall >= 80
-      ? [3, 'Otimizado para IA', 'Excelente estrutura semântica e velocidade compatível com assistentes de IA.']
-      : overall >= 50
-        ? [2, 'Atenção Requerida', 'Boa base técnica, mas com ajustes pendentes em semântica e carregamento.']
-        : [1, 'Crítico', 'Gargalos de carregamento e estruturação detectados na varredura RIA.'];
-
-  return {
-    source: 'ria',
-    score: overall,
-    nivel: nivel as number,
-    nivel_nome: nivel_nome as string,
-    leitura: leitura as string,
-    dimensoes: {
-      D1: { nome: 'Desempenho', pct: d1 },
-      D2: { nome: 'Acessibilidade', pct: d2 },
-      D3: { nome: 'Práticas recomendadas', pct: d3 },
-      D4: { nome: 'SEO', pct: d4 },
-      D5: { nome: 'Navegação agêntica', pct: d5, labelExtra: d5 === 100 ? '3/3' : '2/3' },
-    },
-    webVitals: [
-      { id: 'lcp', name: 'LCP (Maior Pintura)', value: d1 > 80 ? '1.1 s' : '2.8 s', score: d1 },
-      { id: 'fcp', name: 'FCP (Primeira Pintura)', value: d1 > 80 ? '0.7 s' : '1.9 s', score: d1 },
-      { id: 'cls', name: 'CLS (Estabilidade Visual)', value: d1 > 80 ? '0' : '0.12', score: d3 },
-      { id: 'tbt', name: 'TBT (Tempo de Bloqueio)', value: d1 > 80 ? '0 ms' : '210 ms', score: d1 },
-    ],
   };
 }
 
@@ -255,25 +214,25 @@ export default function PotentialDiagnostic() {
             {
               id: 'lcp',
               name: 'LCP (Maior Pintura)',
-              value: audits['largest-contentful-paint']?.displayValue || '1.1 s',
+              value: audits['largest-contentful-paint']?.displayValue || '—',
               score: Math.round((audits['largest-contentful-paint']?.score ?? (d1 / 100)) * 100),
             },
             {
               id: 'fcp',
               name: 'FCP (Primeira Pintura)',
-              value: audits['first-contentful-paint']?.displayValue || '0.7 s',
+              value: audits['first-contentful-paint']?.displayValue || '—',
               score: Math.round((audits['first-contentful-paint']?.score ?? (d1 / 100)) * 100),
             },
             {
               id: 'cls',
               name: 'CLS (Estabilidade Visual)',
-              value: audits['cumulative-layout-shift']?.displayValue || '0',
+              value: audits['cumulative-layout-shift']?.displayValue || '—',
               score: Math.round((audits['cumulative-layout-shift']?.score ?? 1) * 100),
             },
             {
               id: 'tbt',
               name: 'TBT (Tempo de Bloqueio)',
-              value: audits['total-blocking-time']?.displayValue || '0 ms',
+              value: audits['total-blocking-time']?.displayValue || '—',
               score: Math.round((audits['total-blocking-time']?.score ?? 1) * 100),
             },
           ];
@@ -326,12 +285,29 @@ export default function PotentialDiagnostic() {
       }
     }
 
-    // 3. Fallback Heurístico RIA — se APIs externas falharem ou excederem cota, entrega o laudo estruturado
-    if (!diagnosticData) {
-      diagnosticData = generateHeuristicDiagnostic(targetUrl);
-    }
-
+    // 3. Nenhuma fonte respondeu — e aqui a página para.
+    //
+    // Até ago/2026 existia um terceiro passo: `generateHeuristicDiagnostic`,
+    // que derivava nota de performance e Core Web Vitals ("LCP 2.8 s",
+    // "CLS 0.12", "TBT 210 ms") de um hash do NOME DO DOMÍNIO, e publicava o
+    // resultado sob o rótulo "Fonte: varredura RIA". Era determinístico, o que
+    // piorava tudo: o mesmo domínio devolvia sempre o mesmo laudo, então nem
+    // recarregar denunciava a invenção. Qualquer visitante que abrisse o
+    // PageSpeed Insights em seguida recebia a prova de que o laudo dele tinha
+    // sido forjado — numa página que vende diagnóstico.
+    //
+    // O estado de falha abaixo já existia e já dizia a frase certa ("prefiro
+    // não te mostrar um número estimado"), mas era inalcançável: o fallback
+    // fabricava antes. Agora ele é o caminho real.
     clearInterval(progressInterval);
+
+    if (!diagnosticData) {
+      track('diagnostic_failed', { reason: quotaExceeded ? 'quota' : 'unreachable' });
+      setFailure(quotaExceeded ? 'quota' : 'unreachable');
+      setProgress(0);
+      setIsAnalyzing(false);
+      return;
+    }
 
     setProgress(100);
     track('diagnostic_completed', { source: diagnosticData.source, score: diagnosticData.score });
@@ -602,9 +578,9 @@ export default function PotentialDiagnostic() {
                       {SOURCE_LABEL[result.source]}
                     </p>
                     {/* Ponte narrativa: o site que acabou de ser avaliado e a
-                        primeira das cinco frentes. O agente mostra as outras. */}
+                        primeira das tres frentes. O agente mostra as outras. */}
                     <p className="text-slate-700 text-[11px] md:text-xs leading-snug font-semibold mt-1.5">
-                      O site é a primeira das cinco frentes. O agente te mostra as outras quatro.
+                      O site é a primeira das três frentes. O agente te mostra as outras duas.
                     </p>
                   </div>
                 </div>

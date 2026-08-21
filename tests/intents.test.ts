@@ -71,13 +71,13 @@ describe('INTENTS: as seis intencoes cobrem todos os estados', () => {
 describe('hero-cold: o lead frio, com ou sem campanha', () => {
   it('INT-05: sem ref, a frase nao menciona segmento', () => {
     expect(INTENTS['hero-cold'].userMessage(base)).toBe(
-      'Quero me adaptar primeiro — antes do meu concorrente. Por onde eu começo?'
+      'Quero achar o meu gargalo. Por onde eu começo?'
     );
   });
 
   it('INT-06: com ref, o segmento abre a frase', () => {
     expect(INTENTS['hero-cold'].userMessage({ ...base, ref: 'industria' })).toBe(
-      'Tenho uma indústria e quero me adaptar primeiro — antes do meu concorrente. Por onde eu começo?'
+      'Tenho uma indústria e quero achar o meu gargalo. Por onde eu começo?'
     );
   });
 
@@ -137,42 +137,42 @@ describe('front-pick: uma frente escolhida no cartao', () => {
 describe('fronts-agenda: a pauta muda com o que foi marcado', () => {
   it('INT-11: zero marcadas tem frase propria, sem contagem', () => {
     expect(INTENTS['fronts-agenda'].userMessage(base)).toBe(
-      'Não cubro nenhuma das cinco frentes. Quero montar minha pauta.'
+      'Não cubro nenhuma das três frentes. Quero montar minha pauta.'
     );
   });
 
   it('INT-12: parcial lista as faltantes com "e" antes da ultima', () => {
     const texto = INTENTS['fronts-agenda'].userMessage({
       ...base,
-      frontsChecked: [true, false, false, false, false],
+      frontsChecked: [true, false, false],
     });
     expect(texto).toBe(
-      'Marquei 1 de 5. Faltam Agente SDR, Automação, Sistema sob medida e Dados e decisão. Quero montar minha pauta.'
+      'Marquei 1 de 3. Faltam Agente SDR e Automação. Quero montar minha pauta.'
     );
   });
 
   it('INT-20: resta uma frente, o verbo concorda no singular ("Falta")', () => {
     const texto = INTENTS['fronts-agenda'].userMessage({
       ...base,
-      frontsChecked: [true, true, true, true, false],
+      frontsChecked: [true, true, false],
     });
-    expect(texto).toBe('Marquei 4 de 5. Falta Dados e decisão. Quero montar minha pauta.');
+    expect(texto).toBe('Marquei 2 de 3. Falta Automação. Quero montar minha pauta.');
   });
 
   it('INT-21: restam duas frentes, o verbo concorda no plural ("Faltam")', () => {
     const texto = INTENTS['fronts-agenda'].userMessage({
       ...base,
-      frontsChecked: [true, true, true, false, false],
+      frontsChecked: [true, false, false],
     });
     expect(texto).toBe(
-      'Marquei 3 de 5. Faltam Sistema sob medida e Dados e decisão. Quero montar minha pauta.'
+      'Marquei 1 de 3. Faltam Agente SDR e Automação. Quero montar minha pauta.'
     );
   });
 
-  it('INT-13: cinco marcadas viram conversa de otimizacao, nao de pauta', () => {
-    const ctx = { ...base, frontsChecked: [true, true, true, true, true] };
+  it('INT-13: tres marcadas viram conversa de otimizacao, nao de pauta', () => {
+    const ctx = { ...base, frontsChecked: [true, true, true] };
     expect(INTENTS['fronts-agenda'].userMessage(ctx)).toBe(
-      'Marquei as cinco frentes. Quero saber o que ainda dá pra melhorar.'
+      'Marquei as três frentes. Quero saber o que ainda dá pra melhorar.'
     );
     expect(INTENTS['fronts-agenda'].agentReply(ctx)).not.toContain('Pauta anotada');
   });
@@ -180,7 +180,7 @@ describe('fronts-agenda: a pauta muda com o que foi marcado', () => {
   it('INT-14: a resposta abre pela primeira frente descoberta', () => {
     const resposta = INTENTS['fronts-agenda'].agentReply({
       ...base,
-      frontsChecked: [true, false, false, false, false],
+      frontsChecked: [true, false, false],
     });
     expect(resposta).toContain(FRONTS[1].label);
   });

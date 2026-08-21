@@ -1,3 +1,5 @@
+import { hasAnalyticsConsent } from './consent';
+
 // Camada de eventos agnostica de provedor.
 //
 // Sem VITE_GA_MEASUREMENT_ID definido, track() e um no-op silencioso: a pagina
@@ -34,6 +36,8 @@ declare global {
   }
 }
 
+
+
 const measurementId = import.meta.env.VITE_GA_MEASUREMENT_ID ?? '';
 
 /** True quando existe um destino configurado. Exposto para testes. */
@@ -66,6 +70,11 @@ function bootstrap() {
 /** Registra um evento. Nunca lanca — analytics jamais derruba a pagina. */
 export function track(event: RiaEvent, params: Params = {}): void {
   if (!analyticsEnabled) return;
+  // LGPD: sem consentimento explícito, nada é carregado nem enviado. Esta
+  // linha separa 'medição consentida' de 'tratamento sem base legal', e vem
+  // ANTES de bootstrap() de propósito: o script do gtag não pode sequer
+  // chegar ao <head> antes de o visitante decidir.
+  if (!hasAnalyticsConsent()) return;
   try {
     bootstrap();
     window.gtag?.('event', event, params);

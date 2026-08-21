@@ -15,7 +15,7 @@ import { track } from '../lib/analytics';
  * pelo diagnostico da dobra 2: e a mesma coisa que aquela dobra mediu, e deixar
  * o visitante remarcar do zero era perder a costura entre as duas.
  */
-export default function FiveFronts() {
+export default function FrontsSection() {
   const { requestIntent } = useAgentIntent();
   const { frontsChecked, toggleFront, hasNoWebsite, websiteScore } = useVulnerability();
 
@@ -44,15 +44,15 @@ export default function FiveFronts() {
         <div className="glass-chip glass-accent inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full mb-4">
           <Layers size={14} className="text-cyan-700" />
           <span className="text-cyan-800 text-[10px] md:text-xs font-black uppercase tracking-[0.2em]">
-            As cinco frentes
+            As três frentes
           </span>
         </div>
         <h2 className="text-2xl md:text-5xl font-serif text-slate-900 mb-3">
           É aqui que a IA entra <span className="italic font-normal text-slate-500">na sua operação.</span>
         </h2>
         <p className="text-slate-600 text-xs md:text-sm max-w-xl mx-auto font-light leading-relaxed">
-          Cinco frentes, e é isso que eu faço. Marque as que a sua empresa já cobre — as que sobrarem
-          são a pauta da sua sessão.
+          Três frentes, e é isso que eu implanto. Elas entram DEPOIS de o diagnóstico dizer qual delas
+          paga primeiro — marque as que a sua empresa já cobre.
         </p>
       </div>
 
@@ -120,7 +120,7 @@ export default function FiveFronts() {
                     track('cta_click', { location: 'front_card', front_id: front.id });
                     requestIntent('front-pick', front.id);
                   }}
-                  className="self-start mx-4 mb-3 py-2.5 inline-flex items-center gap-1.5 text-[11px] font-bold text-accent hover:text-accent-dark underline underline-offset-2"
+                  className="self-start mx-4 mb-3 py-2.5 min-h-11 inline-flex items-center gap-1.5 text-[11px] font-bold text-accent hover:text-accent-dark underline underline-offset-2"
                 >
                   Falar sobre esta frente <ArrowRight size={12} />
                 </button>
@@ -132,7 +132,7 @@ export default function FiveFronts() {
 
       <div className="text-center mt-6 md:mt-8">
         <p className="text-sm md:text-base text-slate-800 font-semibold mb-4">
-          Você cobre <span className="font-serif text-lg md:text-2xl">{marcadas}</span> de 5.
+          Você cobre <span className="font-serif text-lg md:text-2xl">{marcadas}</span> de 3.
           {faltam > 0 && (
             <>
               {' '}As {faltam} que faltam são a pauta da sua sessão.
@@ -141,7 +141,7 @@ export default function FiveFronts() {
         </p>
         <button
           onClick={() => {
-            track('cta_click', { location: 'five_fronts' });
+            track('cta_click', { location: 'fronts_section' });
             requestIntent('fronts-agenda');
           }}
           className="px-6 py-3.5 bg-slate-900 text-white rounded-xl font-black text-xs uppercase tracking-widest hover:bg-accent active:scale-95 transition-all inline-flex items-center gap-2 shadow-lg"

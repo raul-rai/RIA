@@ -3,8 +3,20 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <title>RIA — Revolução da Inteligência Artificial</title>
-    
+
+    <!--
+      TÍTULO, DESCRIÇÃO, CANONICAL, OPEN GRAPH E JSON-LD NÃO MORAM MAIS AQUI.
+
+      Eles são injetados por rota em scripts/prerender.js, durante o build. O
+      motivo: o domínio estava repetido em sete lugares deste arquivo, cada um
+      com um comentário dizendo "trocar quando houver domínio próprio" — e a
+      /privacidade herdava o title e o canonical da home, o que é erro de
+      indexação. Agora existe uma fonte só (SITE_URL) e cada rota recebe o
+      próprio conjunto.
+
+      O que sobra aqui é o que vale para todas as rotas.
+    -->
+
     <!-- Fontes. Nao ha mais preload de imagem: /rio-real.webp era pre-carregado
          com fetchpriority=high e nunca usado (o componente que o consumiria
          devolvia null), disputando banda com o LCP real. -->
@@ -12,124 +24,11 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
 
-    <!-- SEO (SEO-01) -->
-    <meta name="description" content="A IA está transformando empresas agora. Implemente inteligência artificial no seu negócio antes da concorrência. Consultoria gratuita com especialista." />
-
-    <!-- Canonical (SEO-05) -->
-    <!-- Dominio provisorio .vercel.app. Trocar aqui quando houver dominio proprio. -->
-    <link rel="canonical" href="https://raulvieira.vercel.app" />
-
-    <!-- Open Graph (SEO-02) — lido por WhatsApp e LinkedIn antes de executar JS -->
-    <!-- Dominio provisorio .vercel.app. Trocar aqui quando houver dominio proprio. -->
-    <meta property="og:type" content="website" />
-    <meta property="og:locale" content="pt_BR" />
-    <meta property="og:title" content="RIA — Revolução da Inteligência Artificial" />
-    <meta property="og:description" content="A IA está transformando empresas agora. Implemente inteligência artificial no seu negócio antes da concorrência. Consultoria gratuita com especialista." />
-    <meta property="og:image" content="https://raulvieira.vercel.app/og-image.png" />
-    <meta property="og:image:width" content="1200" />
-    <meta property="og:image:height" content="630" />
-    <meta property="og:url" content="https://raulvieira.vercel.app" />
-    <meta property="og:site_name" content="RIA — Revolução da Inteligência Artificial" />
-
-    <!-- Twitter Card (SEO-03) -->
-    <!-- Dominio provisorio .vercel.app. Trocar aqui quando houver dominio proprio. -->
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="RIA — Revolução da Inteligência Artificial" />
-    <meta name="twitter:description" content="A IA está transformando empresas agora. Implemente inteligência artificial no seu negócio antes da concorrência. Consultoria gratuita com especialista." />
-    <meta name="twitter:image" content="https://raulvieira.vercel.app/og-image.png" />
-
     <!-- Favicon (SEO-04) — retrato self-hostado, gerado por scripts/generate-favicon.js -->
     <link rel="icon" href="/favicon.ico" sizes="48x48" />
     <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
     <link rel="icon" href="/favicon-16.png" type="image/png" sizes="16x16" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
-
-    <!-- Structured Data: LocalBusiness + Person (GEO — per D-05, D-06, D-07) -->
-    <!-- Dominio provisorio .vercel.app. Trocar aqui quando houver dominio proprio. -->
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "LocalBusiness",
-      "name": "RIA — Revolução da Inteligência Artificial",
-      "description": "Consultoria especializada em implementação de inteligência artificial para empresas brasileiras. Automação, agentes de IA e transformação digital.",
-      "url": "https://raulvieira.vercel.app",
-      "areaServed": {
-        "@type": "Country",
-        "name": "Brasil"
-      },
-      "serviceType": "Consultoria em Inteligência Artificial",
-      "employee": {
-        "@type": "Person",
-        "name": "Raul Vieira",
-        "jobTitle": "Consultor de Inteligência Artificial",
-        "alumniOf": {
-          "@type": "CollegeOrUniversity",
-          "name": "Universidade Federal de São Carlos"
-        },
-        "knowsAbout": [
-          "inteligência artificial",
-          "automação de processos",
-          "agentes de IA",
-          "transformação digital",
-          "implementação de IA para empresas"
-        ],
-        "worksFor": {
-          "@type": "LocalBusiness",
-          "name": "RIA — Revolução da Inteligência Artificial"
-        }
-      }
-    }
-    </script>
-
-    <!-- Structured Data: FAQPage (GEO — per D-08, maximiza AI Overviews) -->
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "FAQPage",
-      "mainEntity": [
-        {
-          "@type": "Question",
-          "name": "Como implementar inteligência artificial na minha empresa?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Implementar IA começa com um diagnóstico: identificar processos repetitivos que consomem tempo e que podem ser automatizados. A RIA oferece uma sessão estratégica gratuita de 30 minutos para mapear as oportunidades de IA no seu negócio."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "O que é consultoria de inteligência artificial para empresas?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "É um serviço especializado que ajuda empresas a identificar, planejar e implementar soluções de IA — como automação de atendimento, agentes de IA e análise de dados — sem a necessidade de contratar uma equipe técnica interna."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "Quanto custa implementar IA em uma empresa?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "O custo varia conforme a complexidade. Implementações para pequenas e médias empresas costumam ficar entre R$500 e R$5.000/mês, conforme o escopo. A sessão estratégica de 30 minutos é gratuita e o valor do seu caso sai na proposta, depois do diagnóstico. Sem contrato de fidelidade: se o primeiro processo automatizado não entregar o resultado acordado no prazo acordado, a etapa não é cobrada."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "Quais empresas se beneficiam da inteligência artificial?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Qualquer empresa com processos repetitivos se beneficia — desde e-commerce automatizando atendimento, até escritórios de advocacia automatizando análise de contratos, ou indústrias prevendo falhas em equipamentos com IA."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "O que são agentes de IA e como funcionam nos negócios?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Agentes de IA são sistemas autônomos que percebem o contexto, tomam decisões e executam tarefas sem intervenção humana contínua. Para empresas, atuam como assistentes digitais que trabalham 24/7 — respondendo clientes, qualificando leads e automatizando fluxos de trabalho."
-          }
-        }
-      ]
-    }
-    </script>
   </head>
   <body>
     <div id="root"></div>
