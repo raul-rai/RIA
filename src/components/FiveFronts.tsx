@@ -56,7 +56,16 @@ export default function FiveFronts() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 max-w-4xl mx-auto w-full">
+      {/*
+        Tres colunas no desktop, nao duas.
+
+        Com cinco frentes, duas colunas davam tres fileiras e a dobra fechava.
+        A sexta frente completaria uma QUARTA fileira e empurraria o CTA para
+        fora da tela — o problema nao e o cartao a mais, e a fileira a mais.
+        Em tres colunas os seis cabem em duas fileiras, e a dobra volta a
+        fechar sem encolher nada.
+      */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-w-5xl mx-auto w-full">
         {FRONTS.map((front, i) => {
           const isChecked = frontsChecked[i];
           const destacada = i === 0 && primeiraVazia && !isChecked;
