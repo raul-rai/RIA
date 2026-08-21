@@ -82,7 +82,11 @@ function buildJsonLd() {
       founder: {
         '@type': 'Person',
         name: 'Raul Vieira',
-        jobTitle: 'Consultor de Inteligência Artificial',
+        // Espelha CONSULTANT.role em src/content/consultant.ts. Sao dois arquivos
+        // porque este script roda em Node e nao importa o modulo TS — entao a
+        // concordancia e manual, e divergir aqui faz o schema afirmar um cargo
+        // que a tela nao mostra.
+        jobTitle: 'Engenheiro de Inteligência Artificial',
         alumniOf: {
           '@type': 'CollegeOrUniversity',
           name: 'Universidade Federal de São Carlos',
