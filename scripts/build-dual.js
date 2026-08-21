@@ -73,6 +73,9 @@ const legacyAssunto = capture('git', ['log', '-1', '--format=%s', LEGACY_REF]);
 
 /** Para onde voltar. Nome do branch, ou o SHA se já estiver destacado. */
 let voltarPara = capture('git', ['rev-parse', '--abbrev-ref', 'HEAD']);
+
+/** Se a home saiu com conteudo no HTML. Lido pela conferencia la embaixo. */
+let homePrerender = false;
 if (voltarPara === 'HEAD') voltarPara = capture('git', ['rev-parse', 'HEAD']);
 
 const restaurar = () => {
@@ -90,9 +93,31 @@ try {
 
   run('git', ['checkout', '--quiet', '--detach', legacySha]);
 
-  // A home antiga não tem prerender: o build dela é só `vite build`, como
-  // sempre foi. É essa a versão que está no ar, com o shell vazio e tudo.
   vite(['build'], { SITE_BASE: '/' });
+
+  /**
+   * Prerender da home, quando o ref congelado souber fazer isso.
+   *
+   * Ate ago/2026 esta etapa era so `vite build`, e o comentario aqui dizia que
+   * "a home antiga nao tem prerender" — descricao de um defeito escrita como se
+   * fosse uma decisao. A home publicada saia com `<div id="root"></div>` e
+   * mais nada, numa pagina cuja Frente 1 vende ser citavel por IA e cujo cartao
+   * de diagnostico pergunta ao visitante se o site DELE sobrevive aos motores
+   * de IA.
+   *
+   * A condicao nao e cerimonia: este script aceita QUALQUER ref como home, e
+   * refs anteriores ao porte do prerender nao tem src/entry-server.tsx. Sem a
+   * checagem, apontar o script para um commit antigo quebraria o build inteiro
+   * em vez de reproduzir aquele commit como ele era — que e a unica coisa que
+   * um congelamento precisa saber fazer.
+   */
+  homePrerender = existsSync(resolve(root, 'src/entry-server.tsx'));
+  if (homePrerender) {
+    vite(['build', '--ssr', 'src/entry-server.tsx', '--outDir', 'dist-ssr'], { SITE_BASE: '/' });
+    run(process.execPath, ['scripts/prerender.js'], { env: { ...process.env, SITE_BASE: '/' } });
+  } else {
+    console.log('    (ref sem entry-server.tsx — home sai como SPA, sem prerender)');
+  }
 
   rmSync(outDir, { recursive: true, force: true });
   mkdirSync(outDir, { recursive: true });
@@ -171,7 +196,10 @@ const v2 = readFileSync(resolve(outDir, 'v2/index.html'), 'utf-8');
 
 const check = (ok, label) => console.log(`    ${ok ? '✓' : '✗'} ${label}`);
 console.log('\n═══ Conferência ═══');
-check(home.includes('<div id="root"></div>'), 'home: SPA intacta, como está no ar hoje');
+check(
+  homePrerender ? !home.includes('<div id="root"></div>') : home.includes('<div id="root"></div>'),
+  homePrerender ? 'home: prerenderizada, com conteúdo no HTML' : 'home: SPA (ref sem prerender)'
+);
 check(!v2.includes('<div id="root"></div>'), '/v2: prerenderizado, com conteúdo no HTML');
 check(/content="noindex/.test(v2), '/v2: noindex');
 check(!/content="noindex/.test(home), 'home: indexável');
