@@ -50,6 +50,26 @@ const SOURCE_LABEL: Record<DiagnosticSource, string> = {
   ria: 'Fonte: varredura RIA',
 };
 
+/** Uma escala de cor só para o laudo inteiro.
+ *
+ *  Até ago/2026 a nota geral acendia em `accent` (o teal da marca) e as
+ *  dimensões acendiam em `emerald` na mesma faixa — dois verdes diferentes
+ *  dizendo a mesma coisa na mesma tela, o que faz o olho procurar uma
+ *  distinção que não existe. Aqui a faixa é uma só e vale para a nota, para as
+ *  cinco dimensões e para os Core Web Vitals. */
+function toneOf(pct: number) {
+  if (pct < 50) return { text: 'text-red-600', bar: 'bg-red-500', glass: 'glass-red' };
+  if (pct < 80) return { text: 'text-amber-600', bar: 'bg-amber-500', glass: 'glass-amber' };
+  return { text: 'text-accent', bar: 'bg-accent', glass: 'glass-accent' };
+}
+
+/** "LCP (Maior Pintura)" -> ["LCP", "Maior Pintura"]. A sigla ancora a coluna;
+ *  a tradução vira legenda embaixo, em vez de disputar a mesma linha. */
+function splitVitalName(name: string): [string, string] {
+  const m = name.match(/^(.+?)\s*\((.+)\)\s*$/);
+  return m ? [m[1], m[2]] : [name, ''];
+}
+
 const PAGESPEED_TIMEOUT_MS = 20000;
 const WEBHOOK_TIMEOUT_MS = 25000;
 
@@ -161,6 +181,7 @@ export default function PotentialDiagnostic() {
   };
 
   const marcadas = socialChecks.filter(Boolean).length;
+  const overallTone = toneOf(result?.score ?? 0);
 
   const handleAnalyze = async () => {
     if (!url || !url.includes('.')) {
@@ -505,115 +526,157 @@ export default function PotentialDiagnostic() {
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4 mb-6"
+              className="mb-6 md:mb-8 space-y-3 md:space-y-4"
             >
-              {[
-                result.dimensoes.D1,
-                result.dimensoes.D2,
-                result.dimensoes.D3,
-                result.dimensoes.D4,
-                result.dimensoes.D5,
-              ].map((m, i) => {
-                const icons = [Zap, Cpu, Globe, Search, Bot];
-                const Icon = icons[i] || Activity;
-                const tone =
-                  m.pct < 50
-                    ? { text: 'text-red-600', bar: 'bg-red-500' }
-                    : m.pct < 80
-                      ? { text: 'text-amber-600', bar: 'bg-amber-500' }
-                      : { text: 'text-emerald-600', bar: 'bg-emerald-500' };
-
-                return (
-                  <div
-                    key={i}
-                    className="glass-inset rounded-xl p-3 md:p-4 flex items-center md:flex-col gap-2.5 md:gap-3 relative"
-                  >
-                    <div className="glass-raised p-1.5 rounded-lg shrink-0 flex items-center justify-between w-full md:w-auto">
-                      <Icon size={14} className={tone.text} />
-                      {m.labelExtra && (
-                        <span className="glass-inset glass-emerald inline-flex items-center gap-1 text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-full text-emerald-800">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
-                          {m.labelExtra}
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex-1 md:text-center">
-                      <div className="text-xl md:text-2xl font-serif text-slate-900 font-bold mb-0.5">{m.pct}%</div>
-                      <div className="text-[10px] md:text-xs text-slate-600 uppercase tracking-wider font-bold leading-tight">
-                        {m.nome}
-                      </div>
-                    </div>
-                    <div className="hidden md:block h-1.5 w-full bg-slate-900/15 rounded-full overflow-hidden">
-                      <div className={`h-full ${tone.bar}`} style={{ width: `${m.pct}%` }} />
-                    </div>
-                  </div>
-                );
-              })}
-
-              <div className="glass-inset glass-accent col-span-1 md:col-span-2 lg:col-span-4 p-4 rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div className="flex items-center gap-3 w-full md:w-auto">
-                  <div
-                    className={`w-10 h-10 rounded-full border-2 flex items-center justify-center font-serif text-lg font-bold shrink-0 bg-white/75 ${
-                      result.score < 50
-                        ? 'border-red-500 text-red-600'
-                        : result.score < 80
-                          ? 'border-amber-500 text-amber-600'
-                          : 'border-accent text-accent'
-                    }`}
-                  >
-                    {Math.round(result.score)}
-                  </div>
-                  <div>
-                    <h4 className="text-slate-900 font-bold text-xs md:text-sm uppercase tracking-widest leading-none mb-1.5">
-                      Status:{' '}
-                      <span
-                        className={
-                          result.score < 50
-                            ? 'text-red-600'
-                            : result.score < 80
-                              ? 'text-amber-600'
-                              : 'text-accent'
-                        }
-                      >
-                        {result.nivel_nome}
+              {/* O veredito vem primeiro.
+                  A dobra pergunta "seu site sobrevive?" — a resposta nao pode
+                  chegar depois de cinco cartoes de detalhe. Ate ago/2026 o laudo
+                  era um unico grid de cinco colunas onde o veredito e os Core
+                  Web Vitals ocupavam quatro: sobrava uma coluna vazia a direita
+                  em cada uma das duas linhas, e o bloco perdia o retangulo.
+                  Agora sao tres blocos empilhados, cada um com o proprio grid,
+                  e nenhum deles deixa coluna orfa. */}
+              <div className="glass-inset glass-accent rounded-2xl p-4 md:p-5">
+                <div className="flex items-start sm:items-center gap-4 md:gap-5">
+                  {/* Anel preenchido ate a nota. O circulo antigo tinha 40px e
+                      borda uniforme: mostrava o numero, nao a distancia que
+                      falta para 100 — que e o argumento da secao. */}
+                  <div className={`relative w-16 h-16 md:w-[76px] md:h-[76px] shrink-0 ${overallTone.text}`}>
+                    <div
+                      className="absolute inset-0 rounded-full"
+                      style={{ background: `conic-gradient(currentColor ${result.score}%, rgba(15,23,42,0.10) 0)` }}
+                    />
+                    <div className="absolute inset-[5px] md:inset-[6px] rounded-full bg-white/90 flex flex-col items-center justify-center">
+                      <span className="font-serif text-xl md:text-2xl font-bold leading-none">
+                        {Math.round(result.score)}
                       </span>
+                      <span className="text-[9px] font-mono font-bold text-slate-400 leading-none tracking-tight mt-0.5">/100</span>
+                    </div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-xs md:text-sm font-bold uppercase tracking-[0.16em] leading-none">
+                      <span className="text-slate-500">Status: </span>
+                      <span className={overallTone.text}>{result.nivel_nome}</span>
                     </h4>
-                    <p className="text-slate-600 text-[11px] md:text-xs leading-snug">{result.leitura}</p>
-                    <p className="text-slate-400 text-[9px] md:text-[10px] uppercase tracking-[0.15em] font-bold mt-1.5">
+                    <p className="text-slate-600 text-[11px] md:text-xs leading-relaxed mt-2">{result.leitura}</p>
+                    <p className="text-slate-400 text-[9px] md:text-[10px] uppercase tracking-[0.15em] font-bold mt-2">
                       {SOURCE_LABEL[result.source]}
-                    </p>
-                    {/* Ponte narrativa: o site que acabou de ser avaliado e a
-                        primeira das tres frentes. O agente mostra as outras. */}
-                    <p className="text-slate-700 text-[11px] md:text-xs leading-snug font-semibold mt-1.5">
-                      O site é a primeira das três frentes. O agente te mostra as outras duas.
                     </p>
                   </div>
                 </div>
-                <button
-                  onClick={() => {
-                    track('cta_click', { location: 'diagnostic_result' });
-                    requestIntent('diagnostic-result');
-                  }}
-                  className="px-5 py-3 bg-slate-900 text-white rounded-lg text-xs font-black uppercase tracking-widest hover:bg-accent transition-all flex items-center gap-2 shadow-md shrink-0"
-                >
-                  <span>Falar com o agente</span>
-                  <ArrowRight size={14} />
-                </button>
+                {/* Ponte narrativa e acao na mesma linha, separadas por um filete:
+                    a frase diz por que existe o botao, e antes ela estava
+                    empilhada com mais quatro linhas na coluna da esquerda. */}
+                <div className="mt-4 pt-3.5 border-t border-slate-900/10 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-5">
+                  <p className="flex-1 text-slate-700 text-[11px] md:text-xs leading-snug font-semibold">
+                    O site é a primeira das três frentes. O agente te mostra as outras duas.
+                  </p>
+                  <button
+                    onClick={() => {
+                      track('cta_click', { location: 'diagnostic_result' });
+                      requestIntent('diagnostic-result');
+                    }}
+                    className="w-full sm:w-auto px-5 py-3 bg-slate-900 text-white rounded-lg text-xs font-black uppercase tracking-widest hover:bg-accent transition-all flex items-center justify-center gap-2 shadow-md shrink-0"
+                  >
+                    <span>Falar com o agente</span>
+                    <ArrowRight size={14} />
+                  </button>
+                </div>
+              </div>
+
+              {/* As cinco dimensoes que sustentam a nota.
+                  Duas colunas no telefone e cinco no desktop; a quinta ocupa a
+                  linha inteira nos tamanhos pares para nao sobrar meia celula.
+                  A barra saiu do `hidden md:block`: no telefone o cartao mostrava
+                  so o numero, e era justamente onde a comparacao entre as cinco
+                  dimensoes precisava de forma, nao de leitura. */}
+              <div className="grid grid-cols-2 lg:grid-cols-5 gap-2.5 md:gap-3.5">
+                {[
+                  result.dimensoes.D1,
+                  result.dimensoes.D2,
+                  result.dimensoes.D3,
+                  result.dimensoes.D4,
+                  result.dimensoes.D5,
+                ].map((m, i) => {
+                  const icons = [Zap, Cpu, Globe, Search, Bot];
+                  const Icon = icons[i] || Activity;
+                  const tone = toneOf(m.pct);
+
+                  return (
+                    <div
+                      key={i}
+                      className={`glass-inset rounded-xl p-3 md:p-3.5 flex flex-col gap-2.5 ${
+                        i === 4 ? 'col-span-2 lg:col-span-1' : ''
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="glass-raised p-1.5 rounded-lg inline-flex shrink-0">
+                          <Icon size={14} className={tone.text} />
+                        </span>
+                        {m.labelExtra && (
+                          <span
+                            className={`glass-inset ${tone.glass} inline-flex items-center gap-1 text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-full ${tone.text}`}
+                          >
+                            <span className={`w-1.5 h-1.5 rounded-full inline-block ${tone.bar}`} />
+                            {m.labelExtra}
+                          </span>
+                        )}
+                      </div>
+                      <div>
+                        <div className="font-serif text-2xl md:text-[26px] font-bold text-slate-900 leading-none">
+                          {m.pct}
+                          <span className="text-sm text-slate-400 font-sans font-black">%</span>
+                        </div>
+                        <div className="text-[10px] md:text-[11px] text-slate-600 uppercase tracking-wider font-bold leading-tight mt-1.5">
+                          {m.nome}
+                        </div>
+                      </div>
+                      <div className="mt-auto h-1.5 w-full bg-slate-900/10 rounded-full overflow-hidden">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${m.pct}%` }}
+                          transition={{ duration: 0.7, delay: 0.15 + i * 0.06, ease: [0.16, 1, 0.3, 1] }}
+                          className={`h-full rounded-full ${tone.bar}`}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
 
               {result.webVitals && (
-                <div className="glass-inset col-span-1 md:col-span-2 lg:col-span-4 p-4 rounded-xl">
-                  <h5 className="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-700 mb-2.5 flex items-center gap-1.5">
-                    <Activity size={12} className="text-accent" />
+                <div className="glass-inset rounded-2xl p-4 md:p-5">
+                  <h5 className="text-[10px] md:text-[11px] font-mono font-bold uppercase tracking-[0.12em] md:tracking-[0.16em] text-slate-500 mb-3 flex items-start gap-1.5">
+                    <Activity size={12} className="text-accent shrink-0 mt-[1px]" />
                     <span>Métricas em Tempo Real (Core Web Vitals)</span>
                   </h5>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                    {result.webVitals.map((v) => (
-                      <div key={v.id} className="glass-raised p-2.5 rounded-lg">
-                        <span className="text-[9.5px] font-mono font-bold uppercase text-slate-500 block mb-0.5">{v.name}</span>
-                        <span className="text-sm md:text-base font-serif font-black text-slate-900">{v.value}</span>
-                      </div>
-                    ))}
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 md:gap-3">
+                    {result.webVitals.map((v) => {
+                      // A sigla e a traducao dividiam uma linha so, e "CLS
+                      // (Estabilidade Visual)" quebrava onde desse — quatro
+                      // cartoes com alturas de rotulo diferentes. Separadas, a
+                      // sigla ancora a coluna e a traducao vira legenda.
+                      const [sigla, legenda] = splitVitalName(v.name);
+                      const tone = toneOf(v.score);
+                      return (
+                        <div key={v.id} className="glass-raised p-3 rounded-lg flex flex-col">
+                          <span className="flex items-center gap-1.5 mb-1.5">
+                            <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${tone.bar}`} />
+                            <span className="text-[10px] font-mono font-black uppercase tracking-[0.12em] text-slate-600">
+                              {sigla}
+                            </span>
+                          </span>
+                          <span className="font-serif text-lg md:text-xl font-black text-slate-900 leading-none">
+                            {v.value}
+                          </span>
+                          {legenda && (
+                            <span className="text-[9px] uppercase tracking-wider text-slate-400 font-bold leading-tight mt-1.5">
+                              {legenda}
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}
