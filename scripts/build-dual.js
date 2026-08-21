@@ -222,6 +222,21 @@ writeFileSync(
 );
 console.log('    .vercel/output pronto para `vercel deploy --prebuilt`');
 
+/**
+ * Restaura o invariante "dist/ é o build do código ATUAL".
+ *
+ * O passo 1 constrói a home ANTIGA em dist/, e é de lá que tests/seo.test.ts
+ * lê para checar prerender, JSON-LD e canonical. Sem esta reconstrução, rodar
+ * o build combinado deixava 9 testes falhando — não por regressão no código,
+ * mas porque o alvo do teste virava a versão errada. Um build que quebra a
+ * suíte sem nada estar quebrado é pior que inconveniente: ensina a ignorar
+ * vermelho.
+ */
+console.log('\n═══ Restaurando dist/ para o codigo atual ═══\n');
+vite(['build'], { SITE_BASE: '/' });
+vite(['build', '--ssr', 'src/entry-server.tsx', '--outDir', 'dist-ssr'], { SITE_BASE: '/' });
+run(process.execPath, ['scripts/prerender.js'], { env: { ...process.env, SITE_BASE: '/' } });
+
 console.log(`\n✓ Site combinado em dist-site/`);
 console.log(`    /     home congelada em ${legacyShort}`);
 console.log(`    /v2   versão nova, prerenderizada e noindex\n`);
