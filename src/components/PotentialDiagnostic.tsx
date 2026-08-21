@@ -607,9 +607,9 @@ export default function PotentialDiagnostic() {
                       {SOURCE_LABEL[result.source]}
                     </p>
                     {/* Ponte narrativa: o site que acabou de ser avaliado e a
-                        primeira das cinco frentes. O agente mostra as outras. */}
+                        primeira das seis frentes. O agente mostra as outras. */}
                     <p className="text-slate-700 text-[11px] md:text-xs leading-snug font-semibold mt-1.5">
-                      O site é a primeira das cinco frentes. O agente te mostra as outras quatro.
+                      O site é a primeira das seis frentes. O agente te mostra as outras cinco.
                     </p>
                   </div>
                 </div>

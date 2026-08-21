@@ -44,14 +44,14 @@ export default function FiveFronts() {
         <div className="glass-chip glass-accent inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full mb-4">
           <Layers size={14} className="text-cyan-700" />
           <span className="text-cyan-800 text-[10px] md:text-xs font-black uppercase tracking-[0.2em]">
-            As cinco frentes
+            As seis frentes
           </span>
         </div>
         <h2 className="text-2xl md:text-5xl font-serif text-slate-900 mb-3">
           É aqui que a IA entra <span className="italic font-normal text-slate-500">na sua operação.</span>
         </h2>
         <p className="text-slate-600 text-xs md:text-sm max-w-xl mx-auto font-light leading-relaxed">
-          Cinco frentes, e é isso que eu faço. Marque as que a sua empresa já cobre — as que sobrarem
+          Seis frentes, e é isso que eu faço. Marque as que a sua empresa já cobre — as que sobrarem
           são a pauta da sua sessão.
         </p>
       </div>
@@ -132,7 +132,7 @@ export default function FiveFronts() {
 
       <div className="text-center mt-6 md:mt-8">
         <p className="text-sm md:text-base text-slate-800 font-semibold mb-4">
-          Você cobre <span className="font-serif text-lg md:text-2xl">{marcadas}</span> de 5.
+          Você cobre <span className="font-serif text-lg md:text-2xl">{marcadas}</span> de {FRONTS.length}.
           {faltam > 0 && (
             <>
               {' '}As {faltam} que faltam são a pauta da sua sessão.

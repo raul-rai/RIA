@@ -1,4 +1,4 @@
-// As cinco frentes.
+// As seis frentes.
 //
 // Este arquivo e o catalogo do que a RIA vende. Ele existia so implicito, como
 // checklist de "pilares de IA operacional" — o visitante marcava caixas sem
@@ -6,8 +6,15 @@
 //
 // A frente 1 nao e uma escolha de ordem: ela e a mesma coisa que a dobra 2
 // diagnostica. Ver resolveFirstFront em src/lib/fronts.ts.
+//
+// ORDEM (21/08/2026): "Geracao de conteudo" entrou como frente 3, entre o SDR e
+// a automacao. Nao e ordem alfabetica nem de tamanho de projeto: as tres
+// primeiras sao a cadeia de aquisicao (ser achado -> responder -> alimentar), e
+// as tres ultimas sao a operacao por tras dela. Mexer na posicao quebra essa
+// leitura, e renumerar mexe tambem no campo `front` de content/cases.ts — o
+// caso do produto de decoracao apontava para 4 e passou a apontar para 5.
 
-export type FrontId = 1 | 2 | 3 | 4 | 5;
+export type FrontId = 1 | 2 | 3 | 4 | 5 | 6;
 
 export interface Front {
   id: FrontId;
@@ -42,20 +49,27 @@ export const FRONTS: Front[] = [
   },
   {
     id: 3,
+    label: 'Geração de conteúdo',
+    promise: 'Publicação constante no seu tom, sem depender de alguém da equipe lembrar de escrever.',
+    tag: 'Conteúdo',
+    probe: 'quantas vezes por semana sua empresa publica alguma coisa hoje',
+  },
+  {
+    id: 4,
     label: 'Automação de processos',
     promise: 'As rotinas repetitivas saem da mão da equipe e passam a rodar sem ninguém olhando.',
     tag: 'Automação',
     probe: 'qual rotina consome mais horas da equipe hoje',
   },
   {
-    id: 4,
+    id: 5,
     label: 'Sistema sob medida',
     promise: 'O software que a sua operação precisa e que não existe pronto para comprar.',
     tag: 'Sistema sob medida',
     probe: 'qual controle da operação ainda vive numa planilha',
   },
   {
-    id: 5,
+    id: 6,
     label: 'Dados e decisão',
     promise: 'Números que dizem o que fazer na segunda-feira, não o que aconteceu no mês passado.',
     tag: 'Dados e decisão',

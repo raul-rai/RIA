@@ -137,7 +137,7 @@ export default function AIChatAgent({ webhookUrl = config.chatWebhook }: AIChatA
         : websiteScore !== null
           ? `Site auditado: ${websiteScore}/100`
           : 'Site: não auditado',
-      `Frentes cobertas: ${marcados} de 5`,
+      `Frentes cobertas: ${marcados} de ${FRONTS.length}`,
     ];
     return whatsappWithMessage(linhas.join('\n'));
   }, [assessedVulnerabilityIndex, hasNoWebsite, websiteScore, frontsChecked]);

@@ -272,7 +272,7 @@ const CHAPTERS = [
   { label: 'A ameaça silenciosa', title: 'RIA — A Ameaça Silenciosa' },
   { label: 'Vozes do mercado', title: 'RIA — Vozes do Mercado' },
   { label: 'Diagnóstico de saúde digital', title: 'RIA — Diagnóstico de Saúde Digital' },
-  { label: 'As cinco frentes', title: 'RIA — As Cinco Frentes' },
+  { label: 'As seis frentes', title: 'RIA — As Seis Frentes' },
   { label: 'Prova e quem executa', title: 'RIA — Prova e Quem Executa' },
   { label: 'O agente e a agenda', title: 'RIA — Agende sua Sessão' },
 ];

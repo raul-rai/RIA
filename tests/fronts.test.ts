@@ -4,9 +4,9 @@ import { resolveFirstFront, countChecked } from '../src/lib/fronts';
 import { CASES } from '../src/content/cases';
 
 describe('FRONTS: o catalogo real da RIA', () => {
-  it('FRONT-01: sao exatamente cinco frentes, com ids de 1 a 5', () => {
-    expect(FRONTS).toHaveLength(5);
-    expect(FRONTS.map((f) => f.id)).toEqual([1, 2, 3, 4, 5]);
+  it('FRONT-01: sao exatamente seis frentes, com ids de 1 a 6', () => {
+    expect(FRONTS).toHaveLength(6);
+    expect(FRONTS.map((f) => f.id)).toEqual([1, 2, 3, 4, 5, 6]);
   });
 
   it('FRONT-02: a primeira frente e a presenca digital, que amarra com a dobra 2', () => {

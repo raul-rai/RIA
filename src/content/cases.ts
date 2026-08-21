@@ -21,7 +21,7 @@ export type CaseKind =
 export interface CaseStudy {
   kind: CaseKind;
   /**
-   * Qual das cinco frentes este caso prova. E o que costura a dobra 4 com a
+   * Qual das seis frentes este caso prova. E o que costura a dobra 4 com a
    * dobra 3: o visitante acabou de ver o catalogo e aqui ve cada item provado.
    */
   front: FrontId;
@@ -67,7 +67,10 @@ export const CASES: CaseStudy[] = [
   },
   {
     kind: 'entrega',
-    front: 4,
+    // 4 -> 5: "Sistema sob medida" desceu uma posicao quando "Geracao de
+    // conteudo" entrou como frente 3. Sem isto o cartao anunciaria a frente
+    // errada.
+    front: 5,
     segment: 'DecorColorir',
     headline: 'Do protótipo ao produto final',
     before: 'Ideia de produto sem validação técnica nem caminho de implementação.',
