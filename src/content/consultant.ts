@@ -17,13 +17,25 @@ export const PHOTO_ALT = 'Ilustracao de marca da RIA: retrato estilizado de Raul
 
 export const CONSULTANT = {
   name: 'Raul Vieira',
-  role: 'Consultor de Inteligência Artificial',
+  role: 'Engenheiro de Inteligência Artificial',
   tagline: 'Engenharia de produção aplicada a IA.',
-  bio: 'Engenheiro de produção formado pela UFSCar. A formação importa aqui por um motivo prático: antes de escolher modelo, alguém precisa saber onde está o gargalo. É o mesmo ofício de sempre — medir o processo, achar o ponto que trava, atacar o de maior custo por hora. A IA só mudou a ferramenta.',
+  /**
+   * A bio e uma LISTA de paragrafos, nao uma string.
+   *
+   * Era uma string so, e a secao imprimia tudo num <p> unico. O primeiro
+   * paragrafo conta a formacao; o segundo explica por que ela importa para
+   * quem esta comprando. Sao dois movimentos diferentes, e emenda-los num
+   * bloco so fazia o segundo — que e o argumento de venda — chegar ja no
+   * meio de uma parede de texto.
+   */
+  bio: [
+    'Cursou Engenharia de Produção na UFSCar, onde a capacidade de dissecar processos e a mentalidade de otimização contínua foram bem lapidadas. E desde 2022 vem se especializando em Inteligência Artificial e suas aplicações.',
+    'A formação importa aqui por um motivo prático: antes de escolher modelo, alguém precisa saber onde está o gargalo. É o mesmo ofício de sempre — medir o processo, achar o ponto que trava, atacar o de maior custo por hora. A IA só mudou a ferramenta.',
+  ],
   credentials: [
-    'Engenheiro de Produção — Universidade Federal de São Carlos (UFSCar)',
-    'Agentes de IA em produção qualificando leads em escala',
-    'Automação de processos ponta a ponta com n8n',
-    'Diagnóstico e otimização para busca generativa (GEO)',
+    'Visão Estratégica e Alinhamento de Negócios',
+    'Domínio Prático do Ecossistema de IA em constante evolução',
+    'Governança, Dados e Conformidade (Compliance)',
+    'Visão de Proprietário e Arquitetura de Soluções',
   ],
 };

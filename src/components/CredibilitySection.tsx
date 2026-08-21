@@ -135,9 +135,13 @@ export default function CredibilitySection() {
               {CONSULTANT.name}
             </h3>
             <p className="text-slate-500 text-xs md:text-sm italic mb-3">{CONSULTANT.role}</p>
-            <p className="text-slate-600 text-xs md:text-sm leading-relaxed mb-4 max-w-xl mx-auto md:mx-0">
-              {CONSULTANT.bio}
-            </p>
+            <div className="flex flex-col gap-3 mb-4 max-w-xl mx-auto md:mx-0">
+              {CONSULTANT.bio.map((paragrafo) => (
+                <p key={paragrafo} className="text-slate-600 text-xs md:text-sm leading-relaxed">
+                  {paragrafo}
+                </p>
+              ))}
+            </div>
 
             <ul className="flex flex-col gap-2 mb-5 text-left max-w-xl mx-auto md:mx-0">
               {CONSULTANT.credentials.map((c) => (
@@ -156,7 +160,7 @@ export default function CredibilitySection() {
                 }}
                 className="px-6 py-3.5 w-full md:w-auto bg-slate-900 text-white rounded-xl font-black text-xs uppercase tracking-widest hover:bg-accent active:scale-95 transition-all inline-flex items-center justify-center gap-2 shadow-lg"
               >
-                Falar com o agente <ArrowUpRight size={14} />
+                Fale com nosso agente <ArrowUpRight size={14} />
               </button>
             </div>
           </div>
