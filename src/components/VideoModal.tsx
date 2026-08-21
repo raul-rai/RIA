@@ -128,7 +128,7 @@ export default function VideoModal({ isOpen, onClose, videoUrl, title, bio, star
             >
               <div className="flex items-center gap-2 mb-4">
                 <Award size={16} className="text-accent" />
-                <span className="text-accent-dark text-[10px] md:text-[11px] font-black uppercase tracking-[0.3em]">Speaker Profile</span>
+                <span className="text-accent-dark text-[10px] md:text-[11px] font-black uppercase tracking-[0.3em]">Quem fala</span>
               </div>
               
               <h3 className="text-2xl md:text-3xl font-serif text-white mb-2">{title}</h3>
@@ -143,23 +143,17 @@ export default function VideoModal({ isOpen, onClose, videoUrl, title, bio, star
                 </div>
               )}
 
-              <div className="mt-8 pt-8 border-t border-white/5 flex items-center gap-4">
-                <div className="flex flex-col">
-                  <span className="text-[10px] text-white/20 uppercase tracking-widest font-bold">Protocolo</span>
-                  <span className="text-[11px] text-accent font-mono">RIA_AUTH_VERIFIED</span>
-                </div>
-                {endTime ? (
-                  <div className="ml-auto px-3 py-1 rounded bg-accent/10 border border-accent/20">
-                    <span className="text-[9px] text-accent font-black">
-                      AUTO-STOP: {Math.floor(endTime / 60)}:{(endTime % 60).toString().padStart(2, '0')}
-                    </span>
-                  </div>
-                ) : (
-                  <div className="ml-auto px-3 py-1 rounded bg-accent/10 border border-accent/20">
-                    <span className="text-[9px] text-accent font-black">FULL_PLAYBACK</span>
-                  </div>
-                )}
-              </div>
+              {/*
+                Aqui ficava um rodape de "PROTOCOLO / RIA_AUTH_VERIFIED" com um
+                cracha de "AUTO-STOP: 23:58" ou "FULL_PLAYBACK". Era cosplay de
+                terminal: nada ali era verificado por protocolo nenhum, e o
+                unico efeito real era carimbar jargao falso ao lado do nome de
+                uma pessoa publica que nao tem relacao com a RIA — no painel
+                onde a pagina mais precisa parecer sobria.
+
+                O recorte do video continua existindo: `endTime` segue parando
+                a reproducao no ponto certo, so nao se anuncia mais.
+              */}
             </motion.div>
           </div>
         </motion.div>
