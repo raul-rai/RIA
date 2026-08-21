@@ -16,7 +16,7 @@ import { track } from '../lib/analytics';
 import { VulnerabilityProvider } from '../context/VulnerabilityContext';
 import { AgentIntentProvider, useAgentIntent } from '../context/AgentIntentContext';
 import { REF_LABEL } from '../content/intents';
-import FiveFronts from '../components/FiveFronts';
+import FrontsSection from '../components/FrontsSection';
 import CredibilitySection from '../components/CredibilitySection';
 
 /** Capitulo que concentra a oferta e o agente. Todo CTA aponta para ca. */
@@ -216,7 +216,7 @@ const CHAPTERS = [
   { label: 'A ameaça silenciosa', title: 'RIA — A Ameaça Silenciosa' },
   { label: 'Vozes do mercado', title: 'RIA — Vozes do Mercado' },
   { label: 'Diagnóstico de saúde digital', title: 'RIA — Diagnóstico de Saúde Digital' },
-  { label: 'As cinco frentes', title: 'RIA — As Cinco Frentes' },
+  { label: 'As seis frentes', title: 'RIA — As Seis Frentes' },
   { label: 'Prova e quem executa', title: 'RIA — Prova e Quem Executa' },
   { label: 'O agente e a agenda', title: 'RIA — Agende sua Sessão' },
 ];
@@ -246,7 +246,7 @@ export default function LandingPage() {
     <SceneHero onUnderstandMore={goToMarketVoices} />,
     <SocialProofSection />,
     <PotentialDiagnostic />,
-    <FiveFronts />,
+    <FrontsSection />,
     <CredibilitySection />,
     <SceneCTA />,
   ], [goToMarketVoices]);

@@ -127,18 +127,18 @@ export const INTENTS: Record<IntentId, IntentDefinition> = {
     userMessage: (ctx) => {
       const faltando = uncoveredFronts(FRONTS, ctx.frontsChecked);
       const marcadas = FRONTS.length - faltando.length;
-      if (marcadas === 0) return 'Não cubro nenhuma das cinco frentes. Quero montar minha pauta.';
+      if (marcadas === 0) return 'Não cubro nenhuma das seis frentes. Quero montar minha pauta.';
       if (faltando.length === 0)
-        return 'Marquei as cinco frentes. Quero saber o que ainda dá pra melhorar.';
+        return 'Marquei as seis frentes. Quero saber o que ainda dá pra melhorar.';
       const verbo = faltando.length === 1 ? 'Falta' : 'Faltam';
-      return `Marquei ${marcadas} de 5. ${verbo} ${formatList(
+      return `Marquei ${marcadas} de ${FRONTS.length}. ${verbo} ${formatList(
         faltando.map((f) => f.tag)
       )}. Quero montar minha pauta.`;
     },
     agentReply: (ctx) => {
       const faltando = uncoveredFronts(FRONTS, ctx.frontsChecked);
       if (faltando.length === 0)
-        return 'Cinco de cinco é raro. Então a conversa deixa de ser sobre o que falta e passa a ser sobre o que está rodando abaixo do que poderia. Me diz o que sua empresa faz e qual dessas cinco te dá mais trabalho hoje.';
+        return 'Seis de seis é raro. Então a conversa deixa de ser sobre o que falta e passa a ser sobre o que está rodando abaixo do que poderia. Me diz o que sua empresa faz e qual dessas seis te dá mais trabalho hoje.';
       const primeira = faltando[0];
       const fecho =
         faltando.length === 1
