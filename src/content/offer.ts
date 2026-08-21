@@ -45,7 +45,7 @@ export interface OfferTerm {
 export const OFFER_TERMS: OfferTerm[] = [
   {
     label: 'Como começa',
-    value: 'Conversa de 30 minutos, gratuita',
+    value: 'Conversa de 15 minutos, gratuita',
     detail:
       'Por vídeo ou WhatsApp, sobre a sua operação — não uma apresentação de slides. Serve para saber se faz sentido seguir.',
   },
@@ -91,7 +91,7 @@ export const FAQ: FaqItem[] = [
   },
   {
     question: 'Quanto custa implementar IA em uma empresa?',
-    answer: `A conversa inicial de 30 minutos é gratuita. O Diagnóstico de Gargalo é cobrado à parte e o valor sai na proposta, depois de entender o tamanho da operação. A implementação que vem depois costuma ficar ${IMPLEMENTATION_RANGE} para pequenas e médias empresas, conforme o escopo. Não há contrato de fidelidade: o prazo e o indicador de sucesso entram por escrito na proposta, e se a etapa não entrar em produção na data combinada, ela não é cobrada.`,
+    answer: `A conversa inicial de 15 minutos é gratuita. O Diagnóstico de Gargalo é cobrado à parte e o valor sai na proposta, depois de entender o tamanho da operação. A implementação que vem depois costuma ficar ${IMPLEMENTATION_RANGE} para pequenas e médias empresas, conforme o escopo. Não há contrato de fidelidade: o prazo e o indicador de sucesso entram por escrito na proposta, e se a etapa não entrar em produção na data combinada, ela não é cobrada.`,
   },
   {
     question: 'Por que a maioria dos projetos de IA em empresas falha?',

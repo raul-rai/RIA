@@ -6,9 +6,7 @@ import ChapterSection from '../components/ChapterSection';
 import { useActiveChapter } from '../hooks/useActiveChapter';
 import EliteHUD from '../components/EliteHUD';
 import BrandMark from '../components/BrandMark';
-
 import AIChatAgent from '../components/AIChatAgent';
-import OfferSection from '../components/OfferSection';
 import PotentialDiagnostic from '../components/PotentialDiagnostic';
 import MarketEvidenceSection from '../components/MarketEvidenceSection';
 import MarketVoicesSection from '../components/MarketVoicesSection';
@@ -260,33 +258,29 @@ function SceneHero({ onUnderstandMore }: { onUnderstandMore: () => void }) {
   );
 }
 
-// ─── Capitulo 5: O AGENTE E A AGENDA ─────────────────────────────────────────
-// Um caminho so. Antes eram tres saidas competindo — cartao de oferta, chat e
-// FAB — e a conversao real era um link de WhatsApp com dados parciais. A oferta
-// vira faixa de contexto acima do agente: informacao disponivel, sem disputar
-// o clique.
+// ─── Capitulo 5: O AGENTE ─────────────────────────────────────────────────────
+// Uma coisa so nesta dobra: o chat. Ate ago/2026 havia titulo, subtitulo e a
+// faixa de oferta de quatro colunas empilhados acima do agente — tres blocos
+// de texto disputando a atencao com o unico elemento que converte, e todos
+// repetindo o que os capitulos anteriores ja disseram. Sobrou a frase que
+// explica o que o chat faz, e o chat.
 function SceneCTA() {
   return (
     <div className="w-full max-w-4xl mx-auto px-2 md:px-4 flex flex-col justify-center items-center text-center pointer-events-auto">
-      <div className="w-full mb-4 md:mb-5">
-        <h2 className="reading-surface text-2xl md:text-5xl font-serif text-slate-900 mb-2 px-4 py-2 inline-block">
-          Trinta minutos, <span className="italic font-normal text-slate-500">e você sai com um mapa.</span>
-        </h2>
-        {/* reading-surface e obrigatorio aqui: nesta dobra a onda ja fechou
-            sobre a camera e o fundo do canvas e azul profundo. Sem a superficie
-            clara, este e o unico texto do capitulo que ficaria escuro sobre
-            escuro — os demais ja vivem dentro de cartoes de vidro. */}
-        <p className="reading-surface inline-block px-4 py-2 text-slate-700 text-[13px] md:text-base max-w-xl mx-auto font-sans leading-relaxed">
-          Conte ao agente o que sua empresa faz. Ele já sabe o que você respondeu até aqui, e marca
-          a sessão comigo.
-        </p>
-      </div>
+      {/* reading-surface e obrigatorio aqui: nesta dobra a onda ja fechou
+          sobre a camera e o fundo do canvas e azul profundo. Sem a superficie
+          clara, este e o unico texto do capitulo que ficaria escuro sobre
+          escuro — o resto ja vive dentro do cartao de vidro do agente. */}
+      <h2 className="reading-surface inline-block px-4 py-2 mb-3 md:mb-4 max-w-2xl font-sans text-[13px] md:text-lg text-slate-700 leading-relaxed">
+        Converse com o agente e saia com uma{' '}
+        <span className="font-semibold text-slate-900">reunião de 15 minutos</span> marcada com o
+        especialista, para falar das possibilidades na sua operação.
+      </h2>
 
-      <div className="w-full mb-4">
-        <OfferSection />
-      </div>
-
-      <div className="w-full h-[78svh] lg:h-auto lg:min-h-[560px]">
+      {/* O chat ocupa a dobra inteira menos o cabecalho fixo, a frase e os
+          respiros do capitulo (~290px). O teto evita que ele estique demais em
+          telas altas; o piso evita que ele sufoque em telas baixas. */}
+      <div className="w-full h-[calc(100svh-280px)] min-h-[380px] lg:h-[calc(100svh-290px)] lg:min-h-[420px] lg:max-h-[680px]">
         <AIChatAgent />
       </div>
     </div>

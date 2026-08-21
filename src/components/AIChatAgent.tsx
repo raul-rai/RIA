@@ -151,7 +151,7 @@ export default function AIChatAgent({ webhookUrl = config.chatWebhook }: AIChatA
   const bookingFallbackMessage = useMemo(() => {
     if (!qualification) return '';
     return [
-      'Olá Raul, completei a qualificação no site e quero marcar a sessão de 30 minutos.',
+      'Olá Raul, completei a qualificação no site e quero marcar a sessão de 15 minutos.',
       '',
       `Empresa: ${qualification.company}`,
       `E-mail: ${qualification.email}`,

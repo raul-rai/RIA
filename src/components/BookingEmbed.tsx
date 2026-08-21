@@ -95,12 +95,12 @@ export default function BookingEmbed({ name, email, notes, fallbackMessage }: Bo
       <div className="glass-rail flex items-center gap-2 px-4 py-2.5 border-b border-slate-900/10">
         <CalendarCheck size={14} className="text-accent" />
         <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-slate-600">
-          Escolha o horário — 30 minutos
+          Escolha o horário — 15 minutos
         </span>
       </div>
       <iframe
         src={url}
-        title="Agenda da sessão estratégica de 30 minutos"
+        title="Agenda da sessão estratégica de 15 minutos"
         onLoad={handleLoad}
         onError={() => setFailed(true)}
         className="w-full h-[420px] border-0"

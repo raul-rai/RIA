@@ -11,7 +11,7 @@ export const WHATSAPP_URL_HERO = `https://wa.me/${WHATSAPP_PHONE}?text=${encodeU
 
 /** FinalCTA button — clear booking intent */
 export const WHATSAPP_URL_CTA = `https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(
-  'Olá Raul, quero agendar minha sessão estratégica de 30 minutos.'
+  'Olá Raul, quero agendar minha sessão estratégica de 15 minutos.'
 )}`;
 
 /** Floating FAB — subtle entry point for browsing visitors */
