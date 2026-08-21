@@ -155,7 +155,7 @@ function SceneHero({ onUnderstandMore }: { onUnderstandMore: () => void }) {
       >
         <Target className="text-accent animate-pulse" size={16} />
         <span className="text-slate-900 font-sans tracking-[0.1em] md:tracking-[0.15em] uppercase text-[10px] md:text-xs font-black whitespace-nowrap">
-          {ref && REF_LABEL[ref] ? `Estratégia para ${REF_LABEL[ref]}` : 'Conhecimento relevante para todo empresário'}
+          {ref && REF_LABEL[ref] ? `Estratégia para ${REF_LABEL[ref]}` : 'IA não é uma onda, é um TSUNAMI!'}
         </span>
       </motion.div>
 
