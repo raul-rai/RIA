@@ -130,8 +130,16 @@ export default function FiveFronts() {
         })}
       </div>
 
-      <div className="text-center mt-6 md:mt-8">
-        <p className="text-sm md:text-base text-slate-800 font-semibold mb-4">
+      {/*
+        Contagem e CTA na MESMA linha a partir do sm.
+
+        Empilhados, o sexto cartao empurrava o botao para 939px numa viewport de
+        800: o CTA que converte esta dobra ficava abaixo do ponto de snap, e o
+        visitante precisava rolar contra o snap para achar o que a dobra inteira
+        pede que ele faca. Lado a lado, o bloco cabe.
+      */}
+      <div className="mt-4 md:mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
+        <p className="text-center text-sm md:text-base text-slate-800 font-semibold">
           Você cobre <span className="font-serif text-lg md:text-2xl">{marcadas}</span> de {FRONTS.length}.
           {faltam > 0 && (
             <>
@@ -141,10 +149,13 @@ export default function FiveFronts() {
         </p>
         <button
           onClick={() => {
+            /* Valor mantido apesar da volta para seis frentes: a home publicada
+               emite 'five_fronts' desde sempre, e o nome e interno enquanto o
+               corte na serie historica do funil nao seria. */
             track('cta_click', { location: 'five_fronts' });
             requestIntent('fronts-agenda');
           }}
-          className="px-6 py-3.5 bg-slate-900 text-white rounded-xl font-black text-xs uppercase tracking-widest hover:bg-accent active:scale-95 transition-all inline-flex items-center gap-2 shadow-lg"
+          className="shrink-0 px-6 py-3.5 bg-slate-900 text-white rounded-xl font-black text-xs uppercase tracking-widest hover:bg-accent active:scale-95 transition-all inline-flex items-center gap-2 shadow-lg"
         >
           Montar minha pauta <ArrowRight size={14} />
         </button>
