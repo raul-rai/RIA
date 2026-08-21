@@ -1,4 +1,4 @@
-import { Fragment, useCallback, useEffect, useMemo } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
 import { motion, useScroll, useMotionValue, useSpring } from 'motion/react';
 import { ArrowRight, Target, ChevronDown } from 'lucide-react';
 import DataWave3D from '../components/DataWave3D';
@@ -54,8 +54,25 @@ function MagneticButton({ children, onClick, className }: { children: React.Reac
 // ─── Capitulo 0: A AMEACA ────────────────────────────────────────────────────
 function SceneHero({ onUnderstandMore }: { onUnderstandMore: () => void }) {
   const { requestIntent } = useAgentIntent();
-  const searchParams = new URLSearchParams(window.location.search);
-  const ref = searchParams.get('ref')?.toLowerCase();
+  /**
+   * O segmento da campanha entra DEPOIS da montagem, nao durante o render.
+   *
+   * Este era o unico acesso a `window` no corpo de um render em toda a
+   * aplicacao (todo o resto ja vivia dentro de useEffect), e por causa dele o
+   * prerender do build quebrava com "window is not defined". Mas so guardar
+   * com `typeof window` nao bastava: o HTML prerenderizado e sempre a
+   * variante generica, e se o primeiro render do cliente ja lesse
+   * `?ref=industria` a hidratacao divergiria do servidor justamente no H1.
+   *
+   * Entao o primeiro render do cliente e identico ao do servidor — generico — e
+   * a variante de campanha entra no efeito seguinte. Custo: um quadro com o
+   * titulo generico em URLs de campanha. Ganho: o crawler recebe sempre a
+   * pagina canonica, e a hidratacao nunca briga com ela.
+   */
+  const [ref, setRef] = useState<string | undefined>(undefined);
+  useEffect(() => {
+    setRef(new URLSearchParams(window.location.search).get('ref')?.toLowerCase());
+  }, []);
 
   /**
    * Cada palavra anima sozinha, mas o espaco entre elas e um no de texto real —

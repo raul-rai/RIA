@@ -5,9 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite --port=3000 --host=0.0.0.0",
-    "build": "vite build",
+    "build": "vite build && vite build --ssr src/entry-server.tsx --outDir dist-ssr && node scripts/prerender.js",
     "preview": "vite preview",
-    "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\"",
+    "clean": "node -e \"['dist','dist-ssr'].forEach(d=>require('fs').rmSync(d,{recursive:true,force:true}))\"",
     "lint": "tsc --noEmit",
     "test": "vitest run"
   },
