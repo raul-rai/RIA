@@ -8,6 +8,7 @@ import { config } from '../config';
 import { useVulnerability } from '../context/VulnerabilityContext';
 import { useAgentIntent } from '../context/AgentIntentContext';
 import { whatsappWithMessage } from '../constants/links';
+import { SOCIAL_NETWORKS } from '../constants/socialNetworks';
 import { track } from '../lib/analytics';
 
 /** Qual instrumento produziu o laudo. Os dois medem coisas diferentes e a
@@ -158,6 +159,8 @@ export default function PotentialDiagnostic() {
     if (scrollTimer.current) clearTimeout(scrollTimer.current);
     scrollTimer.current = setTimeout(() => requestIntent('diagnostic-no-website'), NO_WEBSITE_SCROLL_DELAY_MS);
   };
+
+  const marcadas = socialChecks.filter(Boolean).length;
 
   const handleAnalyze = async () => {
     if (!url || !url.includes('.')) {
@@ -335,44 +338,18 @@ export default function PotentialDiagnostic() {
             Seu site sobrevive à <span className="italic font-normal text-slate-500">era dos motores de IA?</span>
           </h2>
           <p className="text-slate-600 text-[13px] md:text-sm max-w-xl mx-auto font-light leading-snug">
-            Se sua empresa não possui site ou possui um site com SEO deficiente, a IA não conseguirá
-            recomendá-la aos clientes.
+            Se sua empresa não possui um site otimizado, com performance, SEO e GEO, a IA não
+            conseguirá recomendá-la aos clientes.
           </p>
-        </div>
-
-        {/* Tem site / nao tem site.
-            min-h-11 (44px) e a altura minima de alvo tocavel do iOS; o Android
-            pede 48dp. Com py-2 estes dois botoes tinham 34px e erravam o toque
-            justamente na escolha que abre o diagnostico. */}
-        <div className="max-w-2xl mx-auto mb-6 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-2.5 sm:gap-3">
-          <button
-            onClick={() => {
-              if (scrollTimer.current) clearTimeout(scrollTimer.current);
-              setNoWebsite(false);
-            }}
-            aria-pressed={!hasNoWebsite}
-            className={`px-4 py-3 min-h-12 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
-              !hasNoWebsite
-                ? 'bg-slate-900 text-white border border-slate-900 shadow-sm'
-                : 'glass-inset glass-interactive text-slate-600'
-            }`}
-          >
-            <Globe size={14} className="shrink-0" />
-            <span>Possuo um site para analisar</span>
-          </button>
-
-          <button
-            onClick={declareNoWebsite}
-            aria-pressed={hasNoWebsite}
-            className={`px-4 py-3 min-h-12 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
-              hasNoWebsite
-                ? 'bg-red-600 text-white border border-red-600 shadow-md shadow-red-500/20'
-                : 'glass-inset glass-red glass-interactive text-red-700'
-            }`}
-          >
-            <AlertTriangle size={14} className="shrink-0" />
-            <span>Não tenho um site ainda</span>
-          </button>
+          {/* O custo sai do paragrafo e vira objeto proprio: e a unica frase
+              desta dobra que nomeia perda, e diluida no corpo de texto ela
+              desaparece. Pilula vermelha, nao caixa-alta no meio da frase. */}
+          <p className="glass-chip glass-red inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full mt-3">
+            <AlertTriangle size={12} className="text-red-600 shrink-0" />
+            <span className="text-red-700 text-[10px] md:text-[11px] font-black uppercase tracking-[0.14em]">
+              Você deixa dinheiro na mesa!
+            </span>
+          </p>
         </div>
 
         {hasNoWebsite ? (
@@ -407,13 +384,31 @@ export default function PotentialDiagnostic() {
               <span>Falar com o agente agora</span>
               <ArrowRight size={14} />
             </button>
+            <button
+              type="button"
+              onClick={() => {
+                if (scrollTimer.current) clearTimeout(scrollTimer.current);
+                setNoWebsite(false);
+              }}
+              className="block mx-auto mt-4 min-h-11 px-2 text-[11px] font-bold text-red-700/70 hover:text-red-900 underline underline-offset-4 decoration-red-300 transition-colors"
+            >
+              Na verdade, tenho um site para analisar
+            </button>
           </motion.div>
         ) : !result && !failure ? (
           <div className="max-w-2xl mx-auto mb-8">
+            <label
+              htmlFor="ria-checkup-url"
+              className="flex items-center justify-center gap-2 mb-3 text-slate-800 text-sm md:text-base font-bold"
+            >
+              <Search size={15} className="text-accent shrink-0" />
+              <span>Faça um checkup no seu site:</span>
+            </label>
             <div className="glass-field relative flex flex-col md:flex-row gap-2 p-1.5 rounded-xl">
               <div className="relative flex-1">
                 <Globe className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
                 <input
+                  id="ria-checkup-url"
                   type="text"
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
@@ -452,6 +447,16 @@ export default function PotentialDiagnostic() {
                   Rodando Lighthouse e varredura semântica no seu domínio. Pode levar até 30 segundos.
                 </p>
               </motion.div>
+            )}
+
+            {!isAnalyzing && (
+              <button
+                type="button"
+                onClick={declareNoWebsite}
+                className="block mx-auto mt-3 min-h-11 px-2 text-[11px] font-semibold text-slate-500 hover:text-red-600 underline underline-offset-4 decoration-slate-300 transition-colors"
+              >
+                Ainda não tenho site
+              </button>
             )}
           </div>
         ) : failure ? (
@@ -616,42 +621,56 @@ export default function PotentialDiagnostic() {
           )
         )}
 
-        {/* Presenca em redes */}
+        {/* Presenca em redes.
+            Ate ago/2026 eram duas afirmacoes longas e compostas ("perfil ativo
+            E atualizado nas redes (Instagram/LinkedIn)"): o visitante que so
+            posta no Instagram nao tinha resposta verdadeira, e a caixa media
+            duas coisas de uma vez. Agora a pergunta e uma so, e cada rede e um
+            alvo — a resposta vira informacao, nao aproximacao. */}
         <div className="mt-6 pt-6 border-t border-slate-900/10 max-w-2xl mx-auto">
-          <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 mb-3 text-center flex items-center justify-center gap-2">
-            <Share2 size={14} className="text-accent" />
-            <span>Presença e tração nas redes sociais</span>
+          <h4 className="text-sm md:text-base font-bold text-slate-800 mb-1 text-center flex items-center justify-center gap-2">
+            <Share2 size={15} className="text-accent shrink-0" />
+            <span>Você consegue estar presente hoje em quais redes sociais?</span>
           </h4>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {[
-              { label: 'Possuo perfil ativo e atualizado nas redes (Instagram/LinkedIn)', index: 0 },
-              { label: 'Tenho canal/link direto para atendimento via IA ou WhatsApp', index: 1 },
-            ].map((item) => {
-              const checked = socialChecks[item.index];
+          <p className="text-[11px] text-slate-500 text-center mb-3.5">
+            {marcadas === 0
+              ? 'Marque todas em que sua empresa já publica.'
+              : `${marcadas} de ${SOCIAL_NETWORKS.length} marcadas`}
+          </p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 md:gap-2.5">
+            {SOCIAL_NETWORKS.map((rede, index) => {
+              const checked = socialChecks[index] ?? false;
+              const { Icon } = rede;
               return (
                 <button
-                  key={item.index}
+                  key={rede.id}
                   type="button"
                   aria-pressed={checked}
-                  onClick={() => { toggleSocialCheck(item.index); track('operational_check', { kind: 'social', index: item.index }); }}
-                  className={`glass-inset p-3 rounded-xl cursor-pointer flex items-center gap-2.5 text-left ${
+                  onClick={() => { toggleSocialCheck(index); track('operational_check', { kind: 'social', index, network: rede.id }); }}
+                  className={`glass-inset min-h-12 px-2.5 py-2.5 rounded-xl cursor-pointer flex items-center gap-2 text-left ${
                     checked
                       ? 'glass-emerald text-emerald-950'
                       : 'glass-interactive text-slate-700'
                   }`}
                 >
-                  <div
+                  <span
                     className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 ${
                       checked ? 'bg-emerald-600 border-emerald-600 text-white' : 'border-slate-400/70 bg-white/70'
                     }`}
                   >
                     {checked && <CheckCircle2 size={12} />}
-                  </div>
-                  <span className="text-xs font-semibold leading-snug">{item.label}</span>
+                  </span>
+                  <Icon size={14} className={`shrink-0 ${checked ? 'text-emerald-700' : 'text-slate-500'}`} />
+                  <span className="text-xs font-semibold leading-snug truncate">{rede.label}</span>
                 </button>
               );
             })}
           </div>
+          {/* Fecho do cartao. Serifada e em corpo maior porque e a unica linha
+              daqui que nao pede acao — ela assina o que o checklist mostrou. */}
+          <p className="mt-5 pt-4 border-t border-slate-900/10 text-center font-serif italic text-slate-700 text-base md:text-lg">
+            Quem não é visto não é lembrado!
+          </p>
         </div>
       </div>
     </div>
