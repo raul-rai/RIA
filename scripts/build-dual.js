@@ -1,10 +1,26 @@
-// Build combinado: home congelada em `/`, versão nova em `/v2`.
+// Build da home publicada, a partir de um commit congelado.
 //
 // POR QUE ISTO EXISTE
 //
-// A remediação da auditoria de ago/2026 reescreveu boa parte do site. Em vez de
-// trocar a home de uma vez, ela vai para `/v2` para avaliação, e a home fica
-// como está até a decisão de promover.
+// A home NAO e construida do HEAD: ela sai de um commit escolhido a mao, e quem
+// a congela e o git — que e para isso que ele serve. Isso existe porque o codigo
+// em desenvolvimento anda mais rapido do que a decisao de publicar.
+//
+// O /v2 FOI REMOVIDO (22/08/2026)
+//
+// Ate aqui este script publicava DUAS versoes: a home congelada em `/` e o HEAD
+// em `/v2`, para avaliacao lado a lado antes de promover. O /v2 existia para
+// responder uma pergunta — qual versao do site vale — e a pergunta foi
+// respondida: sao seis frentes, e a home publicada ja as vende.
+//
+// Mantido depois disso, o /v2 so servia para confundir: duas URLs do mesmo
+// negocio, com numeros diferentes de frentes, e a certeza de que uma das duas
+// estaria sempre desatualizada. Rascunho que sobrevive a propria decisao vira
+// armadilha.
+//
+// O nome do arquivo continua build-dual DE PROPOSITO: renomear quebraria o
+// `npm run build:dual` que outra sessao deste repositorio possa estar chamando.
+// E um nome grande demais para o que o script faz hoje.
 //
 // A tentação seria forkar o código — duplicar componentes, contextos e conteúdo
 // num diretório `v1/`. Seria caro e permanente: `lib/wave-scene.ts`, por
@@ -88,7 +104,7 @@ process.on('exit', restaurar);
 process.on('SIGINT', () => process.exit(130));
 
 try {
-  console.log(`\n═══ 1/3 · Home congelada ═══`);
+  console.log(`\n═══ 1/2 · Home congelada ═══`);
   console.log(`    ${legacyShort} — ${legacyAssunto}\n`);
 
   run('git', ['checkout', '--quiet', '--detach', legacySha]);
@@ -125,27 +141,19 @@ try {
   console.log(`    home -> dist-site/`);
 
   run('git', ['checkout', '--quiet', voltarPara]);
-
-  console.log(`\n═══ 2/3 · Versão nova em /v2 ═══\n`);
-  const envV2 = { SITE_BASE: '/v2/', PRERENDER_OUT: 'dist-v2' };
-  vite(['build', '--outDir', 'dist-v2'], envV2);
-  vite(['build', '--ssr', 'src/entry-server.tsx', '--outDir', 'dist-ssr'], envV2);
-  run(process.execPath, ['scripts/prerender.js'], { env: { ...process.env, ...envV2 } });
-
-  cpSync(resolve(root, 'dist-v2'), resolve(outDir, 'v2'), { recursive: true });
-  console.log(`    /v2  -> dist-site/v2/`);
 } finally {
   restaurar();
 }
 
-console.log(`\n═══ 3/3 · Roteamento ═══`);
+console.log(`\n═══ 2/2 · Roteamento ═══`);
 
 /**
- * Duas SPAs no mesmo domínio, cada uma com o próprio fallback.
+ * Uma SPA, um fallback.
  *
- * A ordem importa: as regras de /v2 vêm ANTES da coringa, senão uma rota
- * interna como /v2/privacidade cairia no index.html da home e o visitante
- * veria a versão antiga com a URL da nova.
+ * Enquanto existia o /v2 havia duas, e a ordem das regras importava. Com uma so,
+ * qualquer caminho que nao seja arquivo real cai no index.html — /v2 inclusive,
+ * que passa a servir a home em vez de 404. E de proposito: quem tiver a URL
+ * antiga salva chega no site certo, em vez de numa parede.
  */
 writeFileSync(
   resolve(outDir, 'vercel.json'),
@@ -153,8 +161,6 @@ writeFileSync(
     {
       cleanUrls: true,
       rewrites: [
-        { source: '/v2', destination: '/v2/index.html' },
-        { source: '/v2/(.*)', destination: '/v2/index.html' },
         { source: '/(.*)', destination: '/index.html' },
       ],
     },
@@ -166,13 +172,12 @@ writeFileSync(
 /**
  * robots.txt da RAIZ.
  *
- * A home congelada nunca teve um. Com o site passando a ter duas versões, ele
- * precisa existir nem que seja para dizer uma coisa: /v2 está fora do índice.
- * As páginas de lá já saem com meta noindex; o Disallow é o cinto além do
- * suspensório, e economiza rastreamento antes de ele acontecer.
+ * A home congelada nunca teve um. Ele nasceu para dizer que /v2 estava fora do
+ * indice; com o /v2 removido, o Disallow saiu junto — bloquear um caminho que
+ * nao existe mais so ensina o crawler a desconfiar do arquivo.
  *
- * Sem isso, Google trataria home e /v2 como conteúdo duplicado do mesmo
- * negócio e escolheria sozinho qual mostrar.
+ * O arquivo continua existindo porque site sem robots.txt e um 404 a cada visita
+ * de crawler, e porque o sitemap merece um lugar declarado.
  */
 writeFileSync(
   resolve(outDir, 'robots.txt'),
@@ -182,17 +187,12 @@ writeFileSync(
     'User-agent: *',
     'Allow: /',
     '',
-    '# Versao em avaliacao — nao indexar. As paginas de /v2 tambem saem com',
-    '# <meta name="robots" content="noindex, nofollow">.',
-    'Disallow: /v2',
-    '',
   ].join('\n')
 );
 console.log('    vercel.json + robots.txt');
 
 // ─── Conferência ────────────────────────────────────────────────────────────
 const home = readFileSync(resolve(outDir, 'index.html'), 'utf-8');
-const v2 = readFileSync(resolve(outDir, 'v2/index.html'), 'utf-8');
 
 const check = (ok, label) => console.log(`    ${ok ? '✓' : '✗'} ${label}`);
 console.log('\n═══ Conferência ═══');
@@ -200,11 +200,8 @@ check(
   homePrerender ? !home.includes('<div id="root"></div>') : home.includes('<div id="root"></div>'),
   homePrerender ? 'home: prerenderizada, com conteúdo no HTML' : 'home: SPA (ref sem prerender)'
 );
-check(!v2.includes('<div id="root"></div>'), '/v2: prerenderizado, com conteúdo no HTML');
-check(/content="noindex/.test(v2), '/v2: noindex');
 check(!/content="noindex/.test(home), 'home: indexável');
-check(v2.includes('/v2/assets/'), '/v2: assets com o prefixo certo');
-check(existsSync(resolve(outDir, 'v2/privacidade.html')), '/v2/privacidade existe');
+check(!existsSync(resolve(outDir, 'v2')), 'nenhum /v2 na saida');
 
 // ─── Saída pré-construída da Vercel (Build Output API v3) ───────────────────
 //
@@ -224,11 +221,11 @@ cpSync(outDir, resolve(vercelOut, 'static'), { recursive: true });
  * Roteamento em formato Build Output API.
  *
  * `handle: filesystem` primeiro: arquivo real sempre ganha do fallback. Sem
- * ele, /v2/assets/index.js cairia no index.html e o navegador receberia HTML
- * onde esperava JavaScript.
+ * ele, /assets/index.js cairia no index.html e o navegador receberia HTML onde
+ * esperava JavaScript.
  *
- * Depois, cada SPA com o próprio fallback — /v2 ANTES da coringa, senão uma
- * rota interna do /v2 abriria a home antiga sob a URL da nova.
+ * Depois, a coringa — a unica regra que sobrou. Sem o /v2 nao ha mais duas SPAs
+ * disputando prefixo.
  */
 writeFileSync(
   resolve(vercelOut, 'config.json'),
@@ -236,11 +233,10 @@ writeFileSync(
     {
       version: 3,
       routes: [
-        // cleanUrls do /v2, explícito porque a saída pré-construída não herda
+        // cleanUrls da home, explícito porque a saída pré-construída não herda
         // o cleanUrls do vercel.json do projeto.
-        { src: '^/v2/privacidade/?$', dest: '/v2/privacidade.html' },
+        { src: '^/privacidade/?$', dest: '/privacidade.html' },
         { handle: 'filesystem' },
-        { src: '^/v2(?:/.*)?$', dest: '/v2/index.html' },
         { src: '/.*', dest: '/index.html' },
       ],
     },
@@ -265,6 +261,5 @@ vite(['build'], { SITE_BASE: '/' });
 vite(['build', '--ssr', 'src/entry-server.tsx', '--outDir', 'dist-ssr'], { SITE_BASE: '/' });
 run(process.execPath, ['scripts/prerender.js'], { env: { ...process.env, SITE_BASE: '/' } });
 
-console.log(`\n✓ Site combinado em dist-site/`);
-console.log(`    /     home congelada em ${legacyShort}`);
-console.log(`    /v2   versão nova, prerenderizada e noindex\n`);
+console.log(`\n✓ Site em dist-site/`);
+console.log(`    /     home congelada em ${legacyShort}\n`);
