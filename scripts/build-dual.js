@@ -233,9 +233,10 @@ writeFileSync(
     {
       version: 3,
       routes: [
-        // cleanUrls da home, explícito porque a saída pré-construída não herda
-        // o cleanUrls do vercel.json do projeto.
-        { src: '^/privacidade/?$', dest: '/privacidade.html' },
+        // Sem regra de cleanUrls: a home congelada NAO prerenderiza
+        // /privacidade — a rota e resolvida pela SPA depois do fallback. Se
+        // um ref futuro passar a prerenderizar essa pagina, a regra
+        // `^/privacidade/?$` precisa voltar aqui.
         { handle: 'filesystem' },
         { src: '/.*', dest: '/index.html' },
       ],
