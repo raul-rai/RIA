@@ -188,6 +188,18 @@ export default function PotentialDiagnostic() {
     setProgress(0);
   };
 
+  /** Volta ao formulario com o campo limpo, para medir outro dominio.
+   *
+   *  Nao desfaz `setWebsiteAuditScore`: a nota ja medida continua valendo no
+   *  indice de vulnerabilidade ate que uma nova varredura a substitua. Zerar
+   *  aqui cobraria do visitante uma medicao que ele ainda nao fez — e derrubaria
+   *  o indice por causa de uma intencao, nao de um resultado. */
+  const analyzeAnother = () => {
+    reset();
+    setUrl('');
+    track('diagnostic_restart');
+  };
+
   /** Guardado para nao rolar a pagina depois que o componente saiu de cena. */
   const scrollTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => () => { if (scrollTimer.current) clearTimeout(scrollTimer.current); }, []);
@@ -529,53 +541,60 @@ export default function PotentialDiagnostic() {
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4 mb-6"
+              className="flex flex-col gap-3 md:gap-4 mb-6"
             >
-              {[
-                result.dimensoes.D1,
-                result.dimensoes.D2,
-                result.dimensoes.D3,
-                result.dimensoes.D4,
-                result.dimensoes.D5,
-              ].map((m, i) => {
-                const icons = [Zap, Cpu, Globe, Search, Bot];
-                const Icon = icons[i] || Activity;
-                const tone =
-                  m.pct < 50
-                    ? { text: 'text-red-600', bar: 'bg-red-500' }
-                    : m.pct < 80
-                      ? { text: 'text-amber-600', bar: 'bg-amber-500' }
-                      : { text: 'text-emerald-600', bar: 'bg-emerald-500' };
+              {/* As cinco dimensoes, no proprio grid.
+                  Ate aqui elas dividiam um unico grid de cinco colunas com o
+                  veredito e os Core Web Vitals, e esses dois ocupavam quatro:
+                  sobrava uma coluna vazia a direita em duas linhas seguidas e o
+                  laudo perdia o retangulo. Cada bloco agora tem a largura toda. */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4">
+                {[
+                  result.dimensoes.D1,
+                  result.dimensoes.D2,
+                  result.dimensoes.D3,
+                  result.dimensoes.D4,
+                  result.dimensoes.D5,
+                ].map((m, i) => {
+                  const icons = [Zap, Cpu, Globe, Search, Bot];
+                  const Icon = icons[i] || Activity;
+                  const tone =
+                    m.pct < 50
+                      ? { text: 'text-red-600', bar: 'bg-red-500' }
+                      : m.pct < 80
+                        ? { text: 'text-amber-600', bar: 'bg-amber-500' }
+                        : { text: 'text-emerald-600', bar: 'bg-emerald-500' };
 
-                return (
-                  <div
-                    key={i}
-                    className="glass-inset rounded-xl p-3 md:p-4 flex items-center md:flex-col gap-2.5 md:gap-3 relative"
-                  >
-                    <div className="glass-raised p-1.5 rounded-lg shrink-0 flex items-center justify-between w-full md:w-auto">
-                      <Icon size={14} className={tone.text} />
-                      {m.labelExtra && (
-                        <span className="glass-inset glass-emerald inline-flex items-center gap-1 text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-full text-emerald-800">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
-                          {m.labelExtra}
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex-1 md:text-center">
-                      <div className="text-xl md:text-2xl font-serif text-slate-900 font-bold mb-0.5">{m.pct}%</div>
-                      <div className="text-[10px] md:text-xs text-slate-600 uppercase tracking-wider font-bold leading-tight">
-                        {m.nome}
+                  return (
+                    <div
+                      key={i}
+                      className="glass-inset rounded-xl p-3 md:p-4 flex items-center md:flex-col gap-2.5 md:gap-3 relative"
+                    >
+                      <div className="glass-raised p-1.5 rounded-lg shrink-0 flex items-center justify-between w-full md:w-auto">
+                        <Icon size={14} className={tone.text} />
+                        {m.labelExtra && (
+                          <span className="glass-inset glass-emerald inline-flex items-center gap-1 text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-full text-emerald-800">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
+                            {m.labelExtra}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex-1 md:text-center">
+                        <div className="text-xl md:text-2xl font-serif text-slate-900 font-bold mb-0.5">{m.pct}%</div>
+                        <div className="text-[10px] md:text-xs text-slate-600 uppercase tracking-wider font-bold leading-tight">
+                          {m.nome}
+                        </div>
+                      </div>
+                      <div className="hidden md:block h-1.5 w-full bg-slate-900/15 rounded-full overflow-hidden">
+                        <div className={`h-full ${tone.bar}`} style={{ width: `${m.pct}%` }} />
                       </div>
                     </div>
-                    <div className="hidden md:block h-1.5 w-full bg-slate-900/15 rounded-full overflow-hidden">
-                      <div className={`h-full ${tone.bar}`} style={{ width: `${m.pct}%` }} />
-                    </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
 
-              <div className="glass-inset glass-accent col-span-1 md:col-span-2 lg:col-span-4 p-4 rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div className="flex items-center gap-3 w-full md:w-auto">
+              <div className="glass-inset glass-accent p-4 rounded-xl">
+                <div className="flex items-start gap-3">
                   <div
                     className={`w-10 h-10 rounded-full border-2 flex items-center justify-center font-serif text-lg font-bold shrink-0 bg-white/75 ${
                       result.score < 50
@@ -587,7 +606,7 @@ export default function PotentialDiagnostic() {
                   >
                     {Math.round(result.score)}
                   </div>
-                  <div>
+                  <div className="flex-1 min-w-0">
                     <h4 className="text-slate-900 font-bold text-xs md:text-sm uppercase tracking-widest leading-none mb-1.5">
                       Status:{' '}
                       <span
@@ -606,27 +625,32 @@ export default function PotentialDiagnostic() {
                     <p className="text-slate-400 text-[9px] md:text-[10px] uppercase tracking-[0.15em] font-bold mt-1.5">
                       {SOURCE_LABEL[result.source]}
                     </p>
-                    {/* Ponte narrativa: o site que acabou de ser avaliado e a
-                        primeira das seis frentes. O agente mostra as outras. */}
-                    <p className="text-slate-700 text-[11px] md:text-xs leading-snug font-semibold mt-1.5">
-                      O site é a primeira das seis frentes. O agente te mostra as outras cinco.
-                    </p>
                   </div>
                 </div>
-                <button
-                  onClick={() => {
-                    track('cta_click', { location: 'diagnostic_result' });
-                    requestIntent('diagnostic-result');
-                  }}
-                  className="px-5 py-3 bg-slate-900 text-white rounded-lg text-xs font-black uppercase tracking-widest hover:bg-accent transition-all flex items-center gap-2 shadow-md shrink-0"
-                >
-                  <span>Falar com o agente</span>
-                  <ArrowRight size={14} />
-                </button>
+                {/* Ponte narrativa e acao na mesma linha, separadas por um filete.
+                    Ate aqui a frase era a quarta linha empilhada na coluna da
+                    esquerda, e o botao — 40px de altura contra 113px de texto —
+                    flutuava no meio do card sem nada que o ancorasse, deixando o
+                    canto inferior direito oco. */}
+                <div className="mt-4 pt-3.5 border-t border-slate-900/10 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-5">
+                  <p className="flex-1 text-slate-700 text-[11px] md:text-xs leading-snug font-semibold">
+                    O site é a primeira das seis frentes. O agente te mostra as outras cinco.
+                  </p>
+                  <button
+                    onClick={() => {
+                      track('cta_click', { location: 'diagnostic_result' });
+                      requestIntent('diagnostic-result');
+                    }}
+                    className="w-full sm:w-auto px-5 py-3 bg-slate-900 text-white rounded-lg text-xs font-black uppercase tracking-widest hover:bg-accent transition-all flex items-center justify-center gap-2 shadow-md shrink-0"
+                  >
+                    <span>Falar com o agente</span>
+                    <ArrowRight size={14} />
+                  </button>
+                </div>
               </div>
 
               {result.webVitals && (
-                <div className="glass-inset col-span-1 md:col-span-2 lg:col-span-4 p-4 rounded-xl">
+                <div className="glass-inset p-4 rounded-xl">
                   <h5 className="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-700 mb-2.5 flex items-center gap-1.5">
                     <Activity size={12} className="text-accent" />
                     <span>Métricas em Tempo Real (Core Web Vitals)</span>
@@ -641,6 +665,19 @@ export default function PotentialDiagnostic() {
                   </div>
                 </div>
               )}
+
+              {/* Saida para uma segunda medicao.
+                  Com o laudo na tela o formulario sai de cena, e ate aqui nao
+                  havia caminho de volta: quem quisesse medir outro dominio
+                  precisava recarregar a pagina inteira e perder o laudo. */}
+              <button
+                type="button"
+                onClick={analyzeAnother}
+                className="glass-raised glass-interactive mx-auto mt-1 px-5 py-3 text-slate-800 rounded-xl text-xs font-black uppercase tracking-widest inline-flex items-center justify-center gap-2"
+              >
+                <RotateCcw size={14} />
+                <span>Analisar outro site</span>
+              </button>
             </motion.div>
           )
         )}

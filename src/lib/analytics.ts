@@ -17,6 +17,8 @@ export type RiaEvent =
   | 'diagnostic_failed'
   /** Visitante declarou que ainda nao tem site — indice 101%, rota curta ao agente. */
   | 'diagnostic_no_website'
+  /** Visitante pediu uma segunda medicao: o laudo sai de cena e o formulario volta. */
+  | 'diagnostic_restart'
   | 'agent_message_sent'
   | 'agent_replied'
   | 'agent_failed'
