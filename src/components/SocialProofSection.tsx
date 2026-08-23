@@ -3,15 +3,27 @@ import { ShieldAlert } from 'lucide-react';
 import VideoModal from './VideoModal';
 import AuthorityAccordion from './AuthorityAccordion';
 import AuthorityCard from './AuthorityCard';
-import { AUTHORITIES, type Authority } from '../content/authorities';
-import { useVulnerability } from '../context/VulnerabilityContext';
+import { AUTHORITIES, AUTHORITIES_DISCLAIMER, type Authority } from '../content/authorities';
 
 export default function SocialProofSection() {
   const [selected, setSelected] = useState<Authority | null>(null);
   // Um aberto por vez: a dobra tem 100svh e tres paineis abertos empurrariam o
   // rodape para fora da tela no celular.
   const [openIndex, setOpenIndex] = useState<number | null>(null);
-  const { awarenessChecks, toggleAwarenessCheck } = useVulnerability();
+
+  /**
+   * A marcacao e local de proposito, e NAO alimenta o Indice de
+   * Vulnerabilidade. O indice mede o que a empresa faz, nunca o que ela
+   * concorda — ver o cabecalho de VulnerabilityContext, que removeu o eixo de
+   * conscientizacao justamente por isso. Aqui a caixa e um gesto de leitura:
+   * marca o que a pessoa ja assimilou, e nao muda nenhuma nota.
+   */
+  const [awarenessChecks, setAwarenessChecks] = useState<boolean[]>(
+    () => AUTHORITIES.map(() => false)
+  );
+  const toggleAwarenessCheck = (index: number) =>
+    setAwarenessChecks((prev) => prev.map((v, i) => (i === index ? !v : v)));
+
   const vistos = awarenessChecks.filter(Boolean).length;
 
   return (
@@ -38,8 +50,8 @@ export default function SocialProofSection() {
       </div>
 
       {/* Mobile: acordeon. Desktop: os tres cartoes lado a lado.
-          A troca e por CSS — o estado das marcacoes vive no VulnerabilityContext,
-          entao girar o aparelho no meio do diagnostico nao perde nada. */}
+          A troca e por CSS e os dois leem o MESMO vetor de marcacoes, entao
+          girar o aparelho no meio da leitura nao perde nada. */}
       <div className="max-w-5xl mx-auto w-full">
         <div className="md:hidden">
           <AuthorityAccordion
@@ -65,6 +77,13 @@ export default function SocialProofSection() {
           ))}
         </div>
       </div>
+
+      {/* A negativa de endosso fica na propria dobra, embaixo dos cartoes, e
+          nao num rodape distante: quem le o nome e a fala de uma pessoa real
+          precisa ler no mesmo lugar que ela nao tem relacao com a RIA. */}
+      <p className="mt-6 md:mt-8 mx-auto max-w-3xl text-center text-[10px] md:text-[11px] text-slate-500 leading-relaxed">
+        {AUTHORITIES_DISCLAIMER}
+      </p>
 
       <VideoModal
         isOpen={!!selected}

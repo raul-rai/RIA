@@ -77,12 +77,15 @@ export const INTENTS: Record<IntentId, IntentDefinition> = {
     id: 'hero-cold',
     userMessage: (ctx) => {
       const abertura = ctx.ref ? REF_PHRASE[ctx.ref] : undefined;
-      // A frase abre com o texto LITERAL do botao e so entao se completa. E essa
+      // A frase ecoa o texto LITERAL do botao e so entao se completa. E essa
       // repeticao que faz o chat parecer continuacao do clique, e nao um
-      // formulario novo. Se o rotulo do CTA do hero mudar, esta string muda junto.
+      // formulario novo. Se o rotulo do CTA do hero mudar, esta string muda
+      // junto — e ja ficou dessincronizada uma vez: o botao virou "Pare de
+      // rasgar dinheiro" e aqui continuou "quero achar o meu gargalo", entao o
+      // lead abria a conversa dizendo algo que nunca leu na tela.
       return abertura
-        ? `${abertura} e quero achar o meu gargalo. Por onde eu começo?`
-        : 'Quero achar o meu gargalo. Por onde eu começo?';
+        ? `${abertura} e quero parar de rasgar dinheiro. Por onde eu começo?`
+        : 'Quero parar de rasgar dinheiro. Por onde eu começo?';
     },
     agentReply: () =>
       'Começa por saber onde está o vazamento. Na maioria das operações ele está em três lugares: lead que não é respondido, rotina que consome hora de gente cara, e decisão tomada no achismo. Me diz o que sua empresa faz — eu volto com qual dos três está te custando mais.',

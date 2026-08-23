@@ -1,4 +1,6 @@
 import { describe, it, expect } from 'vitest';
+import { readFileSync } from 'fs';
+import { resolve } from 'path';
 import { INTENTS, readCampaignRef, REF_LABEL, GREETING, NO_WEBSITE_GREETING } from '../src/content/intents';
 import type { IntentContext, IntentId } from '../src/content/intents';
 import { FRONTS } from '../src/content/fronts';
@@ -71,14 +73,38 @@ describe('INTENTS: as seis intencoes cobrem todos os estados', () => {
 describe('hero-cold: o lead frio, com ou sem campanha', () => {
   it('INT-05: sem ref, a frase nao menciona segmento', () => {
     expect(INTENTS['hero-cold'].userMessage(base)).toBe(
-      'Quero achar o meu gargalo. Por onde eu começo?'
+      'Quero parar de rasgar dinheiro. Por onde eu começo?'
     );
   });
 
   it('INT-06: com ref, o segmento abre a frase', () => {
     expect(INTENTS['hero-cold'].userMessage({ ...base, ref: 'industria' })).toBe(
-      'Tenho uma indústria e quero achar o meu gargalo. Por onde eu começo?'
+      'Tenho uma indústria e quero parar de rasgar dinheiro. Por onde eu começo?'
     );
+  });
+
+  /**
+   * A trava que faltava.
+   *
+   * INT-05 e INT-06 afirmam a string, mas nada as amarrava ao BOTAO. O rotulo
+   * do hero virou "Pare de rasgar dinheiro" e esta intencao ficou meses dizendo
+   * "quero achar o meu gargalo" — o lead abria a conversa afirmando algo que
+   * nunca leu na tela, e os dois testes continuaram verdes porque concordavam
+   * um com o outro. Aqui a fonte da verdade e o componente.
+   */
+  it('INT-25: a fala do lead ecoa o rotulo real do CTA do hero', () => {
+    const landing = readFileSync(
+      resolve(process.cwd(), 'src/pages/LandingPage.tsx'),
+      'utf-8'
+    );
+    const rotulo = landing.match(/<span>([^<]*rasgar[^<]*)<\/span>/i)?.[1];
+    expect(rotulo, 'CTA do hero nao encontrado em LandingPage.tsx').toBeTruthy();
+
+    // "Pare de rasgar dinheiro" -> o nucleo "rasgar dinheiro" precisa aparecer
+    // na fala. Comparar a frase inteira seria rigido demais: o botao e
+    // imperativo, a fala e em primeira pessoa.
+    const nucleo = rotulo!.toLowerCase().replace(/^pare de\s+/, '').trim();
+    expect(INTENTS['hero-cold'].userMessage(base).toLowerCase()).toContain(nucleo);
   });
 
   it('INT-24: a resposta para de ecoar a saudacao do balao 1', () => {

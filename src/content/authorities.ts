@@ -8,9 +8,20 @@ import type { LucideIcon } from 'lucide-react';
  * RIA, e o rodape da secao diz isso em voz alta. Nao edite as citacoes para
  * soarem mais favoraveis do que o original.
  *
- * A ordem deste array e o indice de `awarenessChecks` no VulnerabilityContext.
- * Mexer na ordem remarca a caixa errada; incluir ou remover um item exige mudar
- * o estado inicial do contexto (hoje `[false, false, false]`).
+ * O DISCLAIMER JA SUMIU DA TELA DUAS VEZES. Primeiro no commit 4b24851,
+ * classificado como `chore` — nada quebrou porque nada o testava, e este
+ * cabecalho seguiu afirmando por meses que "o rodape diz isso em voz alta"
+ * enquanto nao dizia. tests/authorities.test.ts nasceu dai. Sumiu de novo na
+ * reescrita dos cartoes de ago/2026, junto com a constante. Sao tres pessoas
+ * publicas reais, com nome, retrato e fala citada, numa pagina que vende
+ * consultoria: a negativa de endosso nao e enfeite, e o que separa citar de
+ * insinuar patrocinio.
+ *
+ * A ordem deste array e o indice do vetor de marcacoes em SocialProofSection,
+ * que e estado LOCAL daquele componente e nao alimenta o Indice de
+ * Vulnerabilidade. Mexer na ordem remarca a caixa errada; incluir ou remover
+ * um item nao exige mudar nada fora dali, porque o vetor e derivado de
+ * AUTHORITIES.map().
  */
 export interface Authority {
   name: string;
@@ -26,6 +37,17 @@ export interface Authority {
   startTime?: number;
   endTime?: number;
 }
+
+/**
+ * A negativa de endosso, no rodape da secao.
+ *
+ * Precisa ser frase de verdade, nao rotulo simbolico: "as opinioes sao dos
+ * autores" nao diz a quem elas NAO pertencem. O teste exige que ela negue
+ * endosso de forma explicita e que a secao de fato a renderize — porque no
+ * defeito original o texto existia no codigo e nao chegava a tela.
+ */
+export const AUTHORITIES_DISCLAIMER =
+  'São participações públicas sobre inteligência artificial em geral. Nenhuma delas é cliente, parceira ou endossante da RIA, e nenhuma tem relação com este site. Os trechos estão recortados para ir ao ponto; o vídeo completo abre no YouTube.';
 
 export const AUTHORITIES: Authority[] = [
   {

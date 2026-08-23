@@ -37,7 +37,12 @@ describe.skipIf(!built)('GEO — a página é legível sem JavaScript', () => {
 
   it('GEO-02: a proposta de valor está no HTML, não só no bundle', () => {
     const texto = visibleText(home);
-    expect(texto).toContain('achar o gargalo');
+    // Antes este teste procurava "achar o gargalo", texto de um CTA do hero que
+    // desde então mudou. Ancorar num rótulo de botão é frágil: a copy do topo é
+    // a parte da página que mais gira. O nome do produto de entrada é o que a
+    // página precisa mesmo entregar ao crawler — e ele vem de content/offer.ts,
+    // não de uma string solta.
+    expect(texto).toContain('Diagnóstico de Gargalo');
   });
 
   it('GEO-03: as três frentes estão no HTML', () => {
