@@ -104,8 +104,8 @@ function SceneHero({ onUnderstandMore }: { onUnderstandMore: () => void }) {
 
   let headline = (
     <>
-      <span className="block pb-2">{animatedText('A inteligência artificial não é o futuro.')}</span>{' '}
-      <span className="block pb-4">{animatedText('Ela já é o presente — e o presente cobra.', true)}</span>
+      <span className="block pb-2">{animatedText('Sua empresa está preparada para enfrentar')}</span>{' '}
+      <span className="block pb-4">{animatedText('a maior mudança de mercado da história?', true)}</span>
     </>
   );
 
@@ -197,7 +197,7 @@ function SceneHero({ onUnderstandMore }: { onUnderstandMore: () => void }) {
         transition={{ delay: 0.6, duration: 1 }}
         className="glass text-[15px] md:text-xl text-slate-800 max-w-2xl mb-6 md:mb-10 font-sans font-medium leading-relaxed px-4 py-3 rounded-2xl"
       >
-        Nenhuma mudança ambiental poupou o maior nem o mais forte — só quem se adaptou primeiro. Hoje, adaptar-se é usar IA em <strong className="font-bold text-slate-950">todos os seus projetos</strong>.
+        A Inteligência Artificial não é coisa do futuro, é <strong className="font-bold text-slate-950">necessidade atual</strong> de empresários que se adaptam, para continuar prosperando.
       </motion.p>
 
       <motion.div
