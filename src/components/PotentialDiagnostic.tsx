@@ -547,8 +547,12 @@ export default function PotentialDiagnostic() {
                   Ate aqui elas dividiam um unico grid de cinco colunas com o
                   veredito e os Core Web Vitals, e esses dois ocupavam quatro:
                   sobrava uma coluna vazia a direita em duas linhas seguidas e o
-                  laudo perdia o retangulo. Cada bloco agora tem a largura toda. */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4">
+                  laudo perdia o retangulo. Cada bloco agora tem a largura toda.
+
+                  Duas colunas no telefone, tres no tablet, cinco no desktop. A
+                  quinta ocupa duas celulas ate lg, e em nenhuma das tres faixas
+                  sobra meia celula: 2+2+1x2 no telefone, 3+1+1x2 no tablet. */}
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2.5 md:gap-4">
                 {[
                   result.dimensoes.D1,
                   result.dimensoes.D2,
@@ -560,33 +564,57 @@ export default function PotentialDiagnostic() {
                   const Icon = icons[i] || Activity;
                   const tone =
                     m.pct < 50
-                      ? { text: 'text-red-600', bar: 'bg-red-500' }
+                      ? { text: 'text-red-600', bar: 'bg-red-500', glass: 'glass-red' }
                       : m.pct < 80
-                        ? { text: 'text-amber-600', bar: 'bg-amber-500' }
-                        : { text: 'text-emerald-600', bar: 'bg-emerald-500' };
+                        ? { text: 'text-amber-600', bar: 'bg-amber-500', glass: 'glass-amber' }
+                        : { text: 'text-emerald-600', bar: 'bg-emerald-500', glass: 'glass-emerald' };
 
                   return (
                     <div
                       key={i}
-                      className="glass-inset rounded-xl p-3 md:p-4 flex items-center md:flex-col gap-2.5 md:gap-3 relative"
+                      className={`glass-inset rounded-xl p-3 md:p-4 flex flex-col gap-2.5 ${
+                        i === 4 ? 'col-span-2 lg:col-span-1' : ''
+                      }`}
                     >
-                      <div className="glass-raised p-1.5 rounded-lg shrink-0 flex items-center justify-between w-full md:w-auto">
-                        <Icon size={14} className={tone.text} />
+                      {/* No telefone o cartao era `flex items-center` e esta caixa
+                          declarava `w-full`: ela tomava 267px dos 293px do cartao
+                          e empurrava o numero para x=331 num cartao que terminava
+                          em x=334 — 73px de "44% DESEMPENHO" caiam fora da borda,
+                          onde o painel os cortava. A coluna resolve sem largura
+                          fixa: o cabecalho ocupa a linha, o numero vem abaixo. */}
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="glass-raised p-1.5 rounded-lg inline-flex shrink-0">
+                          <Icon size={14} className={tone.text} />
+                        </span>
                         {m.labelExtra && (
-                          <span className="glass-inset glass-emerald inline-flex items-center gap-1 text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-full text-emerald-800">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
+                          <span
+                            className={`glass-inset ${tone.glass} inline-flex items-center gap-1 text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-full ${tone.text}`}
+                          >
+                            <span className={`w-1.5 h-1.5 rounded-full inline-block ${tone.bar}`} />
                             {m.labelExtra}
                           </span>
                         )}
                       </div>
-                      <div className="flex-1 md:text-center">
-                        <div className="text-xl md:text-2xl font-serif text-slate-900 font-bold mb-0.5">{m.pct}%</div>
-                        <div className="text-[10px] md:text-xs text-slate-600 uppercase tracking-wider font-bold leading-tight">
+                      <div>
+                        <div className="font-serif text-2xl md:text-[26px] font-bold text-slate-900 leading-none">
+                          {m.pct}
+                          <span className="text-sm text-slate-400 font-sans font-black">%</span>
+                        </div>
+                        <div className="text-[10px] md:text-[11px] text-slate-600 uppercase tracking-wider font-bold leading-tight mt-1.5">
                           {m.nome}
                         </div>
                       </div>
-                      <div className="hidden md:block h-1.5 w-full bg-slate-900/15 rounded-full overflow-hidden">
-                        <div className={`h-full ${tone.bar}`} style={{ width: `${m.pct}%` }} />
+                      {/* A barra saiu do `hidden md:block`. No telefone o cartao
+                          mostrava so o numero — e e ali, onde as cinco dimensoes
+                          nao cabem lado a lado, que a comparacao entre elas mais
+                          precisa de forma, nao de leitura. */}
+                      <div className="mt-auto h-1.5 w-full bg-slate-900/15 rounded-full overflow-hidden">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${m.pct}%` }}
+                          transition={{ duration: 0.7, delay: 0.15 + i * 0.06, ease: [0.16, 1, 0.3, 1] }}
+                          className={`h-full rounded-full ${tone.bar}`}
+                        />
                       </div>
                     </div>
                   );
