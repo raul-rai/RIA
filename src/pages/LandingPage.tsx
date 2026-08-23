@@ -9,7 +9,7 @@ import BrandMark from '../components/BrandMark';
 import AIChatAgent from '../components/AIChatAgent';
 import PotentialDiagnostic from '../components/PotentialDiagnostic';
 import MarketEvidenceSection from '../components/MarketEvidenceSection';
-import MarketVoicesSection from '../components/MarketVoicesSection';
+import SocialProofSection from '../components/SocialProofSection';
 import WhatsAppFab from '../components/WhatsAppFab';
 import { prefersReducedMotion } from '../lib/canvas-quality';
 import { track } from '../lib/analytics';
@@ -21,7 +21,7 @@ import CredibilitySection from '../components/CredibilitySection';
 import SiteFooter from '../components/SiteFooter';
 
 /** Capitulo que concentra a oferta e o agente. Todo CTA aponta para ca. */
-const CTA_CHAPTER = 6;
+const CTA_CHAPTER = 5;
 
 function MagneticButton({ children, onClick, className }: { children: React.ReactNode, onClick: () => void, className?: string }) {
   const x = useMotionValue(0);
@@ -54,31 +54,11 @@ function MagneticButton({ children, onClick, className }: { children: React.Reac
 // ─── Capitulo 0: A AMEACA ────────────────────────────────────────────────────
 function SceneHero({ onUnderstandMore }: { onUnderstandMore: () => void }) {
   const { requestIntent } = useAgentIntent();
-  /**
-   * O segmento da campanha entra DEPOIS da montagem, não durante o render.
-   *
-   * Este era o único acesso a `window` no corpo de um render em toda a
-   * aplicação (todo o resto já vivia dentro de useEffect), e por causa dele o
-   * prerender do build quebrava. Mas só guardar com `typeof window` não
-   * bastava: o HTML prerenderizado é sempre a variante genérica, e se o
-   * primeiro render do cliente já lesse `?ref=industria` a hidratação
-   * divergiria do servidor justamente no H1.
-   *
-   * Então o primeiro render do cliente é idêntico ao do servidor — genérico — e
-   * a variante de campanha entra no efeito seguinte. Custo: um quadro com o
-   * título genérico em URLs de campanha. Ganho: o crawler recebe sempre a
-   * página canônica, e a hidratação nunca briga com ela.
-   */
   const [ref, setRef] = useState<string | undefined>(undefined);
   useEffect(() => {
     setRef(new URLSearchParams(window.location.search).get('ref')?.toLowerCase());
   }, []);
 
-  /**
-   * Cada palavra anima sozinha, mas o espaco entre elas e um no de texto real —
-   * nao margem. Sem isso o textContent do H1 sai grudado ("OTsunamidaIA...") e
-   * fica ilegivel para leitor de tela, copy-paste e crawler generativo.
-   */
   const animatedText = (text: string, isAccent?: boolean) => {
     const words = text.split(' ');
     return (
@@ -102,26 +82,10 @@ function SceneHero({ onUnderstandMore }: { onUnderstandMore: () => void }) {
     );
   };
 
-  /**
-   * REPOSICIONAMENTO (ago/2026).
-   *
-   * O H1 anterior era "A inteligência artificial não é o futuro. Ela já é o
-   * presente — e o presente cobra." Ameaça genérica: qualquer um dos mil
-   * vendedores de IA poderia assiná-la, e em 2026 o comprador já ouviu essa
-   * frase de todos eles. O que diferencia o Raul não é o alarme, é o método —
-   * engenharia de produção: medir o processo, achar o ponto que trava, atacar
-   * o de maior custo por hora. Isso estava enterrado num parágrafo de bio na
-   * quinta dobra. Agora é a primeira coisa que se lê.
-   *
-   * As variantes de campanha viraram PERGUNTAS. As antigas afirmavam defeitos
-   * que ninguém mediu ("Sua produção manual é o gargalo que vai te afogar"),
-   * o que insulta um industrial que talvez rode lean há vinte anos. Pergunta
-   * abre conversa; acusação fecha aba.
-   */
   let headline = (
     <>
-      <span className="block pb-2">{animatedText('Antes de escolher a ferramenta de IA,')}</span>{' '}
-      <span className="block pb-4">{animatedText('alguém precisa achar o gargalo.', true)}</span>
+      <span className="block pb-2">{animatedText('Sua empresa está preparada para enfrentar')}</span>{' '}
+      <span className="block pb-4">{animatedText('a maior mudança de mercado da história?', true)}</span>
     </>
   );
 
@@ -149,19 +113,6 @@ function SceneHero({ onUnderstandMore }: { onUnderstandMore: () => void }) {
   }
 
   return (
-    /**
-     * Dois grupos empurrados para os extremos, com a onda no meio.
-     *
-     * Antes isto era um bloco unico centrado verticalmente — e o painel de
-     * vidro do subtexto pousava exatamente sobre a crista, que no scroll 0
-     * desenha a faixa dos ~45% aos ~65% da viewport (ver projectPoint em
-     * lib/wave-scene). A cena que sustenta a narrativa da pagina inteira ficava
-     * tapada por uma caixa opaca na unica dobra em que ela aparece inteira.
-     *
-     * A altura desconta o padding que ChapterSection ja reserva (pt-20 pb-24 =
-     * 11rem; md:pt-28 md:pb-20 = 12rem). Nao sao numeros escolhidos: se aquele
-     * padding mudar, estes mudam junto.
-     */
     <div className="w-full max-w-4xl mx-auto px-4 flex flex-col items-center text-center pointer-events-auto relative z-10 min-h-[calc(100svh-11rem)] md:min-h-[calc(100svh-12rem)] justify-between">
       <div className="flex flex-col items-center">
       <motion.div
@@ -171,7 +122,7 @@ function SceneHero({ onUnderstandMore }: { onUnderstandMore: () => void }) {
       >
         <Target className="text-accent animate-pulse" size={16} />
         <span className="text-slate-900 font-sans tracking-[0.1em] md:tracking-[0.15em] uppercase text-[10px] md:text-xs font-black whitespace-nowrap">
-          {ref && REF_LABEL[ref] ? `Estratégia para ${REF_LABEL[ref]}` : 'Engenharia de produção aplicada a IA'}
+          {ref && REF_LABEL[ref] ? `Estratégia para ${REF_LABEL[ref]}` : 'Conhecimento relevante para todo empresário'}
         </span>
       </motion.div>
 
@@ -185,22 +136,6 @@ function SceneHero({ onUnderstandMore }: { onUnderstandMore: () => void }) {
       </motion.h1>
       </div>
 
-      {/*
-        O vao. E `flex-1` com piso, nao altura fixa: em monitor alto ele absorve
-        toda a folga e a onda fica com mais de um terco da tela; num celular de
-        640px ele recolhe ate 8svh e o CTA secundario continua acima da dobra.
-        Vazio de proposito — o leitor de tela salta do H1 direto para o subtexto.
-
-        O piso de 18svh e o do `md:`, que liga pela LARGURA — e num celular
-        deitado a largura passa de 768px com 375px de altura sobrando. Ali o
-        criterio tem que ser a altura, senao o vao abre 68px numa tela que nao
-        tem 68px para dar. Mesma regra que ChapterSection e EliteHUD ja usam.
-
-        Abaixo de 600px de altura o piso some de vez: numa tela dessas nao ha
-        folga para revelar onda nenhuma, e reservar espaco para uma revelacao
-        que nao acontece so empurra o CTA para fora da dobra. O `flex-1`
-        continua ali e volta a abrir sozinho assim que houver sobra.
-      */}
       <div
         aria-hidden="true"
         className="flex-1 min-h-[8svh] md:min-h-[18svh] [@media(max-height:600px)]:min-h-0"
@@ -213,16 +148,7 @@ function SceneHero({ onUnderstandMore }: { onUnderstandMore: () => void }) {
         transition={{ delay: 0.6, duration: 1 }}
         className="glass text-[15px] md:text-xl text-slate-800 max-w-2xl mb-6 md:mb-10 font-sans font-medium leading-relaxed px-4 py-3 rounded-2xl"
       >
-        {/*
-          O texto anterior era a citação pseudo-darwiniana ("nenhuma mudança
-          ambiental poupou o maior nem o mais forte"), que Darwin nunca
-          escreveu — é do Leon Megginson, 1963, e distorce seleção natural.
-          Numa página que se apoia em evidência com fonte, abrir com um clichê
-          factualmente falso custava mais do que rendia.
-        */}
-        <strong className="font-bold text-slate-950">95% dos projetos de IA em empresas não devolvem nada</strong>{' '}
-        — quase sempre porque automatizaram a rotina errada. O trabalho começa medindo qual rotina
-        custa mais, e só então escolhendo a ferramenta.
+        A Inteligência Artificial não é coisa do futuro, é <strong className="font-bold text-slate-950">necessidade atual</strong> de empresários que se adaptam, para continuar prosperando.
       </motion.p>
 
       <motion.div
@@ -238,10 +164,7 @@ function SceneHero({ onUnderstandMore }: { onUnderstandMore: () => void }) {
           }}
           className="w-full sm:w-auto group px-7 py-4 bg-slate-950 text-white rounded-xl font-black text-xs uppercase tracking-widest transition-all duration-300 hover:bg-accent shadow-2xl flex items-center justify-center gap-2.5 min-h-[52px]"
         >
-          {/* Se este rótulo mudar, a userMessage de 'hero-cold' em
-              content/intents.ts muda junto — é a repetição literal que faz o
-              chat parecer continuação do clique, e não um formulário novo. */}
-          <span>Quero achar o meu gargalo</span>
+          <span>Pare de rasgar dinheiro</span>
           <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform duration-300" />
         </MagneticButton>
 
@@ -259,27 +182,14 @@ function SceneHero({ onUnderstandMore }: { onUnderstandMore: () => void }) {
 }
 
 // ─── Capitulo 5: O AGENTE ─────────────────────────────────────────────────────
-// Uma coisa so nesta dobra: o chat. Ate ago/2026 havia titulo, subtitulo e a
-// faixa de oferta de quatro colunas empilhados acima do agente — tres blocos
-// de texto disputando a atencao com o unico elemento que converte, e todos
-// repetindo o que os capitulos anteriores ja disseram. Sobrou a frase que
-// explica o que o chat faz, e o chat.
 function SceneCTA() {
   return (
     <div className="w-full max-w-4xl mx-auto px-2 md:px-4 flex flex-col justify-center items-center text-center pointer-events-auto">
-      {/* reading-surface e obrigatorio aqui: nesta dobra a onda ja fechou
-          sobre a camera e o fundo do canvas e azul profundo. Sem a superficie
-          clara, este e o unico texto do capitulo que ficaria escuro sobre
-          escuro — o resto ja vive dentro do cartao de vidro do agente. */}
       <h2 className="reading-surface inline-block px-4 py-2 mb-3 md:mb-4 max-w-2xl font-sans text-[13px] md:text-lg text-slate-700 leading-relaxed">
-        Converse com o agente e saia com uma{' '}
-        <span className="font-semibold text-slate-900">reunião de 15 minutos</span> marcada com o
-        especialista, para falar das possibilidades na sua operação.
+        Converse com o agente para agendar seu{' '}
+        <span className="font-semibold text-slate-900">Diagnóstico de Gargalo</span> e uma reunião de 15 minutos com o especialista.
       </h2>
 
-      {/* O chat ocupa a dobra inteira menos o cabecalho fixo, a frase e os
-          respiros do capitulo (~290px). O teto evita que ele estique demais em
-          telas altas; o piso evita que ele sufoque em telas baixas. */}
       <div className="w-full h-[calc(100svh-280px)] min-h-[380px] lg:h-[calc(100svh-290px)] lg:min-h-[420px] lg:max-h-[680px]">
         <AIChatAgent />
       </div>
@@ -288,13 +198,8 @@ function SceneCTA() {
 }
 
 // ─── Pagina ──────────────────────────────────────────────────────────────────
-// Seis dobras. A ordem e a espinha narrativa: ameaca -> validacao externa ->
-// tensao pessoal (a nota do site) -> o caminho (o catalogo) -> confianca ->
-// acao. O que quebrava antes era o degrau entre tensao e caminho: a pagina
-// subia a tensao e respondia com metodologia de ROI.
 const CHAPTERS = [
-  { label: 'Onde está o gargalo', title: 'RIA — Onde Está o Gargalo' },
-  { label: 'O que os dados dizem', title: 'RIA — O Que os Dados Dizem' },
+  { label: 'A ameaça silenciosa', title: 'RIA — A Ameaça Silenciosa' },
   { label: 'Vozes do mercado', title: 'RIA — Vozes do Mercado' },
   { label: 'Diagnóstico de saúde digital', title: 'RIA — Diagnóstico de Saúde Digital' },
   { label: 'As três frentes', title: 'RIA — As Três Frentes' },
@@ -321,17 +226,19 @@ export default function LandingPage() {
   }, []);
 
   const goToCta = useCallback(() => goToChapter(CTA_CHAPTER), [goToChapter]);
-  const goToEvidence = useCallback(() => goToChapter(1), [goToChapter]);
+  const goToSocialProof = useCallback(() => goToChapter(1), [goToChapter]);
 
   const chapterContent = useMemo(() => [
-    <SceneHero onUnderstandMore={goToEvidence} />,
-    <MarketEvidenceSection />,
-    <MarketVoicesSection />,
+    <SceneHero onUnderstandMore={goToSocialProof} />,
+    <div className="w-full flex flex-col gap-8 md:gap-16">
+      <MarketEvidenceSection />
+      <SocialProofSection />
+    </div>,
     <PotentialDiagnostic />,
     <FrontsSection />,
     <CredibilitySection />,
     <SceneCTA />,
-  ], [goToEvidence]);
+  ], [goToSocialProof]);
 
   return (
     <VulnerabilityProvider>
@@ -357,7 +264,6 @@ export default function LandingPage() {
 
         <SiteFooter />
 
-        {/* Marca — recolhida no mobile, onde competia com o indice pelo topo. */}
         <BrandMark />
 
         <WhatsAppFab hideOnChapter={CTA_CHAPTER} />
@@ -366,3 +272,4 @@ export default function LandingPage() {
     </VulnerabilityProvider>
   );
 }
+

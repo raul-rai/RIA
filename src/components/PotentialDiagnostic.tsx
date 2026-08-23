@@ -167,6 +167,18 @@ export default function PotentialDiagnostic() {
     setProgress(0);
   };
 
+  /** Volta ao formulario com o campo limpo, para medir outro dominio.
+   *
+   *  Nao desfaz `setWebsiteAuditScore`: a nota ja medida continua valendo no
+   *  indice de vulnerabilidade ate que uma nova varredura a substitua. Zerar
+   *  aqui cobraria do visitante uma medicao que ele ainda nao fez — e derrubaria
+   *  o indice por causa de uma intencao, nao de um resultado. */
+  const analyzeAnother = () => {
+    reset();
+    setUrl('');
+    track('diagnostic_restart');
+  };
+
   /** Guardado para nao rolar a pagina depois que o componente saiu de cena. */
   const scrollTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => () => { if (scrollTimer.current) clearTimeout(scrollTimer.current); }, []);
@@ -680,6 +692,19 @@ export default function PotentialDiagnostic() {
                   </div>
                 </div>
               )}
+
+              {/* Saida para uma segunda medicao.
+                  Com o laudo na tela o formulario sai de cena, e ate aqui nao
+                  havia caminho de volta: quem quisesse medir outro dominio
+                  precisava recarregar a pagina inteira e perder o laudo. */}
+              <button
+                type="button"
+                onClick={analyzeAnother}
+                className="glass-raised glass-interactive mx-auto flex w-fit px-5 py-3 text-slate-800 rounded-xl text-xs font-black uppercase tracking-widest items-center justify-center gap-2"
+              >
+                <RotateCcw size={14} />
+                <span>Analisar outro site</span>
+              </button>
             </motion.div>
           )
         )}
