@@ -23,6 +23,26 @@
 export const DIAGNOSTIC_PRICE: string | null = null;
 
 /**
+ * Duração da conversa inicial, em minutos.
+ *
+ * FONTE ÚNICA. Este número aparecia escrito à mão em oito lugares — a oferta, o
+ * FAQ (que alimenta o FAQPage JSON-LD), a chamada da dobra do agente, o
+ * cabeçalho e o título do embed da agenda, duas mensagens de WhatsApp e o botão
+ * do chat. Sete diziam 15; o botão do chat dizia 30.
+ *
+ * O botão errado era justamente o que mais converte: o visitante lia "sessão de
+ * 30 min" e caía numa agenda que a página inteira vendeu como de 15. Divergir
+ * numa promessa de tempo é barato de cometer e caro de explicar na chamada.
+ *
+ * ATENÇÃO — ISTO NÃO ALCANÇA O CAL.COM. O evento configurado em
+ * VITE_BOOKING_URL tem o slug `/30min`. Alinhar o código não muda a duração do
+ * evento no provedor: ou o evento passa a ser de 15 minutos, ou esta constante
+ * vira 30 e a oferta muda junto. Enquanto os dois discordarem, o visitante
+ * ainda vê uma coisa e agenda outra.
+ */
+export const SESSION_MINUTES = 15;
+
+/**
  * Faixa de implementação.
  *
  * ATENÇÃO — o piso de R$ 500/mês está aqui porque já estava publicado, não
@@ -45,7 +65,7 @@ export interface OfferTerm {
 export const OFFER_TERMS: OfferTerm[] = [
   {
     label: 'Como começa',
-    value: 'Conversa de 15 minutos, gratuita',
+    value: `Conversa de ${SESSION_MINUTES} minutos, gratuita`,
     detail:
       'Por vídeo ou WhatsApp, sobre a sua operação — não uma apresentação de slides. Serve para saber se faz sentido seguir.',
   },
@@ -91,7 +111,7 @@ export const FAQ: FaqItem[] = [
   },
   {
     question: 'Quanto custa implementar IA em uma empresa?',
-    answer: `A conversa inicial de 15 minutos é gratuita. O Diagnóstico de Gargalo é cobrado à parte e o valor sai na proposta, depois de entender o tamanho da operação. A implementação que vem depois costuma ficar ${IMPLEMENTATION_RANGE} para pequenas e médias empresas, conforme o escopo. Não há contrato de fidelidade: o prazo e o indicador de sucesso entram por escrito na proposta, e se a etapa não entrar em produção na data combinada, ela não é cobrada.`,
+    answer: `A conversa inicial de ${SESSION_MINUTES} minutos é gratuita. O Diagnóstico de Gargalo é cobrado à parte e o valor sai na proposta, depois de entender o tamanho da operação. A implementação que vem depois costuma ficar ${IMPLEMENTATION_RANGE} para pequenas e médias empresas, conforme o escopo. Não há contrato de fidelidade: o prazo e o indicador de sucesso entram por escrito na proposta, e se a etapa não entrar em produção na data combinada, ela não é cobrada.`,
   },
   {
     question: 'Por que a maioria dos projetos de IA em empresas falha?',
