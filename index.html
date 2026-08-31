@@ -17,12 +17,23 @@
       O que sobra aqui é o que vale para todas as rotas.
     -->
 
-    <!-- Fontes. Nao ha mais preload de imagem: /rio-real.webp era pre-carregado
-         com fetchpriority=high e nunca usado (o componente que o consumiria
-         devolvia null), disputando banda com o LCP real. -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
+    <!--
+      AS FONTES NAO MORAM MAIS AQUI.
+
+      Havia dois preconnect e uma folha de estilo de fonts.googleapis.com. Isso
+      entregava o IP de todo visitante ao Google — num site que pede
+      consentimento para medir navegacao e publica uma politica dizendo para
+      onde os dados vao, sem mencionar este — e punha um terceiro
+      render-blocking no caminho critico do LCP (228 ms so para a folha, antes
+      de qualquer letra aparecer).
+
+      Agora Inter e Playfair sao auto-hospedadas via @fontsource e importadas em
+      src/main.tsx, saindo no mesmo bundle com hash do resto. Ver a nota la.
+
+      Nao ha mais preload de imagem tambem: /rio-real.webp era pre-carregado com
+      fetchpriority=high e nunca usado (o componente que o consumiria devolvia
+      null), disputando banda com o LCP real.
+    -->
 
     <!-- Favicon (SEO-04) — retrato self-hostado, gerado por scripts/generate-favicon.js -->
     <link rel="icon" href="/favicon.ico" sizes="48x48" />

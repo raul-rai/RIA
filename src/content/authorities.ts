@@ -56,7 +56,7 @@ export const AUTHORITIES: Authority[] = [
     quote:
       'A IA não é o futuro, é a sobrevivência do presente. Quem não se adaptar agora será engolido pelo mercado.',
     checkboxLabel: 'Estou ciente de que a IA não é o futuro, mas sim a sobrevivência do presente.',
-    videoUrl: 'https://www.youtube.com/embed/4ZRJCW9CSvE?autoplay=1',
+    videoUrl: 'https://www.youtube-nocookie.com/embed/4ZRJCW9CSvE?autoplay=1',
     thumbnail: '/autoridades/ricardo-amorim.webp',
     bio: 'Economista mais influente do Brasil segundo a Forbes, apresentador do Manhattan Connection e LinkedIn Top Voice. Com mais de 20 anos no mercado financeiro global, é a voz mais respeitada sobre transformações econômicas e tecnológicas no país.',
     icon: TrendingUp,
@@ -69,7 +69,7 @@ export const AUTHORITIES: Authority[] = [
     quote:
       'A Inteligência Artificial emerge não como uma simples ferramenta, mas como uma força estratégica - uma nova dimensão da inteligência para os negócios.',
     checkboxLabel: 'Estou ciente de que a IA é uma força estratégica indispensável para os negócios.',
-    videoUrl: 'https://www.youtube.com/embed/tcmntVEQr2o?autoplay=1',
+    videoUrl: 'https://www.youtube-nocookie.com/embed/tcmntVEQr2o?autoplay=1',
     thumbnail: '/autoridades/silvio-meira.webp',
     bio: 'Um dos fundadores do CESAR (Centro de Estudos e Sistemas Avançados do Recife) e Cientista Chefe da TDS Company. Uma das maiores referências em engenharia de software e inovação digital do Brasil.',
     icon: Cpu,
@@ -82,7 +82,7 @@ export const AUTHORITIES: Authority[] = [
     quote:
       'A Inteligência Artificial não é um hype, é a maior alavanca de eficiência do nosso tempo. O mercado recompensa a eficiência e não perdoa a inércia.',
     checkboxLabel: 'Estou ciente de que o mercado recompensa a eficiência e não perdoa a inércia.',
-    videoUrl: 'https://www.youtube.com/embed/a1MVf8eGlG8?autoplay=1',
+    videoUrl: 'https://www.youtube-nocookie.com/embed/a1MVf8eGlG8?autoplay=1',
     thumbnail: '/autoridades/flavio-augusto.webp',
     bio: 'Um dos empreendedores mais bem-sucedidos do Brasil, fundador da Wiser Educação (Wise Up) e ex-dono do Orlando City. Referência absoluta em vendas, gestão e escala de negócios no país.',
     icon: TrendingUp,

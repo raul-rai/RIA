@@ -38,7 +38,9 @@ describe('AUTHORITIES — as vozes, com as travas que faltavam', () => {
       expect(a.quote.trim()).toBeTruthy();
       expect(a.bio.trim()).toBeTruthy();
       expect(a.icon).toBeTruthy();
-      expect(a.videoUrl).toMatch(/^https:\/\/www\.youtube\.com\/embed\/[\w-]{11}/);
+      // -nocookie, nao youtube.com: o player nao pode plantar identificador de
+      // publicidade em quem so quis ver um trecho. Ver tests/terceiros.test.ts.
+      expect(a.videoUrl).toMatch(/^https:\/\/www\.youtube-nocookie\.com\/embed\/[\w-]{11}/);
       expect(a.thumbnail).toMatch(/^\/autoridades\/[\w.-]+\.webp$/);
     }
   });

@@ -12,7 +12,17 @@ import { EMAIL, WHATSAPP_URL } from '../constants/links';
  *   - agenda        -> iframe config.bookingUrl (Cal.com) com nome e e-mail na query
  *   - analytics     -> gtag.js, só quando VITE_GA_MEASUREMENT_ID existe E há consentimento
  *   - WhatsApp      -> wa.me com a mensagem pré-preenchida que o visitante lê antes de enviar
+ *   - vídeo         -> components/VideoModal, iframe puro em
+ *                      youtube-nocookie.com, montado só quando o modal abre
+ *   - hospedagem    -> Vercel, que registra o acesso como qualquer servidor web
  *
+ * O QUE JÁ ESTEVE FALTANDO AQUI: até ago/2026 esta lista omitia o YouTube e o
+ * Google Fonts. Os dois transferiam o IP do visitante a terceiros — o Fonts em
+ * TODA visita, antes de qualquer clique. O Fonts foi eliminado (as fontes são
+ * auto-hospedadas, ver src/main.tsx); o YouTube passou a ser declarado, movido
+ * para o domínio sem cookie e anunciado na própria tela do player.
+ *
+
  * REGRA: se um desses fluxos mudar no código, esta página muda junto. Política
  * que descreve um tratamento que não acontece (ou omite um que acontece) é pior
  * que política nenhuma — vira prova documental contra o controlador.
@@ -29,11 +39,16 @@ export const CONTROLLER = {
   name: 'Raul Vieira (RIA — Revolução da Inteligência Artificial)',
   /** PENDENTE: preencher com o CNPJ quando a PJ existir. */
   document: null as string | null,
+  /**
+   * Pode ser null, e a página trata isso: o botão de e-mail some e sobra o
+   * WhatsApp. Ver a nota em constants/links.ts — publicar um endereço que
+   * ninguém lê como canal do art. 18 é pior do que não oferecer o canal.
+   */
   email: EMAIL,
   whatsapp: WHATSAPP_URL,
 };
 
-export const LAST_UPDATED = '20 de agosto de 2026';
+export const LAST_UPDATED = '30 de agosto de 2026';
 
 export interface PrivacySection {
   title: string;
@@ -72,6 +87,15 @@ export const PRIVACY_SECTIONS: PrivacySection[] = [
       'Cal.com (agenda): recebe seu nome e e-mail para criar o evento, porque é ele que envia a confirmação e o convite.',
       'Google Analytics: recebe dados de navegação anônimos, e só se você consentir. Veja a seção sobre medição.',
       'WhatsApp: só quando você clica para conversar. A mensagem já vem preenchida e fica visível na tela antes de você decidir enviá-la — nada é enviado sem o seu toque.',
+      'YouTube: só quando você abre um dos vídeos das vozes do mercado. Nada do YouTube é carregado antes desse clique — a miniatura da lista é um arquivo deste site. Ao abrir, o player sobe em youtube-nocookie.com, o modo em que o YouTube não grava identificadores até a reprodução começar nem os usa para anúncios. Ele recebe o seu IP, como qualquer servidor de onde o seu navegador busca um arquivo.',
+      'Vercel (hospedagem): serve as páginas e registra, como qualquer servidor web, os acessos — endereço IP, horário e página pedida. É o mínimo técnico para o site existir e responder.',
+    ],
+  },
+  {
+    title: 'O que este site deliberadamente NÃO carrega',
+    paragraphs: [
+      'Nenhuma fonte, biblioteca ou ícone vem de servidor de terceiro. Até agosto de 2026 as fontes Inter e Playfair vinham do Google Fonts, o que entregava o seu endereço IP ao Google em toda visita — antes de qualquer clique seu, e sem que esta política dissesse. Elas passaram a ser servidas por este mesmo domínio. A transferência não foi divulgada: ela deixou de acontecer.',
+      'Não há pixel de rastreamento, não há botão de rede social que carregue script de fora, e não há mapa incorporado. Fora os serviços listados acima, e sempre por uma ação sua, nenhum terceiro sabe que você esteve aqui.',
     ],
   },
   {
