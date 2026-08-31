@@ -10,6 +10,9 @@ import { useAgentIntent } from '../context/AgentIntentContext';
 import { whatsappWithMessage } from '../constants/links';
 import { SOCIAL_NETWORKS } from '../constants/socialNetworks';
 import { track } from '../lib/analytics';
+import {
+  readAgenticReadiness, overallScore, type AgenticCheck,
+} from '../lib/agentic-readiness';
 
 /** Qual instrumento produziu o laudo. Os dois medem coisas diferentes e a
  *  pagina precisa dizer qual foi — senao o mesmo botao entrega dois produtos. */
@@ -22,7 +25,14 @@ export type WebVital = {
   score: number;
 };
 
-type DiagnosticDimension = { nome: string; pct: number; labelExtra?: string };
+type DiagnosticDimension = {
+  nome: string;
+  /** `null` = não medido. NUNCA 0 para isso: zero a tela lê como reprovação. */
+  pct: number | null;
+  labelExtra?: string;
+  /** Só a D5: as auditorias que compõem a nota, para o laudo poder ser conferido. */
+  checks?: AgenticCheck[];
+};
 
 type DiagnosticResult = {
   source: DiagnosticSource;
@@ -63,6 +73,9 @@ function toneOf(pct: number) {
   return { text: 'text-accent', bar: 'bg-accent', glass: 'glass-accent' };
 }
 
+/** O tom de "não medido". Cinza porque ausência de medição não é nota. */
+const NEUTRO = { text: 'text-slate-400', bar: 'bg-slate-300', glass: 'glass-slate' };
+
 /** "LCP (Maior Pintura)" -> ["LCP", "Maior Pintura"]. A sigla ancora a coluna;
  *  a tradução vira legenda embaixo, em vez de disputar a mesma linha. */
 function splitVitalName(name: string): [string, string] {
@@ -70,7 +83,20 @@ function splitVitalName(name: string): [string, string] {
   return m ? [m[1], m[2]] : [name, ''];
 }
 
-const PAGESPEED_TIMEOUT_MS = 20000;
+/**
+ * Teto de espera do PageSpeed.
+ *
+ * Era 20 s, e a tela ao lado promete "pode levar até 30 segundos". A diferença
+ * não era teórica: medido contra a API de produção, uma varredura com as quatro
+ * categorias leva ~21 s na primeira chamada (o PSI só devolve rápido quando o
+ * resultado já está no cache dele). Ou seja, o app desistia um segundo antes da
+ * resposta chegar e mostrava "a varredura não completou" para um site que o
+ * Lighthouse tinha acabado de medir.
+ *
+ * O número agora é o mesmo que a página promete. Se um dia precisar de mais,
+ * o texto da barra de progresso muda junto.
+ */
+const PAGESPEED_TIMEOUT_MS = 30000;
 const WEBHOOK_TIMEOUT_MS = 25000;
 
 /** fetch com teto de tempo. Sem isso um backend lento trava a UI para sempre. */
@@ -122,8 +148,18 @@ function parseWebhookResult(raw: unknown): DiagnosticResult | null {
       // Default 0, não 100. Quando o n8n omite D5, a leitura correta é "não
       // medido" — antes o default era nota máxima com etiqueta "3/3" fixa, ou
       // seja, a ausência de medição virava aprovação perfeita na tela.
+      /**
+       * Quando o n8n omite D5, a leitura correta é "não medido" — e agora a
+       * tela diz isso, em vez de imprimir 0%, que o visitante lê como
+       * reprovação. O comentário antigo aqui já afirmava essa intenção; o
+       * código entregava um zero.
+       */
       D5: (() => {
-        const pct = toNumber(dim?.['D5']?.pct, 0);
+        const bruto = dim?.['D5']?.pct;
+        if (bruto === undefined || bruto === null || !Number.isFinite(Number(bruto))) {
+          return { nome: 'Navegação agêntica', pct: null, labelExtra: 'não medido' };
+        }
+        const pct = toNumber(bruto, 0);
         return {
           nome: 'Navegação agêntica',
           pct,
@@ -240,12 +276,20 @@ export default function PotentialDiagnostic() {
           const d2 = Math.round((categories.accessibility?.score ?? 0) * 100);
           const d3 = Math.round((categories['best-practices']?.score ?? 0) * 100);
           const d4 = Math.round((categories.seo?.score ?? 0) * 100);
-          const d5 = d4 >= 80 ? 100 : d4 >= 50 ? 67 : 33;
-          const labelD5 = d5 === 100 ? '3/3' : d5 === 67 ? '2/3' : '1/3';
-
-          const overall = Math.round(d1 * 0.35 + d2 * 0.25 + d3 * 0.15 + d4 * 0.15 + d5 * 0.1);
 
           const audits = data?.lighthouseResult?.audits || {};
+
+          /**
+           * D5, agora medida. Ver src/lib/agentic-readiness.ts para o que
+           * estava aqui antes e por que saiu — em resumo: era a nota de SEO
+           * disfarçada, entrando duas vezes na média.
+           *
+           * `null` quando as três auditorias não vêm completas. Nesse caso a
+           * dimensão sai marcada como não medida e o peso dela é
+           * redistribuído, em vez de contar zero.
+           */
+          const agentic = readAgenticReadiness(audits);
+          const overall = overallScore({ d1, d2, d3, d4, d5: agentic?.pct ?? null });
           const webVitals: WebVital[] = [
             {
               id: 'lcp',
@@ -291,7 +335,14 @@ export default function PotentialDiagnostic() {
               D2: { nome: 'Acessibilidade', pct: d2 },
               D3: { nome: 'Práticas recomendadas', pct: d3 },
               D4: { nome: 'SEO', pct: d4 },
-              D5: { nome: 'Navegação agêntica', pct: d5, labelExtra: labelD5 },
+              D5: agentic
+                ? {
+                    nome: 'Navegação agêntica',
+                    pct: agentic.pct,
+                    labelExtra: `${agentic.passed}/${agentic.total}`,
+                    checks: agentic.checks,
+                  }
+                : { nome: 'Navegação agêntica', pct: null, labelExtra: 'não medido' },
             },
             webVitals,
           };
@@ -448,7 +499,7 @@ export default function PotentialDiagnostic() {
                   onKeyDown={(e) => e.key === 'Enter' && handleAnalyze()}
                   aria-label="Domínio do seu site"
                   placeholder="seu-dominio.com.br"
-                  className="w-full bg-transparent py-3 pl-10 pr-4 text-slate-900 focus:outline-none text-base md:text-sm placeholder:text-slate-400"
+                  className="w-full bg-transparent py-3 pl-10 pr-4 text-slate-900 text-base md:text-sm placeholder:text-slate-400"
                 />
               </div>
               <button
@@ -612,7 +663,10 @@ export default function PotentialDiagnostic() {
                 ].map((m, i) => {
                   const icons = [Zap, Cpu, Globe, Search, Bot];
                   const Icon = icons[i] || Activity;
-                  const tone = toneOf(m.pct);
+                  /* Não medido não tem cor de nota: acender vermelho num
+                     "não sei" é a mesma mentira que acender verde. */
+                  const medido = m.pct !== null;
+                  const tone = medido ? toneOf(m.pct!) : NEUTRO;
 
                   return (
                     <div
@@ -636,25 +690,76 @@ export default function PotentialDiagnostic() {
                       </div>
                       <div>
                         <div className="font-serif text-2xl md:text-[26px] font-bold text-slate-900 leading-none">
-                          {m.pct}
-                          <span className="text-sm text-slate-400 font-sans font-black">%</span>
+                          {medido ? (
+                            <>
+                              {m.pct}
+                              <span className="text-sm text-slate-400 font-sans font-black">%</span>
+                            </>
+                          ) : (
+                            <span className="text-slate-400">—</span>
+                          )}
                         </div>
                         <div className="text-[10px] md:text-[11px] text-slate-600 uppercase tracking-wider font-bold leading-tight mt-1.5">
                           {m.nome}
                         </div>
                       </div>
+
+                      {/* As auditorias que compõem a D5, nomeadas.
+                          É o que separa "nota" de "alegação": o visitante pode
+                          abrir o PageSpeed e conferir cada uma pelo id. */}
+                      {m.checks && (
+                        <ul className="flex flex-col gap-1">
+                          {m.checks.map((c) => (
+                            <li key={c.id} className="flex items-center gap-1.5 text-[10px] leading-tight">
+                              {c.ok ? (
+                                <CheckCircle2 size={11} className="text-accent shrink-0" aria-hidden="true" />
+                              ) : (
+                                <AlertTriangle size={11} className="text-red-600 shrink-0" aria-hidden="true" />
+                              )}
+                              <span className={c.ok ? 'text-slate-600' : 'text-red-700 font-semibold'}>
+                                {c.label}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+
                       <div className="mt-auto h-1.5 w-full bg-slate-900/10 rounded-full overflow-hidden">
-                        <motion.div
-                          initial={{ width: 0 }}
-                          animate={{ width: `${m.pct}%` }}
-                          transition={{ duration: 0.7, delay: 0.15 + i * 0.06, ease: [0.16, 1, 0.3, 1] }}
-                          className={`h-full rounded-full ${tone.bar}`}
-                        />
+                        {medido && (
+                          <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${m.pct}%` }}
+                            transition={{ duration: 0.7, delay: 0.15 + i * 0.06, ease: [0.16, 1, 0.3, 1] }}
+                            className={`h-full rounded-full ${tone.bar}`}
+                          />
+                        )}
                       </div>
                     </div>
                   );
                 })}
               </div>
+
+              {/*
+                O LIMITE DA D5, dito na mesma tela que mostra a nota.
+
+                As três auditorias medem se um motor CONSEGUE CHEGAR e SEGUIR a
+                página. É condição necessária para ser citado, não suficiente:
+                nenhuma delas responde se o HTML servido já traz o conteúdo
+                antes do JavaScript rodar — e o Lighthouse audita a página
+                RENDERIZADA, então ele não tem como responder isso.
+
+                Declarar o que o instrumento NÃO alcança é o que separa este
+                laudo do que ele era: uma função degrau da nota de SEO,
+                publicada como se fosse medição independente.
+              */}
+              {result.dimensoes.D5.checks && (
+                <p className="text-[10px] md:text-[11px] text-slate-500 leading-relaxed">
+                  <strong className="text-slate-600">Sobre a navegação agêntica:</strong> as três
+                  checagens são auditorias do Lighthouse e dizem se um motor de IA consegue alcançar
+                  e percorrer o site. Elas não verificam se o conteúdo já está no HTML antes do
+                  JavaScript — essa parte entra no Diagnóstico de Gargalo, feita à mão.
+                </p>
+              )}
 
               {result.webVitals && (
                 <div className="glass-inset rounded-2xl p-4 md:p-5">
