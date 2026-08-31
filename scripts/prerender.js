@@ -59,8 +59,9 @@ if (!existsSync(ssrEntry)) {
   process.exit(1);
 }
 
-// FAQ vem reexportado pela mesma entrada — ver a nota em src/entry-server.tsx.
-const { render, ROUTES, FAQ } = await import(pathToFileURL(ssrEntry).href);
+// FAQ e metadados vêm reexportados pela mesma entrada — ver a nota em
+// src/entry-server.tsx.
+const { render, ROUTES, FAQ, metaFor } = await import(pathToFileURL(ssrEntry).href);
 
 const template = readFileSync(resolve(outDir, 'index.html'), 'utf-8');
 
@@ -122,21 +123,14 @@ function buildJsonLd() {
 }
 
 // ─── Meta por rota ──────────────────────────────────────────────────────────
-const META = {
-  '/': {
-    title: 'RIA — Antes de escolher a ferramenta de IA, alguém precisa achar o gargalo',
-    description:
-      '95% dos projetos de IA em empresas não devolvem nada — quase sempre por automatizar a rotina errada. Diagnóstico de gargalo por engenheiro de produção.',
-  },
-  '/privacidade': {
-    title: 'RIA — Política de Privacidade',
-    description:
-      'Como a RIA trata os dados coletados no site: o que é coletado, para onde vai, com que base legal e como pedir exclusão.',
-  },
-};
+// Os textos NÃO moram mais aqui: vêm de src/content/meta.ts, o mesmo módulo que
+// as páginas leem para restaurar o título na navegação client-side. Enquanto os
+// dois lados lerem daquele arquivo, é impossível o título publicado e o título
+// que o React deixa no DOM contarem histórias diferentes — que era exatamente o
+// defeito, e o que o Googlebot indexava era a versão errada.
 
 function applyHead(html, route) {
-  const meta = META[route] ?? META['/'];
+  const meta = metaFor(route);
   const canonical = publicUrl(route);
   const ogImage = `${SITE_URL}${SITE_BASE.replace(/\/$/, '')}/og-image.png`;
 

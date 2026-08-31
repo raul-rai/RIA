@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync, existsSync } from 'fs';
 import { resolve } from 'path';
+import { ROUTE_META, metaFor } from '../src/content/meta';
 
 /**
  * SEO / GEO — testado sobre o que é PUBLICADO, não sobre o template.
@@ -158,6 +159,28 @@ describe.skipIf(!built)('SEO — metadados por rota', () => {
     }
   });
 
+  it('SEO-09: o título publicado é o de content/meta.ts, e a home é a home', () => {
+    /**
+     * REGRESSÃO VERIFICADA NO NAVEGADOR.
+     *
+     * O prerender injetava o título certo e o React o APAGAVA na hidratação,
+     * trocando por "RIA — A Ameaça Silenciosa" (o rótulo do capítulo 0) e
+     * reescrevendo a cada rolagem. Como o Googlebot lê o <title> DEPOIS de
+     * executar o JavaScript, o título indexado era o do capítulo — sem
+     * "gargalo", sem "ferramenta de IA".
+     *
+     * O teste só consegue afirmar o lado publicado; o lado do React está em
+     * SEO-10, que é onde a regressão de fato entrava.
+     */
+    const title = home.match(/<title>([^<]+)<\/title>/)?.[1];
+    const desc = home.match(/<meta name="description" content="([^"]+)"/)?.[1];
+    expect(title).toBe(ROUTE_META['/'].title);
+    expect(desc).toBe(ROUTE_META['/'].description);
+
+    const priv = readFileSync(resolve(dist, 'privacidade/index.html'), 'utf-8');
+    expect(priv.match(/<title>([^<]+)<\/title>/)?.[1]).toBe(ROUTE_META['/privacidade'].title);
+  });
+
   it('SEO-07: sitemap.xml lista exatamente as rotas prerenderizadas', () => {
     const sitemap = readFileSync(resolve(dist, 'sitemap.xml'), 'utf-8');
     const locs = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
@@ -166,5 +189,66 @@ describe.skipIf(!built)('SEO — metadados por rota', () => {
     // Sitemap que lista página inexistente (ou omite uma que existe) é o erro
     // clássico; aqui as duas listas saem da mesma constante ROUTES.
     for (const loc of locs) expect(loc).toMatch(/^https:\/\//);
+  });
+});
+
+/**
+ * O título depois da hidratação.
+ *
+ * Estes testes não dependem do build: eles trancam a fonte, que é onde o
+ * defeito morava. O <title> publicado estava sempre correto — o problema era o
+ * React sobrescrevê-lo no primeiro frame, e nenhum teste sobre `dist/` tem como
+ * enxergar isso.
+ */
+describe('SEO — o título sobrevive à hidratação', () => {
+  const src = (p: string) => readFileSync(resolve(process.cwd(), p), 'utf-8');
+
+  it('SEO-10: nenhuma página escreve document.title com texto solto', () => {
+    /**
+     * O contrato: escrever `document.title` é permitido — a navegação
+     * client-side precisa disso, senão ir da home para /privacidade pelo rodapé
+     * deixa o título da home na aba. O que não é permitido é escrever um valor
+     * que o prerender não conhece. Toda escrita passa por metaFor().
+     */
+    for (const pagina of ['src/pages/LandingPage.tsx', 'src/pages/PrivacyPage.tsx']) {
+      const escritas = [...src(pagina).matchAll(/document\.title\s*=\s*([^;]+);/g)];
+      expect(escritas.length, `${pagina} escreve o título ${escritas.length}x`).toBeLessThanOrEqual(1);
+      for (const [, valor] of escritas) {
+        expect(valor.trim(), `${pagina}: document.title = ${valor.trim()}`).toMatch(
+          /^metaFor\('[^']+'\)\.title$/
+        );
+      }
+    }
+  });
+
+  it('SEO-11: a lista de capítulos não carrega mais um título próprio', () => {
+    // O campo `title` de CHAPTERS existia só para alimentar a sobrescrita.
+    // Enquanto ele não voltar, não há de onde a regressão renascer.
+    const landing = src('src/pages/LandingPage.tsx');
+    const chapters = landing.slice(landing.indexOf('const CHAPTERS'), landing.indexOf('export default'));
+    expect(chapters).toContain("label:");
+    expect(chapters, 'CHAPTERS voltou a ter title — ver src/content/meta.ts').not.toContain('title:');
+  });
+
+  it('SEO-12: o prerender lê os metadados da mesma fonte que as páginas', () => {
+    // Sem isto, o script podia redeclarar o seu próprio objeto META e as duas
+    // listas voltariam a divergir em silêncio — que é o modo de falha que
+    // content/meta.ts existe para fechar.
+    const prerender = src('scripts/prerender.js');
+    expect(prerender).toContain('metaFor');
+    expect(prerender, 'prerender.js redeclarou META').not.toMatch(/^const META = \{/m);
+    expect(src('src/entry-server.tsx')).toContain("from './content/meta'");
+  });
+
+  it('SEO-13: toda rota prerenderizada tem metadados declarados', () => {
+    // ROUTES vive em entry-server.tsx (que não dá para importar aqui, arrasta
+    // React), então a checagem é por texto — e o que importa é o inverso: uma
+    // rota nova sem metadados cairia calada no título da home.
+    const rotas = [...src('src/entry-server.tsx').matchAll(/\{ path: '([^']+)'/g)].map((m) => m[1]);
+    expect(rotas.length).toBeGreaterThan(0);
+    for (const rota of rotas) {
+      expect(ROUTE_META[rota], `rota ${rota} não tem entrada em ROUTE_META`).toBeDefined();
+      expect(metaFor(rota).description.length).toBeLessThanOrEqual(160);
+    }
   });
 });

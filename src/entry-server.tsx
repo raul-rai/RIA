@@ -59,3 +59,15 @@ export const ROUTES = [
  * prometia respostas que o comprador não encontrava em lugar nenhum da página.
  */
 export { FAQ, OFFER_TERMS } from './content/offer';
+
+/**
+ * Reexportado pelo mesmo motivo que o FAQ: o prerender roda em Node e não
+ * importa TypeScript direto.
+ *
+ * Antes o script declarava um objeto META próprio, com o title e a description
+ * de cada rota escritos à mão. Eram os mesmos textos que as páginas precisam na
+ * navegação client-side — e a home tinha um terceiro título ainda, escrito pelo
+ * React na hidratação, que apagava o do prerender. Agora existe um lugar só.
+ * Ver src/content/meta.ts.
+ */
+export { ROUTE_META, metaFor } from './content/meta';
