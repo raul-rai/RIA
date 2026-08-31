@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, ShieldCheck, MessageCircle, Mail } from 'lucide-react';
 import { PRIVACY_SECTIONS, CONTROLLER, LAST_UPDATED } from '../content/privacy';
+import { metaFor } from '../content/meta';
 
 /**
  * Política de Privacidade — /privacidade.
@@ -14,8 +15,11 @@ import { PRIVACY_SECTIONS, CONTROLLER, LAST_UPDATED } from '../content/privacy';
  * acompanhar o que o código faz. Ver a nota de manutenção lá.
  */
 export default function PrivacyPage() {
+  // Escrito porque a navegação pelo rodapé não recarrega o documento: sem isto
+  // a política herdaria o título da home. O valor vem da MESMA fonte que o
+  // prerender injetou neste HTML, então os dois não podem divergir.
   useEffect(() => {
-    document.title = 'RIA — Política de Privacidade';
+    document.title = metaFor('/privacidade').title;
   }, []);
 
   return (
@@ -74,7 +78,8 @@ export default function PrivacyPage() {
             <h2 className="text-xl md:text-2xl font-serif text-slate-900 mb-3">Como falar comigo</h2>
             <p className="text-sm md:text-[15px] text-slate-700 leading-relaxed mb-4">
               Qualquer pedido sobre seus dados — acesso, correção, exclusão, revogação de
-              consentimento — chega direto em mim por um destes canais:
+              consentimento — chega direto em mim{' '}
+              {CONTROLLER.email ? 'por um destes canais:' : 'pelo WhatsApp:'}
             </p>
             <div className="flex flex-col sm:flex-row gap-3">
               <a
@@ -86,13 +91,18 @@ export default function PrivacyPage() {
                 <MessageCircle size={14} />
                 WhatsApp
               </a>
-              <a
-                href={`mailto:${CONTROLLER.email}`}
-                className="glass-raised glass-interactive inline-flex items-center justify-center gap-2 px-5 py-3 text-slate-800 rounded-xl text-xs font-black uppercase tracking-widest"
-              >
-                <Mail size={14} />
-                {CONTROLLER.email}
-              </a>
+              {/* Só aparece quando existe um endereço real. Um botão de e-mail
+                  apontando para uma caixa que ninguém lê faz o titular acreditar
+                  que exerceu um direito que não chegou a lugar nenhum. */}
+              {CONTROLLER.email && (
+                <a
+                  href={`mailto:${CONTROLLER.email}`}
+                  className="glass-raised glass-interactive inline-flex items-center justify-center gap-2 px-5 py-3 text-slate-800 rounded-xl text-xs font-black uppercase tracking-widest"
+                >
+                  <Mail size={14} />
+                  {CONTROLLER.email}
+                </a>
+              )}
             </div>
             <p className="text-xs text-slate-500 mt-4 leading-relaxed">
               Controlador: {CONTROLLER.name}
