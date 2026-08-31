@@ -23,7 +23,7 @@ export default function AwarenessCheck({ label, checked, onToggle, className = '
       role="checkbox"
       aria-checked={checked}
       onClick={onToggle}
-      className={`glass-inset w-full p-3 rounded-xl cursor-pointer select-none flex items-start gap-2.5 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 ${
+      className={`glass-inset w-full p-3 rounded-xl cursor-pointer select-none flex items-start gap-2.5 text-left ${
         checked
           ? 'glass-emerald text-emerald-950'
           : 'glass-interactive text-slate-700'
@@ -39,7 +39,11 @@ export default function AwarenessCheck({ label, checked, onToggle, className = '
       </span>
       <span className="flex-1">
         <span className="text-[11px] md:text-xs font-semibold block leading-tight">{label}</span>
-        <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block mt-1">
+        {/* slate-600, nao slate-500: a 10px sobre a superficie rebaixada
+            (gray-100) o slate-500 media 4.34:1 e reprovava no AA. slate-600
+            devolve 6.9:1 sem mudar a hierarquia — continua sendo a linha
+            auxiliar, so que legivel. */}
+        <span className="text-[10px] text-slate-600 font-bold uppercase tracking-wider block mt-1">
           {checked ? '✓ Marcado' : 'Marcar se você concorda'}
         </span>
       </span>

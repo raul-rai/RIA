@@ -133,7 +133,7 @@ export default function QualificationFlow({
             inputMode={step.field === 'phone' ? 'tel' : step.field === 'email' ? 'email' : 'text'}
             aria-label={step.prompt}
             aria-invalid={error !== null}
-            className="glass-field flex-1 min-w-0 px-3.5 py-2.5 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none"
+            className="glass-field flex-1 min-w-0 px-3.5 py-2.5 rounded-xl text-sm text-slate-900 placeholder:text-slate-400"
           />
           <button
             type="submit"

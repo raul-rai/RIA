@@ -53,7 +53,9 @@ export default function AuthorityAccordion({
                 onClick={() => onToggleOpen(i)}
                 aria-expanded={isOpen}
                 aria-controls={panelId}
-                className="w-full flex items-center gap-3 p-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-inset"
+                // Encostado nas tres quinas do cartao (overflow:hidden): anel
+                // para dentro, senao some nas bordas.
+                className="focus-ring-inset w-full flex items-center gap-3 p-3 text-left"
               >
                 {/* objectPosition 22%: "center top" cortava no cabelo — num
                     circulo de 44px sobrava testa e nenhum rosto. */}
@@ -120,7 +122,7 @@ export default function AuthorityAccordion({
                     <button
                       type="button"
                       onClick={() => onPlay(authority)}
-                      className="glass-raised glass-interactive self-start inline-flex items-center gap-2 px-4 py-3 min-h-11 rounded-lg text-slate-700 text-[11px] font-bold uppercase tracking-wider hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                      className="glass-raised glass-interactive self-start inline-flex items-center gap-2 px-4 py-3 min-h-11 rounded-lg text-slate-700 text-[11px] font-bold uppercase tracking-wider hover:text-accent"
                     >
                       <Play size={12} fill="currentColor" />
                       Assistir o trecho

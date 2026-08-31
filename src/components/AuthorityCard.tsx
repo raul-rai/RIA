@@ -54,7 +54,9 @@ export default function AuthorityCard({ authority, index, checked, onToggle, onP
           type="button"
           onClick={onPlay}
           aria-label={`Assistir o trecho de ${authority.name}`}
-          className="absolute inset-0 z-20 flex items-center justify-center cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-inset"
+          // O botao cobre a imagem inteira dentro de um cartao overflow:hidden:
+          // o anel precisa crescer para DENTRO ou a quina do cartao o recorta.
+          className="focus-ring-inset absolute inset-0 z-20 flex items-center justify-center cursor-pointer"
         >
           <span className="w-11 h-11 rounded-full bg-white/90 text-slate-950 flex items-center justify-center shadow-xl group-hover:scale-110 group-hover:bg-accent group-hover:text-white transition-all">
             <Play size={18} fill="currentColor" className="ml-0.5" />

@@ -9,6 +9,7 @@ import QualificationFlow from './QualificationFlow';
 import BookingEmbed from './BookingEmbed';
 import { buildQualificationPayload, labelFor, type Qualification } from '../lib/qualification';
 import { FRONTS } from '../content/fronts';
+import { SESSION_MINUTES } from '../content/offer';
 import {
   INTENTS,
   readCampaignRef,
@@ -151,7 +152,7 @@ export default function AIChatAgent({ webhookUrl = config.chatWebhook }: AIChatA
   const bookingFallbackMessage = useMemo(() => {
     if (!qualification) return '';
     return [
-      'Olá Raul, completei a qualificação no site e quero marcar a sessão de 15 minutos.',
+      `Olá Raul, completei a qualificação no site e quero marcar a sessão de ${SESSION_MINUTES} minutos.`,
       '',
       `Empresa: ${qualification.company}`,
       `E-mail: ${qualification.email}`,
@@ -472,7 +473,7 @@ export default function AIChatAgent({ webhookUrl = config.chatWebhook }: AIChatA
               }}
               className="w-full px-4 py-3 bg-slate-900 text-white rounded-xl font-black text-[11px] uppercase tracking-widest hover:bg-accent active:scale-[0.99] transition-all inline-flex items-center justify-center gap-2"
             >
-              <CalendarCheck size={14} /> Agendar minha sessão de 30 min
+              <CalendarCheck size={14} /> Agendar minha sessão de {SESSION_MINUTES} min
             </button>
           </div>
         )}
@@ -521,7 +522,7 @@ export default function AIChatAgent({ webhookUrl = config.chatWebhook }: AIChatA
               onKeyDown={(e) => e.key === 'Enter' && send(input)}
               aria-label="Mensagem para o agente de IA"
               placeholder="Digite sua resposta..."
-              className="glass-field w-full rounded-xl py-4 pl-4 pr-14 text-base md:text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-accent/20 placeholder:text-slate-400"
+              className="glass-field w-full rounded-xl py-4 pl-4 pr-14 text-base md:text-sm text-slate-900 placeholder:text-slate-400"
             />
             {/* 44x44: o botao tinha 32px de lado, o menor alvo da pagina — e o
                 unico que envia a mensagem. */}
