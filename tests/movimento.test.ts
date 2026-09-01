@@ -1,0 +1,349 @@
+import { describe, it, expect } from 'vitest';
+import { readFileSync, readdirSync } from 'fs';
+import { resolve, join } from 'path';
+
+/**
+ * A11Y-04, A11Y-05, CONF-02 e DOC-01 — os quatro de acabamento.
+ *
+ * O que junta os quatro num arquivo só: nenhum deles quebra nada. São todos
+ * defeitos de PROMESSA — a página dizendo uma coisa e fazendo outra. O
+ * movimento que ignora a preferência do sistema, o alvo que promete ser
+ * clicável e tem metade do tamanho mínimo, o rótulo que diz "tempo real" sobre
+ * uma simulação, e três comentários que descrevem um código que não existe.
+ *
+ * Nada disso reprova em compilador nem em teste de unidade comum. Só reprova
+ * contra a leitura de alguém — que é exatamente o tipo de defeito que volta.
+ */
+
+const raiz = process.cwd();
+const ler = (p: string) => readFileSync(resolve(raiz, p), 'utf-8');
+
+/** Todos os .tsx de src, recursivamente. */
+function arquivosTsx(dir = 'src'): string[] {
+  const saida: string[] = [];
+  for (const entrada of readdirSync(resolve(raiz, dir), { withFileTypes: true })) {
+    const rel = join(dir, entrada.name);
+    if (entrada.isDirectory()) saida.push(...arquivosTsx(rel));
+    else if (entrada.name.endsWith('.tsx')) saida.push(rel);
+  }
+  return saida;
+}
+
+describe('A11Y-04 — "reduzir movimento" alcança a página inteira, não só o canvas', () => {
+  /**
+   * O defeito: `prefers-reduced-motion` chegava a exatamente UM lugar — o
+   * canvas da onda, por lib/canvas-quality.ts. As ~28 animações de entrada do
+   * motion espalhadas pelos capítulos ignoravam a preferência inteira.
+   *
+   * Quem liga "reduzir movimento" no sistema faz isso porque movimento causa
+   * náusea ou tontura. A página respondia com todos os capítulos deslizando.
+   */
+
+  it('MOV-01: o App inteiro está dentro de um MotionConfig reducedMotion="user"', () => {
+    const app = ler('src/App.tsx');
+    expect(app).toContain("import { MotionConfig } from 'motion/react'");
+    expect(app).toMatch(/<MotionConfig\s+reducedMotion="user">/);
+
+    // Precisa ENVOLVER, não apenas existir: as rotas e a barra de consentimento
+    // ficam dentro. Um MotionConfig irmão não configura nada.
+    const abre = app.indexOf('<MotionConfig');
+    const fecha = app.indexOf('</MotionConfig>');
+    expect(abre).toBeGreaterThan(-1);
+    expect(fecha).toBeGreaterThan(abre);
+    const dentro = app.slice(abre, fecha);
+    expect(dentro).toContain('<Routes>');
+    expect(dentro).toContain('<ConsentBar />');
+  });
+
+  it('MOV-02: "always" não entra — quem não pediu não perde a página', () => {
+    // `always` desligaria o movimento para todo mundo. A configuração tem que
+    // obedecer à mídia do sistema, não substituí-la por uma decisão nossa.
+    expect(ler('src/App.tsx')).not.toMatch(/reducedMotion="always"/);
+  });
+
+  it('MOV-03: os dois pontos de entrada montam o App — cliente e prerender', () => {
+    /**
+     * O MotionConfig mora no App justamente para valer nos dois. Se um dia ele
+     * subir para o main.tsx, o HTML gerado pelo prerender sai sem a
+     * configuração e a preferência volta a ser ignorada até a hidratação.
+     */
+    expect(ler('src/main.tsx')).toContain('<App />');
+    expect(ler('src/entry-server.tsx')).toContain('<App />');
+  });
+
+  it('MOV-04: toda animação infinita do Tailwind tem guarda no ponto de uso', () => {
+    /**
+     * `MotionConfig` cobre o motion e nada além dele. `animate-pulse`,
+     * `animate-ping` e `animate-bounce` são CSS puro do Tailwind: rodam para
+     * sempre e não passam por contexto nenhum. Cada ocorrência precisa carregar
+     * a própria variante `motion-reduce:`.
+     *
+     * É o critério 2.2.2 (Pausar, Parar, Ocultar): movimento automático que
+     * dura mais de cinco segundos precisa ter como parar. "Para sempre" é
+     * bastante mais que cinco segundos.
+     */
+    const infinitas = /\banimate-(pulse|ping|bounce)\b(?!-)/;
+    const faltando: string[] = [];
+
+    for (const arquivo of arquivosTsx()) {
+      ler(arquivo)
+        .split('\n')
+        .forEach((linha, i) => {
+          if (infinitas.test(linha) && !linha.includes('motion-reduce:')) {
+            faltando.push(`${arquivo}:${i + 1}`);
+          }
+        });
+    }
+
+    expect(faltando, `sem guarda de movimento reduzido: ${faltando.join(', ')}`).toEqual([]);
+  });
+
+  it('MOV-05: animate-spin fica de fora, e isso é deliberado', () => {
+    /**
+     * A exceção de conteúdo essencial do próprio 2.2.2. O spinner só existe
+     * enquanto a varredura roda e é o único sinal na tela de que ela continua
+     * viva. Parar aquele seria trocar um incômodo por uma tela que parece
+     * travada.
+     *
+     * O teste existe para que a exceção seja uma DECISÃO registrada, e não um
+     * esquecimento que o MOV-04 não pegou.
+     */
+    const diagnostico = ler('src/components/PotentialDiagnostic.tsx');
+    expect(diagnostico).toContain('animate-spin');
+    expect(diagnostico).not.toMatch(/animate-spin[^"]*motion-reduce:/);
+
+    // E a razão precisa estar escrita em algum lugar que alguém leia.
+    expect(ler('src/index.css')).toMatch(/animate-spin[\s\S]{0,400}?2\.2\.2/);
+  });
+
+  it('MOV-06: as animações infinitas do index.css são desligadas DE FATO', () => {
+    /**
+     * A primeira versão deste teste procurava o nome da classe dentro de um
+     * bloco `prefers-reduced-motion` e passava — com o CSS não desligando nada.
+     *
+     * A guarda tinha sido escrita ANTES das definições, e `@media` não
+     * acrescenta especificidade: `.glitch-text { animation: none }` e
+     * `.glitch-text { animation: glitch 500ms infinite }` valem o mesmo, e
+     * vence o último. O teste provava que alguém tinha escrito a regra, não que
+     * a regra ganhava. Verificado nos bytes do CSS compilado: a guarda estava
+     * em 72631 e as três definições em 72685, 73459 e 73724.
+     *
+     * Por isso agora o teste confere ORDEM, que é o que decide.
+     */
+    const css = ler('src/index.css');
+
+    const comInfinite = [
+      ...css.matchAll(/\.([a-z-]+)\s*\{[^}]*animation:[^;]*\binfinite\b/g),
+    ].map((m) => ({ classe: m[1], definidaEm: m.index! }));
+
+    expect(
+      comInfinite.length,
+      'nenhuma animação infinita encontrada — o regex quebrou'
+    ).toBeGreaterThan(0);
+
+    for (const { classe, definidaEm } of comInfinite) {
+      // Onde a classe é desligada dentro de um bloco de movimento reduzido.
+      const guarda = [
+        ...css.matchAll(/@media \(prefers-reduced-motion: reduce\)\s*\{([\s\S]*?)\n  \}/g),
+      ].find((m) => m[1].includes(`.${classe}`));
+
+      expect(guarda, `.${classe} roda para sempre sem guarda nenhuma`).toBeDefined();
+      expect(
+        guarda!.index!,
+        `.${classe}: a guarda está ANTES da definição e perde no cascade — ` +
+          `mova o bloco para depois da linha onde a classe é declarada`
+      ).toBeGreaterThan(definidaEm);
+    }
+  });
+
+  it('MOV-06b: no CSS compilado, a guarda vem depois — é lá que o cascade acontece', () => {
+    /**
+     * O teste acima lê a fonte. Este lê o que o navegador recebe: o Tailwind
+     * reordena, funde blocos `@media` iguais e move utilitárias entre camadas.
+     * Uma ordem certa na fonte pode sair errada do build.
+     *
+     * Pula quando não há build — não faz sentido travar o `vitest` de quem
+     * ainda não rodou `npm run build`.
+     */
+    const dist = 'dist/assets';
+    let arquivo: string | undefined;
+    try {
+      arquivo = readdirSync(resolve(raiz, dist)).find((f) => /^index-.*\.css$/.test(f));
+    } catch {
+      return;
+    }
+    if (!arquivo) return;
+
+    const css = ler(join(dist, arquivo));
+
+    const pares: [string, string][] = [
+      ['.animate-pulse{', 'motion-reduce\\:animate-none{'],
+      ['.animate-ping{', 'motion-reduce\\:animate-none{'],
+      ['.animate-bounce{', 'motion-reduce\\:animate-none{'],
+      ['.animate-pulse-subtle{', '.animate-pulse-subtle,.scanline,.glitch-text{'],
+      ['.glitch-text{', '.animate-pulse-subtle,.scanline,.glitch-text{'],
+      ['.scanline{', '.animate-pulse-subtle,.scanline,.glitch-text{'],
+    ];
+
+    for (const [definicao, guardaTexto] of pares) {
+      const iDef = css.indexOf(definicao);
+      const iGuarda = css.indexOf(guardaTexto);
+      if (iDef === -1) continue; // classe sem uso foi eliminada do build
+      expect(iGuarda, `guarda de ${definicao} sumiu do CSS publicado`).toBeGreaterThan(-1);
+      expect(
+        iGuarda,
+        `${definicao} vem DEPOIS da guarda no CSS publicado — a guarda não tem efeito`
+      ).toBeGreaterThan(iDef);
+    }
+  });
+
+  it('MOV-07: as barras do HUD param, e param na altura de repouso', () => {
+    /**
+     * A única `repeat: Infinity` da base. O MotionConfig até cobriria — `height`
+     * está no conjunto de chaves posicionais do motion — mas isso é detalhe
+     * INTERNO da biblioteca. A guarda explícita é o que sobrevive a um upgrade.
+     *
+     * E a altura precisa vir do style quando não há animação: sem ela a barra
+     * nasce com zero e o gráfico some.
+     */
+    const hud = ler('src/components/EliteHUD.tsx');
+    expect(hud).toContain('useReducedMotion');
+    expect(hud).toMatch(/reduzMovimento\s*\?\s*undefined\s*:\s*\{\s*height:/);
+    expect(hud).toMatch(/reduzMovimento\s*\?\s*\{\s*height:\s*`\$\{base\}%`\s*\}/);
+
+    // A `repeat: Infinity` não pode voltar a rodar solta.
+    const semGuarda = /animate=\{\{\s*height:[^}]*\}\}[\s\S]{0,200}repeat:\s*Infinity/;
+    expect(hud, 'a barra voltou a pulsar sem guarda').not.toMatch(semGuarda);
+  });
+});
+
+describe('A11Y-05 — o alvo do link de fonte chega aos 24px do critério 2.5.8', () => {
+  const secao = ler('src/components/MarketEvidenceSection.tsx');
+  const linkFonte = secao.match(/className="([^"]*underline-offset-2[^"]*)"/)?.[1] ?? '';
+
+  it('MOV-08: o link existe e é o do rodapé de fonte', () => {
+    expect(linkFonte, 'o link de fonte mudou de forma e o teste perdeu o alvo').toContain('text-[');
+  });
+
+  it('MOV-09: altura do alvo calculada a partir das classes, não confiada', () => {
+    /**
+     * A conta, e não a promessa: 11px de fonte com `leading-snug` (1.375) dão
+     * 15,1px de caixa de texto. Sozinho, o link media isso — abaixo dos 24px
+     * exigidos, e a isenção de "alvo em linha" não vale para um link autônomo
+     * no rodapé de um cartão.
+     *
+     * `py-1.5` acrescenta 6px de cada lado. 15,1 + 12 = 27,1px.
+     */
+    const fonte = Number(linkFonte.match(/text-\[(\d+)px\]/)?.[1]);
+    expect(fonte, 'tamanho de fonte não declarado em px — refazer a conta').toBeGreaterThan(0);
+
+    const leading = linkFonte.includes('leading-snug') ? 1.375 : 1.5;
+
+    const py = Number(linkFonte.match(/(?:^|\s)py-([\d.]+)(?:\s|$)/)?.[1] ?? 0);
+    const alturaAlvo = fonte * leading + py * 4 * 2;
+
+    expect(
+      alturaAlvo,
+      `alvo de ${alturaAlvo.toFixed(1)}px — o critério 2.5.8 (AA) pede 24`
+    ).toBeGreaterThanOrEqual(24);
+  });
+
+  it('MOV-10: o desenho não muda — a margem negativa devolve o espaço ao layout', () => {
+    /**
+     * Sem isso o padding empurraria o cartão inteiro. Cresce a área que responde
+     * ao toque, não a caixa. O que transborda para baixo cai sobre o texto do
+     * método, que não é clicável: nenhum alvo vizinho é atropelado.
+     */
+    const py = linkFonte.match(/(?:^|\s)py-([\d.]+)(?:\s|$)/)?.[1];
+    expect(linkFonte, 'padding sem margem negativa desloca o cartão').toContain(`-my-${py}`);
+  });
+});
+
+describe('CONF-02 — o bloco de Web Vitals diz de onde o número vem', () => {
+  const diagnostico = ler('src/components/PotentialDiagnostic.tsx');
+  const semComentarios = diagnostico
+    .replace(/\/\*[\s\S]*?\*\//g, ' ')
+    .replace(/\{\/\*[\s\S]*?\*\/\}/g, ' ')
+    .replace(/(^|[^:])\/\/[^\n]*/g, '$1');
+
+  it('MOV-11: "tempo real" não aparece mais na tela', () => {
+    /**
+     * O rótulo era "Métricas em Tempo Real (Core Web Vitals)". Nenhum daqueles
+     * quatro números é de tempo real nem vem de visitante nenhum: são
+     * auditorias de LABORATÓRIO do Lighthouse — uma carga só, num celular
+     * simulado, com a rede estrangulada por software num servidor do Google.
+     *
+     * O dado de campo existe (`loadingExperience`, o CrUX, na mesma resposta),
+     * mas só para páginas com tráfego suficiente — e numa chamada sem chave ele
+     * voltou vazio, que é como produção chama hoje. Prometer campo e entregar
+     * laboratório é o mesmo defeito do CONF-01 com outra roupa.
+     */
+    expect(semComentarios, 'o rótulo de "tempo real" voltou').not.toMatch(/[Tt]empo [Rr]eal/);
+  });
+
+  it('MOV-12: a tela nomeia o laboratório e diz o que ele não alcança', () => {
+    expect(semComentarios).toMatch(/medidos em laborat[óo]rio/i);
+    expect(semComentarios).toMatch(/simulada/i);
+    expect(
+      semComentarios,
+      'falta dizer que não é o que os visitantes experimentaram'
+    ).toMatch(/n[ãa]o [ée] o que os seus\s+visitantes/);
+  });
+
+  it('MOV-13: se um dia o CrUX entrar, ele entra como campo — nunca por cima do laboratório', () => {
+    // Enquanto `loadingExperience` não for lido, o teste guarda a razão de não
+    // ser. Se alguém adicionar o leitor, este teste falha e obriga a rever o
+    // rótulo dos dois blocos de uma vez.
+    if (semComentarios.includes('loadingExperience')) {
+      expect(semComentarios).toMatch(/campo/i);
+    } else {
+      expect(diagnostico, 'a decisão de não ler o CrUX precisa estar escrita').toContain(
+        'loadingExperience'
+      );
+    }
+  });
+});
+
+describe('DOC-01 — nenhum comentário afirma o contrário do código', () => {
+  const landing = ler('src/pages/LandingPage.tsx');
+  const convivem =
+    landing.includes('<MarketEvidenceSection />') && landing.includes('<SocialProofSection />');
+
+  it('MOV-14: as duas seções realmente convivem no capítulo 1', () => {
+    expect(convivem).toBe(true);
+  });
+
+  it('MOV-15: ninguém diz "substitui" enquanto as duas estão na página', () => {
+    /**
+     * Dois arquivos afirmavam ter substituído o SocialProofSection. A
+     * substituição foi PLANEJADA e não aconteceu: o bloco teve os problemas
+     * dele corrigidos no lugar e ficou. Um comentário que descreve o plano em
+     * vez do código é pior que comentário nenhum — ele é lido com a confiança
+     * de documentação.
+     */
+    if (!convivem) return;
+    for (const arquivo of ['src/content/evidence.ts', 'src/components/MarketEvidenceSection.tsx']) {
+      expect(ler(arquivo), `${arquivo} ainda se diz substituto`).not.toMatch(
+        /Substitui (SocialProofSection|o antigo bloco)/
+      );
+    }
+  });
+
+  it('MOV-16: o checkbox não se descreve como algo que mexe no índice', () => {
+    /**
+     * `AwarenessCheck` se apresentava como "a caixa que reduz o Índice de
+     * Vulnerabilidade" e dizia que marcar ali mudava o diagnóstico adiante. Era
+     * verdade até o eixo de conscientização ser removido inteiro — justamente
+     * porque o índice mede o que a empresa FAZ, nunca o que ela concorda.
+     */
+    const check = ler('src/components/AwarenessCheck.tsx');
+    expect(check).not.toMatch(/a caixa que reduz o [ÍI]ndice/);
+    expect(check).not.toMatch(/marcar aqui muda o diagnostico/i);
+    expect(check, 'precisa dizer explicitamente que NÃO pontua').toMatch(/N[ÃA]O mexe no [ÍI]ndice/);
+
+    // E a promessa tem que continuar verdadeira no código: nenhum caminho daqui
+    // até o contexto de vulnerabilidade.
+    expect(check).not.toContain('useVulnerability');
+    expect(ler('src/components/SocialProofSection.tsx')).not.toContain('useVulnerability');
+  });
+});

@@ -8,13 +8,22 @@ interface AwarenessCheckProps {
 }
 
 /**
- * Marcacao de conscientizacao do capitulo 1 — a caixa que reduz o Indice de
- * Vulnerabilidade. Compartilhada pelo cartao (desktop) e pelo acordeon (mobile)
- * para que as duas versoes nunca divirjam em texto ou estado.
+ * Marcacao de conscientizacao do capitulo 1. Compartilhada pelo cartao
+ * (desktop) e pelo acordeon (mobile) para que as duas versoes nunca divirjam em
+ * texto ou estado.
  *
- * E um <button role="checkbox">, nao uma <div> com onClick: precisa alcancar
- * teclado e leitor de tela, ja que marcar aqui muda o diagnostico exibido
- * adiante na pagina.
+ * NAO mexe no Indice de Vulnerabilidade, e nao muda nenhuma nota exibida
+ * adiante. Este comentario afirmava as duas coisas — era verdade ate ago/2026,
+ * quando marcar aqui pagava 5 pontos de protecao. O eixo de conscientizacao foi
+ * removido inteiro (ver o cabecalho de context/VulnerabilityContext) porque o
+ * indice mede o que a empresa FAZ, nunca o que ela concorda: reduzir a propria
+ * vulnerabilidade concordando com o vendedor e um quiz de vendas com estetica
+ * de instrumento. O estado sobrevive apenas local, dentro do SocialProofSection.
+ *
+ * Continua sendo <button role="checkbox"> e nao uma <div> com onClick — mas
+ * agora pelo motivo certo: ele TEM estado marcado/desmarcado, e leitor de tela
+ * e teclado precisam alcancar e anunciar esse estado. O criterio e a semantica
+ * do controle, nao a consequencia dele.
  */
 export default function AwarenessCheck({ label, checked, onToggle, className = '' }: AwarenessCheckProps) {
   return (

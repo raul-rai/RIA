@@ -60,7 +60,7 @@ export default function WhatsAppFab({ hideOnChapter }: WhatsAppFabProps) {
           className="fixed bottom-[max(1rem,calc(env(safe-area-inset-bottom)+0.5rem))] right-[max(1rem,env(safe-area-inset-right))] md:bottom-6 md:right-6 z-50 w-13 h-13 md:w-14 md:h-14 rounded-full bg-[#2a42ec] text-white flex items-center justify-center shadow-[0_4px_25px_rgba(42,66,236,0.5)] border border-white/20 md:hover:scale-110 md:hover:shadow-[0_6px_35px_rgba(42,66,236,0.8)] active:scale-95 transition-all duration-300 group"
         >
           {/* Subtle pulse animation ring */}
-          <span className="absolute inset-0 rounded-full bg-[#2a42ec] animate-ping opacity-30 pointer-events-none" style={{ animationDuration: '2.5s' }} />
+          <span className="absolute inset-0 rounded-full bg-[#2a42ec] animate-ping motion-reduce:hidden opacity-30 pointer-events-none" style={{ animationDuration: '2.5s' }} />
 
           {/* Official clean WhatsApp SVG icon */}
           <svg

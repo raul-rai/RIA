@@ -137,7 +137,7 @@ function SceneHero({ onUnderstandMore }: { onUnderstandMore: () => void }) {
     <div className="w-full max-w-4xl mx-auto px-4 flex flex-col items-center text-center pointer-events-auto relative z-10 min-h-[calc(100svh-11rem)] md:min-h-[calc(100svh-12rem)] justify-between">
       <div className="flex flex-col items-center">
       <div className="hero-rise glass-chip inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-5 md:mb-6">
-        <Target className="text-accent animate-pulse" size={16} />
+        <Target className="text-accent animate-pulse motion-reduce:animate-none" size={16} />
         <span className="text-slate-900 font-sans tracking-[0.1em] md:tracking-[0.15em] uppercase text-[10px] md:text-xs font-black whitespace-nowrap">
           {ref && REF_LABEL[ref] ? `Estratégia para ${REF_LABEL[ref]}` : 'Conhecimento relevante para todo empresário'}
         </span>

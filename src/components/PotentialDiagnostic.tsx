@@ -763,9 +763,42 @@ export default function PotentialDiagnostic() {
 
               {result.webVitals && (
                 <div className="glass-inset rounded-2xl p-4 md:p-5">
+                  {/*
+                    NÃO escreva "tempo real" aqui de novo.
+
+                    Era esse o rótulo até ago/2026: "Métricas em Tempo Real
+                    (Core Web Vitals)". Nenhum destes quatro números é de tempo
+                    real, e nenhum vem de visitante nenhum. São auditorias de
+                    LABORATÓRIO do Lighthouse: uma carga só, num Moto G de
+                    mentira, com a rede estrangulada por software num data
+                    center do Google. É uma simulação — útil, reproduzível, e
+                    exatamente o oposto do que a palavra "real" promete a quem
+                    lê.
+
+                    O dado de campo existe e vem na MESMA resposta da API:
+                    `loadingExperience`, o CrUX, que é a distribuição do que os
+                    visitantes de verdade mediram nos últimos 28 dias. Ele não
+                    entrou aqui por dois motivos apurados, não por preguiça:
+
+                    1. Só existe para páginas com tráfego suficiente. Um site
+                       de PME — o cliente desta ferramenta — quase nunca tem, e
+                       o bloco viveria vazio justo para quem o diagnóstico
+                       serve.
+                    2. Numa chamada sem chave o `loadingExperience` voltou
+                       VAZIO (`{}`), e produção hoje chama sem chave: a
+                       VITE_PAGESPEED_API_KEY não existe na Vercel. Escrever o
+                       leitor desse campo agora seria escrever contra um
+                       formato que eu não consegui observar.
+
+                    Então o rótulo passa a dizer o que o número é. Trocar
+                    "real" por "laboratório" custa uma palavra e é a diferença
+                    entre um laudo e um enfeite. Se um dia a chave existir e o
+                    CrUX for observado de verdade, o campo entra AO LADO deste
+                    bloco, nomeado como campo — nunca por cima dele.
+                  */}
                   <h5 className="text-[10px] md:text-[11px] font-mono font-bold uppercase tracking-[0.12em] md:tracking-[0.16em] text-slate-500 mb-3 flex items-start gap-1.5">
                     <Activity size={12} className="text-accent shrink-0 mt-[1px]" />
-                    <span>Métricas em Tempo Real (Core Web Vitals)</span>
+                    <span>Core Web Vitals — medidos em laboratório</span>
                   </h5>
                   <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 md:gap-3">
                     {result.webVitals.map((v) => {
@@ -795,6 +828,14 @@ export default function PotentialDiagnostic() {
                       );
                     })}
                   </div>
+
+                  {/* Mesma regra da D5: o limite do instrumento é dito na tela
+                      que mostra o número, não num rodapé que ninguém lê. */}
+                  <p className="text-[10px] md:text-[11px] text-slate-500 leading-relaxed mt-3">
+                    Uma carga simulada em celular, com rede estrangulada, a partir de um servidor do
+                    Google. Serve para comparar antes e depois de uma correção — não é o que os seus
+                    visitantes de fato experimentaram.
+                  </p>
                 </div>
               )}
 

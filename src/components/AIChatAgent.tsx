@@ -370,7 +370,7 @@ export default function AIChatAgent({ webhookUrl = config.chatWebhook }: AIChatA
           </div>
         </div>
         <div className="glass-inset glass-accent flex items-center gap-2 px-3 py-1 rounded-full">
-          <Sparkles size={12} className="text-accent animate-pulse" />
+          <Sparkles size={12} className="text-accent animate-pulse motion-reduce:animate-none" />
           <span className="text-[9px] font-bold uppercase tracking-widest text-accent-dark">Ativo</span>
         </div>
       </div>
@@ -455,9 +455,9 @@ export default function AIChatAgent({ webhookUrl = config.chatWebhook }: AIChatA
                 <Bot size={14} className="text-accent" />
               </div>
               <div className="glass-inset p-4 rounded-2xl flex items-center gap-1">
-                <div className="w-1.5 h-1.5 bg-accent rounded-full animate-bounce [animation-delay:-0.3s]" />
-                <div className="w-1.5 h-1.5 bg-accent rounded-full animate-bounce [animation-delay:-0.15s]" />
-                <div className="w-1.5 h-1.5 bg-accent rounded-full animate-bounce" />
+                <div className="w-1.5 h-1.5 bg-accent rounded-full animate-bounce motion-reduce:animate-none [animation-delay:-0.3s]" />
+                <div className="w-1.5 h-1.5 bg-accent rounded-full animate-bounce motion-reduce:animate-none [animation-delay:-0.15s]" />
+                <div className="w-1.5 h-1.5 bg-accent rounded-full animate-bounce motion-reduce:animate-none" />
               </div>
             </motion.div>
           )}

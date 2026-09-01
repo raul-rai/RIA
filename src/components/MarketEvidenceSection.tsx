@@ -5,18 +5,24 @@ import { useAgentIntent } from '../context/AgentIntentContext';
 import { track } from '../lib/analytics';
 
 /**
- * Capítulo 1 — a evidência.
+ * Capítulo 1, primeira metade — a evidência.
  *
- * Substitui SocialProofSection, que exibia nome, foto, biografia e citação de
- * três figuras públicas reais numa página comercial, com checkbox que convertia
- * a concordância do visitante em pontuação de vulnerabilidade. Três problemas
- * de uma vez: uso comercial de imagem sem autorização, sugestão de endosso que
- * nunca existiu (o disclaimer foi removido no commit 4b24851), e um índice que
- * pagava por concordar com o vendedor.
+ * NÃO substitui o SocialProofSection. As duas convivem no mesmo capítulo, nesta
+ * ordem, e a ordem é o argumento: dado primeiro, rosto depois. Ver o array de
+ * capítulos em pages/LandingPage.tsx, onde as duas aparecem dentro da mesma
+ * dobra.
  *
- * O que entra no lugar faz o mesmo trabalho retórico com mais força e sem risco:
- * quatro estudos públicos, nomeados, datados e linkados. O leitor pode conferir
- * cada um — e é justamente por poder conferir que o argumento pesa.
+ * (Este comentário já afirmou o contrário, e por meses. A substituição foi
+ * planejada e não aconteceu: o SocialProofSection teve os problemas dele
+ * corrigidos no lugar — o disclaimer de não-endosso voltou em
+ * content/authorities.ts e a marcação deixou de pontuar o índice. Sem motivo
+ * para remover, ele ficou. Um comentário que descreve o plano em vez do código
+ * é pior que comentário nenhum: ele é lido com a confiança de documentação.)
+ *
+ * O que esta metade acrescenta: quatro estudos públicos, nomeados, datados e
+ * linkados. O leitor pode conferir cada um — e é justamente por poder conferir
+ * que o argumento pesa. Abrir o capítulo por aqui é o que permite que as vozes
+ * venham depois como ilustração de um número, e não como o próprio argumento.
  *
  * Sem checkbox aqui, de propósito. Esta dobra informa; ela não pontua.
  */
@@ -74,12 +80,29 @@ export default function MarketEvidenceSection() {
                 que os motores generativos citam quando reproduzem uma página.
               */}
               <footer className="mt-auto pt-3 border-t border-slate-900/10">
+                {/*
+                  `py-1.5 -my-1.5`: o alvo cresce, o desenho não muda.
+
+                  A 11px com leading-snug o link media 15px de altura. O
+                  critério 2.5.8 (WCAG 2.2 AA) pede 24px, e a isenção de "alvo
+                  em linha" não vale aqui: este é um link autônomo no rodapé de
+                  um cartão, não uma palavra sublinhada no meio de uma frase.
+                  Quinze pixels num dedo, num celular, é o link que a pessoa
+                  erra duas vezes antes de acertar.
+
+                  O padding leva o alvo a 27px. A margem negativa devolve o
+                  espaço ao layout, então a ficha da fonte continua encostada na
+                  borda exatamente como antes — o que cresce é a área que
+                  responde ao toque, não o cartão. Os 6px que transbordam para
+                  baixo caem sobre o texto do método, que não é clicável: não há
+                  alvo vizinho para atropelar.
+                */}
                 <a
                   href={e.url}
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={() => track('cta_click', { location: 'evidence_source' })}
-                  className="inline-flex items-start gap-1 text-[11px] font-bold text-accent hover:text-accent-dark underline underline-offset-2 leading-snug"
+                  className="inline-flex items-start gap-1 py-1.5 -my-1.5 text-[11px] font-bold text-accent hover:text-accent-dark underline underline-offset-2 leading-snug"
                 >
                   <span>
                     {e.source} ({e.year})

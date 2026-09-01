@@ -102,7 +102,7 @@ export default function BrandMark() {
         <motion.div
           animate={{ scale: settled ? 1 : 0 }}
           transition={{ duration: SETTLE_MS / 1000, ease: EASE }}
-          className="w-2 h-2 shrink-0 rounded-full bg-accent animate-pulse"
+          className="w-2 h-2 shrink-0 rounded-full bg-accent animate-pulse motion-reduce:animate-none"
         />
 
         {/* A leitura assistiva nunca ve a sopa de letras: le a marca por extenso,

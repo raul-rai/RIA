@@ -4,9 +4,12 @@ import type { LucideIcon } from 'lucide-react';
 /**
  * Evidência de mercado (capítulo 1).
  *
- * Substitui o antigo bloco de "vozes do mercado", que exibia nome, foto e
- * citação de três figuras públicas reais numa página comercial, sem autorização
- * declarada — e cujo disclaimer havia sido removido no commit 4b24851.
+ * Convive com "Vozes do mercado" (components/SocialProofSection) na mesma
+ * dobra, e vem ANTES dela. Este arquivo já dizia que substituía aquele bloco;
+ * não substituiu — o bloco continua na página, com os problemas dele
+ * corrigidos no lugar (disclaimer de não-endosso em content/authorities.ts,
+ * marcação que não pontua mais o índice). Ver o cabeçalho de
+ * MarketEvidenceSection.
  *
  * REGRA DE INTEGRIDADE (a mesma de cases.ts): todo número aqui vem de um estudo
  * público, nomeado, datado e linkado. Nenhum é estimado, arredondado para soar

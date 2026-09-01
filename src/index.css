@@ -888,4 +888,36 @@
         -0.025em -0.05em 0 rgba(0, 0, 255, 0.75);
     }
   }
+
+  /* As animações INFINITAS declaradas neste arquivo.
+   *
+   * O `<MotionConfig reducedMotion="user">` do App resolve tudo que é motion, e
+   * as utilitárias infinitas do Tailwind (`animate-pulse`, `animate-ping`,
+   * `animate-bounce`) levam `motion-reduce:` no ponto de uso. Sobram estas
+   * três, que são CSS deste arquivo e não passariam por nenhum dos dois
+   * caminhos.
+   *
+   * `.scanline` e `.glitch-text` não têm uso hoje. Entram aqui mesmo assim: uma
+   * classe com `infinite` no corpo é uma armadilha armada esperando o dia em
+   * que alguém a aplicar, e a guarda custa duas linhas.
+   *
+   * Fica de fora, de propósito, o `animate-spin` do botão de varredura. Ele só
+   * existe enquanto a análise roda e é o único sinal na tela de que ela ainda
+   * está viva; parar aquele seria trocar um incômodo por uma tela que parece
+   * travada. É a exceção de conteúdo essencial do próprio critério 2.2.2.
+   *
+   * ESTE BLOCO PRECISA FICAR DEPOIS DAS TRÊS DEFINIÇÕES, e é por isso que ele
+   * está no fim do arquivo em vez de junto do bloco do hero, onde nasceu.
+   * `@media` não acrescenta especificidade: `.glitch-text { animation: none }`
+   * aqui dentro e `.glitch-text { animation: glitch 500ms infinite }` lá em
+   * cima valem exatamente o mesmo, e quem vence é o último. Escrito antes, o
+   * bloco compilava, passava em teste que só procurasse o nome da classe, e não
+   * parava uma única animação. */
+  @media (prefers-reduced-motion: reduce) {
+    .animate-pulse-subtle,
+    .scanline,
+    .glitch-text {
+      animation: none;
+    }
+  }
 }
