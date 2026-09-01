@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { motion } from 'motion/react';
+import { m } from 'motion/react';
 import { prefersReducedMotion } from '../lib/canvas-quality';
 
 /**
@@ -87,7 +87,7 @@ export default function BrandMark() {
   const settled = phase === 'done';
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       // Sem movimento reduzido a marca entra com um respiro. Com ele, o chip ja
@@ -99,7 +99,7 @@ export default function BrandMark() {
       <div className="glass-chip flex items-center gap-3 px-4 py-2 rounded-full">
         {/* O ponto assenta por ultimo. O espaco dele fica reservado desde o
             inicio para o chip nao dar um pulo de layout no fim. */}
-        <motion.div
+        <m.div
           animate={{ scale: settled ? 1 : 0 }}
           transition={{ duration: SETTLE_MS / 1000, ease: EASE }}
           className="w-2 h-2 shrink-0 rounded-full bg-accent animate-pulse motion-reduce:animate-none"
@@ -109,7 +109,7 @@ export default function BrandMark() {
             uma vez, desde o primeiro frame. */}
         <span className="sr-only">RIA — Revolução da Inteligência Artificial</span>
 
-        <motion.span
+        <m.span
           aria-hidden="true"
           animate={{ letterSpacing: settled ? '0.35em' : '0.08em' }}
           transition={{ duration: COLLAPSE_MS / 1000, ease: EASE }}
@@ -130,7 +130,7 @@ export default function BrandMark() {
 
             const w = widths?.[i];
             return (
-              <motion.span
+              <m.span
                 key={i}
                 ref={(el) => { tailRefs.current[i] = el; }}
                 className={box}
@@ -147,11 +147,11 @@ export default function BrandMark() {
                 }}
               >
                 {text}
-              </motion.span>
+              </m.span>
             );
           })}
-        </motion.span>
+        </m.span>
       </div>
-    </motion.div>
+    </m.div>
   );
 }

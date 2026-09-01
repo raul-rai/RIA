@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { motion } from 'motion/react';
+import { m } from 'motion/react';
 import { Check, Layers, ArrowRight } from 'lucide-react';
 import { FRONTS } from '../content/fronts';
 import { resolveFirstFront, countChecked } from '../lib/fronts';
@@ -70,7 +70,7 @@ export default function FrontsSection() {
                toggle "ja cubro" e o atalho "falar sobre" sao irmaos, nunca
                aninhados — <button> dentro de <button> e HTML invalido. */
             <div key={front.id} className={`glass-card glass-hover flex flex-col rounded-2xl ${tom}`}>
-              <motion.button
+              <m.button
                 type="button"
                 onClick={() => {
                   toggleFront(i);
@@ -109,7 +109,7 @@ export default function FrontsSection() {
                     </span>
                   )}
                 </span>
-              </motion.button>
+              </m.button>
 
               {/* So nos cartoes vazios: pedir uma frente que voce acabou de
                   declarar coberta nao e um estado que precise existir. */}

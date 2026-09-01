@@ -1,4 +1,4 @@
-import { motion } from 'motion/react';
+import { m } from 'motion/react';
 import { Play } from 'lucide-react';
 import type { Authority } from '../content/authorities';
 import AwarenessCheck from './AwarenessCheck';
@@ -16,7 +16,7 @@ export default function AuthorityCard({ authority, index, checked, onToggle, onP
   const Icon = authority.icon;
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.1 }}
@@ -70,6 +70,6 @@ export default function AuthorityCard({ authority, index, checked, onToggle, onP
         </blockquote>
         <AwarenessCheck label={authority.checkboxLabel} checked={checked} onToggle={onToggle} />
       </div>
-    </motion.div>
+    </m.div>
   );
 }

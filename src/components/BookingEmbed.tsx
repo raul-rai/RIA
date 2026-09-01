@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { motion } from 'motion/react';
+import { m } from 'motion/react';
 import { CalendarCheck, MessageCircle } from 'lucide-react';
 import { config } from '../config';
 import { buildBookingUrl } from '../lib/booking';
@@ -88,7 +88,7 @@ export default function BookingEmbed({ name, email, notes, fallbackMessage }: Bo
   }
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       className="glass-raised glass-accent mt-3 rounded-xl overflow-hidden text-left"
@@ -106,6 +106,6 @@ export default function BookingEmbed({ name, email, notes, fallbackMessage }: Bo
         onError={() => setFailed(true)}
         className="w-full h-[420px] border-0"
       />
-    </motion.div>
+    </m.div>
   );
 }

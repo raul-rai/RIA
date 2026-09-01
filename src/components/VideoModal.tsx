@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef } from 'react';
-import { motion } from 'motion/react';
+import { m } from 'motion/react';
 import { Link } from 'react-router-dom';
 import { X, Award, Quote } from 'lucide-react';
 
@@ -146,14 +146,14 @@ export default function VideoModal({ isOpen, onClose, videoUrl, title, bio, star
   const src = playerSrc(videoUrl, startTime, endTime);
 
   return (
-      <motion.div
+      <m.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.2 }}
         className="fixed inset-0 z-[100] flex items-center justify-center p-2 md:p-8 backdrop-blur-3xl bg-black/90 pointer-events-auto"
         onClick={onClose}
       >
-        <motion.div
+        <m.div
           ref={painelRef}
           role="dialog"
           aria-modal="true"
@@ -189,7 +189,7 @@ export default function VideoModal({ isOpen, onClose, videoUrl, title, bio, star
 
           {/* Bio Section - 30% width on desktop */}
           <div className="w-full md:w-[30%] p-6 md:p-10 flex flex-col justify-center bg-gradient-to-br from-white/[0.02] to-transparent overflow-y-auto">
-            <motion.div
+            <m.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.3 }}
@@ -248,9 +248,9 @@ export default function VideoModal({ isOpen, onClose, videoUrl, title, bio, star
                 O recorte do video continua existindo: `endTime` segue parando
                 a reproducao no ponto certo, so nao se anuncia mais.
               */}
-            </motion.div>
+            </m.div>
           </div>
-        </motion.div>
-      </motion.div>
+        </m.div>
+      </m.div>
   );
 }

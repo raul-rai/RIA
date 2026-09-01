@@ -1,5 +1,5 @@
 import { Fragment, useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react';
-import { motion, useScroll, useMotionValue, useSpring } from 'motion/react';
+import { m, useScroll, useMotionValue, useSpring } from 'motion/react';
 import { ArrowRight, Target, ChevronDown } from 'lucide-react';
 import DataWave3D from '../components/DataWave3D';
 import ChapterSection from '../components/ChapterSection';
@@ -39,7 +39,7 @@ function MagneticButton({ children, onClick, className }: { children: React.Reac
   }
 
   return (
-    <motion.button
+    <m.button
       style={{ x: mouseXSpring, y: mouseYSpring }}
       onMouseMove={handleMouseMove}
       onMouseLeave={() => { x.set(0); y.set(0); }}
@@ -49,7 +49,7 @@ function MagneticButton({ children, onClick, className }: { children: React.Reac
       className={className}
     >
       {children}
-    </motion.button>
+    </m.button>
   );
 }
 

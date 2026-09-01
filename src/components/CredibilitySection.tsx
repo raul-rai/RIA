@@ -1,4 +1,4 @@
-import { motion } from 'motion/react';
+import { m } from 'motion/react';
 import { LineChart, Hammer, Check, ArrowUpRight, Award } from 'lucide-react';
 import { CASES } from '../content/cases';
 import { CONSULTANT, PHOTO_SRC, PHOTO_ALT } from '../content/consultant';
@@ -44,7 +44,7 @@ export default function CredibilitySection() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-5 mb-8">
         {CASES.map((c, i) => (
-          <motion.article
+          <m.article
             key={c.segment}
             initial={{ opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -106,7 +106,7 @@ export default function CredibilitySection() {
                 Número informado pelo cliente, ainda sem apuração independente publicada.
               </p>
             ) : null}
-          </motion.article>
+          </m.article>
         ))}
       </div>
 

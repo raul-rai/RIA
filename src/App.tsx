@@ -1,4 +1,4 @@
-import { MotionConfig } from 'motion/react';
+import { LazyMotion, MotionConfig, domAnimation } from 'motion/react';
 import { Routes, Route } from 'react-router-dom';
 import LandingPage from './pages/LandingPage';
 import OndaPage from './pages/OndaPage';
@@ -32,18 +32,41 @@ import ConsentBar from './components/ConsentBar';
  * com a própria guarda em index.css — a primeira dobra pinta sem esperar o
  * JavaScript, então a preferência dela também precisa valer sem JavaScript.
  */
+/**
+ * Só o motor de animação que esta página usa.
+ *
+ * `motion.div` arrasta o motion INTEIRO para o bundle: drag, animação de
+ * layout, projeção, pan — recursos que esta página não usa em lugar nenhum
+ * (verificado: zero `drag`, zero `layout`, zero `layoutId`). `m` é o mesmo
+ * componente sem essa bagagem, e `domAnimation` é o conjunto que traz o que
+ * daqui se usa de fato: animação, saída, e os gestos de hover, toque, foco e
+ * `whileInView`.
+ *
+ * `domAnimation` e não `domMax`: a diferença entre os dois é exatamente drag e
+ * layout. E `features={domAnimation}` importado de forma ESTÁTICA, não pela
+ * versão assíncrona que a documentação sugere — a assíncrona economiza mais,
+ * mas cria uma SEGUNDA requisição da qual a visibilidade do conteúdo passa a
+ * depender: doze elementos abaixo da dobra são servidos com `opacity: 0` e só
+ * acendem pelo `whileInView`. Trocar bytes por um novo modo de falha em que a
+ * página fica permanentemente em branco no meio não é uma troca boa.
+ *
+ * `strict` fecha a porta: com ele, um `motion.div` que volte a aparecer lança
+ * erro em vez de silenciosamente arrastar a biblioteca inteira de novo.
+ */
 export default function App() {
   return (
-    <MotionConfig reducedMotion="user">
-      <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/onda" element={<OndaPage />} />
-        <Route path="/privacidade" element={<PrivacyPage />} />
-      </Routes>
-      {/* Fora do <Routes>: o aviso de medição vale para o site inteiro, não
-          para uma rota. Ele se esconde sozinho quando não há analytics
-          configurado ou quando o visitante já decidiu. */}
-      <ConsentBar />
-    </MotionConfig>
+    <LazyMotion features={domAnimation} strict>
+      <MotionConfig reducedMotion="user">
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/onda" element={<OndaPage />} />
+          <Route path="/privacidade" element={<PrivacyPage />} />
+        </Routes>
+        {/* Fora do <Routes>: o aviso de medição vale para o site inteiro, não
+            para uma rota. Ele se esconde sozinho quando não há analytics
+            configurado ou quando o visitante já decidiu. */}
+        <ConsentBar />
+      </MotionConfig>
+    </LazyMotion>
   );
 }

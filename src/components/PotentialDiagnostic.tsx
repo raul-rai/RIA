@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { motion } from 'motion/react';
+import { m } from 'motion/react';
 import {
   Globe, Search, Zap, Cpu, ArrowRight, Activity, AlertTriangle,
   CheckCircle2, Share2, MessageCircle, RotateCcw, Bot,
@@ -79,8 +79,10 @@ const NEUTRO = { text: 'text-slate-400', bar: 'bg-slate-300', glass: 'glass-slat
 /** "LCP (Maior Pintura)" -> ["LCP", "Maior Pintura"]. A sigla ancora a coluna;
  *  a tradução vira legenda embaixo, em vez de disputar a mesma linha. */
 function splitVitalName(name: string): [string, string] {
-  const m = name.match(/^(.+?)\s*\((.+)\)\s*$/);
-  return m ? [m[1], m[2]] : [name, ''];
+  // `partes` e não `m`: desde o LazyMotion, `m` é o componente animado
+  // importado no topo deste arquivo. Um `const m` aqui dentro o sombreia.
+  const partes = name.match(/^(.+?)\s*\((.+)\)\s*$/);
+  return partes ? [partes[1], partes[2]] : [name, ''];
 }
 
 /**
@@ -437,7 +439,7 @@ export default function PotentialDiagnostic() {
         </div>
 
         {hasNoWebsite ? (
-          <motion.div
+          <m.div
             initial={{ opacity: 0, scale: 0.97 }}
             animate={{ opacity: 1, scale: 1 }}
             className="glass-card glass-red max-w-2xl mx-auto rounded-2xl p-6 text-center text-red-950 mb-8"
@@ -478,7 +480,7 @@ export default function PotentialDiagnostic() {
             >
               Na verdade, tenho um site para analisar
             </button>
-          </motion.div>
+          </m.div>
         ) : !result && !failure ? (
           <div className="max-w-2xl mx-auto mb-8">
             <label
@@ -513,13 +515,13 @@ export default function PotentialDiagnostic() {
             </div>
 
             {isAnalyzing && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-4">
+              <m.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-4">
                 <div className="flex justify-between text-[10px] md:text-xs uppercase tracking-[0.2em] text-slate-600 mb-2 font-black">
                   <span>Varredura tecnica</span>
                   <span>{progress}%</span>
                 </div>
                 <div className="h-[2px] w-full bg-slate-900/15 rounded-full overflow-hidden">
-                  <motion.div
+                  <m.div
                     initial={{ width: 0 }}
                     animate={{ width: `${progress}%` }}
                     className="h-full bg-accent"
@@ -530,7 +532,7 @@ export default function PotentialDiagnostic() {
                 <p className="text-[10px] text-slate-500 mt-2 text-center">
                   Rodando Lighthouse e varredura semântica no seu domínio. Pode levar até 30 segundos.
                 </p>
-              </motion.div>
+              </m.div>
             )}
 
             {!isAnalyzing && (
@@ -544,7 +546,7 @@ export default function PotentialDiagnostic() {
             )}
           </div>
         ) : failure ? (
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             className="glass-card glass-amber max-w-2xl mx-auto mb-8 rounded-2xl p-6 text-center"
@@ -583,10 +585,10 @@ export default function PotentialDiagnostic() {
                 </a>
               )}
             </div>
-          </motion.div>
+          </m.div>
         ) : (
           result && (
-            <motion.div
+            <m.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               className="mb-6 md:mb-8 space-y-3 md:space-y-4"
@@ -660,13 +662,13 @@ export default function PotentialDiagnostic() {
                   result.dimensoes.D3,
                   result.dimensoes.D4,
                   result.dimensoes.D5,
-                ].map((m, i) => {
+                ].map((dim, i) => {
                   const icons = [Zap, Cpu, Globe, Search, Bot];
                   const Icon = icons[i] || Activity;
                   /* Não medido não tem cor de nota: acender vermelho num
                      "não sei" é a mesma mentira que acender verde. */
-                  const medido = m.pct !== null;
-                  const tone = medido ? toneOf(m.pct!) : NEUTRO;
+                  const medido = dim.pct !== null;
+                  const tone = medido ? toneOf(dim.pct!) : NEUTRO;
 
                   return (
                     <div
@@ -679,12 +681,12 @@ export default function PotentialDiagnostic() {
                         <span className="glass-raised p-1.5 rounded-lg inline-flex shrink-0">
                           <Icon size={14} className={tone.text} />
                         </span>
-                        {m.labelExtra && (
+                        {dim.labelExtra && (
                           <span
                             className={`glass-inset ${tone.glass} inline-flex items-center gap-1 text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-full ${tone.text}`}
                           >
                             <span className={`w-1.5 h-1.5 rounded-full inline-block ${tone.bar}`} />
-                            {m.labelExtra}
+                            {dim.labelExtra}
                           </span>
                         )}
                       </div>
@@ -692,7 +694,7 @@ export default function PotentialDiagnostic() {
                         <div className="font-serif text-2xl md:text-[26px] font-bold text-slate-900 leading-none">
                           {medido ? (
                             <>
-                              {m.pct}
+                              {dim.pct}
                               <span className="text-sm text-slate-400 font-sans font-black">%</span>
                             </>
                           ) : (
@@ -700,16 +702,16 @@ export default function PotentialDiagnostic() {
                           )}
                         </div>
                         <div className="text-[10px] md:text-[11px] text-slate-600 uppercase tracking-wider font-bold leading-tight mt-1.5">
-                          {m.nome}
+                          {dim.nome}
                         </div>
                       </div>
 
                       {/* As auditorias que compõem a D5, nomeadas.
                           É o que separa "nota" de "alegação": o visitante pode
                           abrir o PageSpeed e conferir cada uma pelo id. */}
-                      {m.checks && (
+                      {dim.checks && (
                         <ul className="flex flex-col gap-1">
-                          {m.checks.map((c) => (
+                          {dim.checks.map((c) => (
                             <li key={c.id} className="flex items-center gap-1.5 text-[10px] leading-tight">
                               {c.ok ? (
                                 <CheckCircle2 size={11} className="text-accent shrink-0" aria-hidden="true" />
@@ -726,9 +728,9 @@ export default function PotentialDiagnostic() {
 
                       <div className="mt-auto h-1.5 w-full bg-slate-900/10 rounded-full overflow-hidden">
                         {medido && (
-                          <motion.div
+                          <m.div
                             initial={{ width: 0 }}
-                            animate={{ width: `${m.pct}%` }}
+                            animate={{ width: `${dim.pct}%` }}
                             transition={{ duration: 0.7, delay: 0.15 + i * 0.06, ease: [0.16, 1, 0.3, 1] }}
                             className={`h-full rounded-full ${tone.bar}`}
                           />
@@ -851,7 +853,7 @@ export default function PotentialDiagnostic() {
                 <RotateCcw size={14} />
                 <span>Analisar outro site</span>
               </button>
-            </motion.div>
+            </m.div>
           )
         )}
 

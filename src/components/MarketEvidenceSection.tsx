@@ -1,4 +1,4 @@
-import { motion } from 'motion/react';
+import { m } from 'motion/react';
 import { BarChart3, ArrowUpRight } from 'lucide-react';
 import { EVIDENCE } from '../content/evidence';
 import { useAgentIntent } from '../context/AgentIntentContext';
@@ -52,7 +52,7 @@ export default function MarketEvidenceSection() {
         {EVIDENCE.map((e, i) => {
           const Icon = e.icon;
           return (
-            <motion.article
+            <m.article
               key={e.source}
               initial={{ opacity: 0, y: 16 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -111,7 +111,7 @@ export default function MarketEvidenceSection() {
                 </a>
                 <p className="text-[10px] text-slate-500 leading-snug mt-1">{e.method}</p>
               </footer>
-            </motion.article>
+            </m.article>
           );
         })}
       </div>

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { m, AnimatePresence } from 'motion/react';
 import { Link } from 'react-router-dom';
 import { BarChart3 } from 'lucide-react';
 import { readConsent, setConsent, onConsentChange, type ConsentState } from '../lib/consent';
@@ -33,7 +33,7 @@ export default function ConsentBar() {
   return (
     <AnimatePresence>
       {shouldShow && (
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 24 }}
@@ -70,7 +70,7 @@ export default function ConsentBar() {
               </button>
             </div>
           </div>
-        </motion.div>
+        </m.div>
       )}
     </AnimatePresence>
   );

@@ -1,4 +1,4 @@
-import { motion, useReducedMotion } from 'motion/react';
+import { m, useReducedMotion } from 'motion/react';
 import { useState, useEffect } from 'react';
 import { useVulnerability } from '../context/VulnerabilityContext';
 
@@ -105,7 +105,7 @@ export default function EliteHUD({ activeScene = 0 }: { activeScene?: number }) 
               const threshold = Math.floor((val / 100) * 10);
               const isCritical = i >= Math.max(2, 10 - threshold);
               return (
-                <motion.div
+                <m.div
                   key={i}
                   animate={
                     reduzMovimento
@@ -154,7 +154,7 @@ export default function EliteHUD({ activeScene = 0 }: { activeScene?: number }) 
           <span className="text-accent-dark font-black tracking-widest text-[10px]">AI_Timeline_Sync</span>
         </div>
         {logs.map((log, i) => (
-          <motion.div
+          <m.div
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1 - i * 0.12, x: 0 }}
             key={`${log.year}-${i}`}
@@ -162,7 +162,7 @@ export default function EliteHUD({ activeScene = 0 }: { activeScene?: number }) 
           >
             <span className="text-[9px] font-black text-cyan-800">{`[${log.year}]`}</span>
             <span className={i === 0 ? 'text-slate-950 font-bold' : 'text-slate-600 font-medium'}>{log.text}</span>
-          </motion.div>
+          </m.div>
         ))}
       </div>
     </div>

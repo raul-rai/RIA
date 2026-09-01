@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'motion/react';
+import { m } from 'motion/react';
 import { ArrowRight, ArrowLeft } from 'lucide-react';
 import {
   QUALIFICATION_STEPS,
@@ -66,7 +66,7 @@ export default function QualificationFlow({
   };
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       className="glass-raised glass-accent mt-3 p-4 rounded-xl text-left"
@@ -175,6 +175,6 @@ export default function QualificationFlow({
         </Link>
         .
       </p>
-    </motion.div>
+    </m.div>
   );
 }

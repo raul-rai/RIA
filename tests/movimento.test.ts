@@ -41,7 +41,9 @@ describe('A11Y-04 — "reduzir movimento" alcança a página inteira, não só o
 
   it('MOV-01: o App inteiro está dentro de um MotionConfig reducedMotion="user"', () => {
     const app = ler('src/App.tsx');
-    expect(app).toContain("import { MotionConfig } from 'motion/react'");
+    // O import é conferido por conteúdo, não pela linha inteira: o LazyMotion
+    // do PERF-02 entrou na mesma declaração e quebrou a versão literal disto.
+    expect(app).toMatch(/import \{[^}]*\bMotionConfig\b[^}]*\} from 'motion\/react'/);
     expect(app).toMatch(/<MotionConfig\s+reducedMotion="user">/);
 
     // Precisa ENVOLVER, não apenas existir: as rotas e a barra de consentimento

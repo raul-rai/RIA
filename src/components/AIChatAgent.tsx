@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { m, AnimatePresence } from 'motion/react';
 import { Send, User, Bot, Sparkles, TrendingUp, ArrowRight, MessageCircle, CalendarCheck } from 'lucide-react';
 import { config } from '../config';
 import { useVulnerability } from '../context/VulnerabilityContext';
@@ -379,7 +379,7 @@ export default function AIChatAgent({ webhookUrl = config.chatWebhook }: AIChatA
       <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 md:p-6 space-y-5 scrollbar-hide">
         <AnimatePresence initial={false}>
           {messages.map((msg, i) => (
-            <motion.div
+            <m.div
               key={i}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -405,7 +405,7 @@ export default function AIChatAgent({ webhookUrl = config.chatWebhook }: AIChatA
                   {msg.content}
 
                   {msg.data && (
-                    <motion.div
+                    <m.div
                       initial={{ opacity: 0, scale: 0.96 }}
                       animate={{ opacity: 1, scale: 1 }}
                       className="glass-raised glass-accent mt-4 p-4 rounded-xl"
@@ -429,7 +429,7 @@ export default function AIChatAgent({ webhookUrl = config.chatWebhook }: AIChatA
                       >
                         Agendar minha sessão <ArrowRight size={12} />
                       </button>
-                    </motion.div>
+                    </m.div>
                   )}
 
                   {msg.handoff && (
@@ -446,11 +446,11 @@ export default function AIChatAgent({ webhookUrl = config.chatWebhook }: AIChatA
                   )}
                 </div>
               </div>
-            </motion.div>
+            </m.div>
           ))}
 
           {isTyping && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex gap-3">
+            <m.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex gap-3">
               <div className="w-8 h-8 rounded-full bg-accent/10 border border-accent/30 flex items-center justify-center">
                 <Bot size={14} className="text-accent" />
               </div>
@@ -459,7 +459,7 @@ export default function AIChatAgent({ webhookUrl = config.chatWebhook }: AIChatA
                 <div className="w-1.5 h-1.5 bg-accent rounded-full animate-bounce motion-reduce:animate-none [animation-delay:-0.15s]" />
                 <div className="w-1.5 h-1.5 bg-accent rounded-full animate-bounce motion-reduce:animate-none" />
               </div>
-            </motion.div>
+            </m.div>
           )}
         </AnimatePresence>
 
@@ -493,7 +493,7 @@ export default function AIChatAgent({ webhookUrl = config.chatWebhook }: AIChatA
 
         {/* Sugestoes de primeira mensagem — o vazio de 350px sai daqui */}
         {showSuggestions && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
@@ -508,7 +508,7 @@ export default function AIChatAgent({ webhookUrl = config.chatWebhook }: AIChatA
                 {s}
               </button>
             ))}
-          </motion.div>
+          </m.div>
         )}
       </div>
 

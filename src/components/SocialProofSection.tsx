@@ -1,9 +1,28 @@
-import { useState } from 'react';
+import { Suspense, lazy, useState } from 'react';
 import { ShieldAlert } from 'lucide-react';
-import VideoModal from './VideoModal';
 import AuthorityAccordion from './AuthorityAccordion';
 import AuthorityCard from './AuthorityCard';
 import { AUTHORITIES, AUTHORITIES_DISCLAIMER, type Authority } from '../content/authorities';
+
+/**
+ * O diálogo de vídeo sai do pacote principal.
+ *
+ * Pode ser tarde porque ele NÃO existe até alguém clicar em "assistir": ele é o
+ * único pedaço grande da página que nenhum visitante vê sem pedir. Enquanto
+ * ninguém pede, seu código não desce.
+ *
+ * A montagem CONDICIONAL abaixo é o que torna isto seguro no prerender, e não é
+ * detalhe de estilo. O build gera o HTML com `renderToString`, que é síncrono e
+ * não sabe esperar: um componente `lazy` que chegue a renderizar no servidor
+ * suspende e derruba o prerender inteiro. Com `{selected && ...}`, e `selected`
+ * sempre nulo no servidor, ele nunca chega lá.
+ *
+ * É também por isso que só ELE saiu. Os seis capítulos são todos renderizados
+ * no servidor — é essa renderização que faz o site ser legível por um crawler
+ * que não executa JavaScript, que é o produto da Frente 1. Dividir por rota ou
+ * por capítulo custaria exatamente aquilo.
+ */
+const VideoModal = lazy(() => import('./VideoModal'));
 
 export default function SocialProofSection() {
   const [selected, setSelected] = useState<Authority | null>(null);
@@ -85,15 +104,21 @@ export default function SocialProofSection() {
         {AUTHORITIES_DISCLAIMER}
       </p>
 
-      <VideoModal
-        isOpen={!!selected}
-        onClose={() => setSelected(null)}
-        videoUrl={selected?.videoUrl || ''}
-        title={selected?.name || ''}
-        bio={selected?.bio}
-        startTime={selected?.startTime}
-        endTime={selected?.endTime}
-      />
+      {selected && (
+        // fallback null de propósito: o clique abre um diálogo, e um esqueleto
+        // piscando por 80ms no lugar dele seria mais ruído que espera.
+        <Suspense fallback={null}>
+          <VideoModal
+            isOpen
+            onClose={() => setSelected(null)}
+            videoUrl={selected.videoUrl}
+            title={selected.name}
+            bio={selected.bio}
+            startTime={selected.startTime}
+            endTime={selected.endTime}
+          />
+        </Suspense>
+      )}
     </div>
   );
 }

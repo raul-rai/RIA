@@ -1,4 +1,4 @@
-import { AnimatePresence, motion } from 'motion/react';
+import { AnimatePresence, m } from 'motion/react';
 import { ChevronDown, Play } from 'lucide-react';
 import type { Authority } from '../content/authorities';
 import AwarenessCheck from './AwarenessCheck';
@@ -104,7 +104,7 @@ export default function AuthorityAccordion({
 
             <AnimatePresence initial={false}>
               {isOpen && (
-                <motion.div
+                <m.div
                   id={panelId}
                   role="region"
                   aria-labelledby={headerId}
@@ -128,7 +128,7 @@ export default function AuthorityAccordion({
                       Assistir o trecho
                     </button>
                   </div>
-                </motion.div>
+                </m.div>
               )}
             </AnimatePresence>
 
