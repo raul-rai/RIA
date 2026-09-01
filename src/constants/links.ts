@@ -45,8 +45,38 @@ export const WHATSAPP_URL = `https://wa.me/${WHATSAPP_PHONE}`;
  */
 export const EMAIL: string | null = null;
 
-/** LinkedIn — placeholder until profile is created */
-export const LINKEDIN_URL = '#'; // TODO: update when LinkedIn profile is created
+/**
+ * Telefone do negócio, em E.164. Mesmo número dos links de WhatsApp acima —
+ * declarado aqui porque o JSON-LD precisa dele num formato que `wa.me` não usa.
+ *
+ * Não publica nada de novo: este número já sai em toda a página, em cada botão
+ * de WhatsApp. O que muda é que agora um motor de busca consegue LER que ele é
+ * o telefone do negócio, em vez de inferir de uma URL.
+ */
+export const PHONE_E164 = `+${WHATSAPP_PHONE}`;
+
+/**
+ * Perfis públicos do negócio, para o `sameAs` do schema.org.
+ *
+ * VAZIO, e isso é uma medição — não uma pendência esquecida.
+ *
+ * Aqui morava `LINKEDIN_URL = '#'` com um `// TODO: update when LinkedIn
+ * profile is created`, e nenhum arquivo do projeto o importava. Um placeholder
+ * que não é usado por ninguém não é um link quebrado; é um lembrete disfarçado
+ * de constante, e o custo dele apareceria no dia em que alguém o colasse num
+ * `sameAs`.
+ *
+ * `sameAs` é a declaração "estas contas são a mesma entidade que este site".
+ * Um Google que siga um `#`, ou um perfil que não é do Raul, não devolve erro
+ * — ele associa a marca a outra coisa, em silêncio, e desfazer isso depois é
+ * bem mais caro do que não afirmar nada agora. Enquanto o array estiver vazio,
+ * o prerender OMITE a propriedade inteira, que é a leitura honesta de "não há
+ * perfil verificado".
+ *
+ * PARA LIGAR: acrescente as URLs de perfil reais. O schema passa a declará-las
+ * sozinho, sem nenhuma outra mudança.
+ */
+export const SOCIAL_PROFILES: string[] = [];
 
 /** WhatsApp com mensagem livre — usado pelo resultado do chat/diagnostico */
 export const whatsappWithMessage = (message: string): string =>

@@ -61,63 +61,198 @@ if (!existsSync(ssrEntry)) {
 
 // FAQ e metadados vêm reexportados pela mesma entrada — ver a nota em
 // src/entry-server.tsx.
-const { render, ROUTES, FAQ, metaFor } = await import(pathToFileURL(ssrEntry).href);
+const {
+  render,
+  ROUTES,
+  FAQ,
+  metaFor,
+  FRONTS,
+  CONSULTANT,
+  SOCIAL_PROFILES,
+  PHONE_E164,
+} = await import(pathToFileURL(ssrEntry).href);
 
 const template = readFileSync(resolve(outDir, 'index.html'), 'utf-8');
 
 // ─── JSON-LD ────────────────────────────────────────────────────────────────
-// Gerado, não escrito à mão. O FAQPage sai do MESMO array que a página
-// renderiza, então é impossível o schema prometer uma resposta que o visitante
-// não encontra na tela.
-function buildJsonLd() {
-  const blocks = [
-    {
-      '@context': 'https://schema.org',
-      '@type': 'ProfessionalService',
-      name: 'RIA — Revolução da Inteligência Artificial',
-      description:
-        'Consultoria de IA para empresas brasileiras. O trabalho começa por medir onde está o gargalo — engenharia de produção aplicada a inteligência artificial.',
-      url: publicUrl('/'),
-      areaServed: { '@type': 'Country', name: 'Brasil' },
-      serviceType: 'Consultoria em Inteligência Artificial',
-      founder: {
-        '@type': 'Person',
-        name: 'Raul Vieira',
-        // Espelha CONSULTANT.role em src/content/consultant.ts. Sao dois arquivos
-        // porque este script roda em Node e nao importa o modulo TS — entao a
-        // concordancia e manual, e divergir aqui faz o schema afirmar um cargo
-        // que a tela nao mostra.
-        jobTitle: 'Engenheiro de Inteligência Artificial',
-        alumniOf: {
-          '@type': 'CollegeOrUniversity',
-          name: 'Universidade Federal de São Carlos',
-        },
-        knowsAbout: [
-          'diagnóstico de gargalo de processo',
-          'engenharia de produção',
-          'agentes de IA',
-          'automação de processos',
-          'otimização para busca generativa (GEO)',
-        ],
-      },
-    },
-  ];
+// Gerado, não escrito à mão, e a partir das MESMAS fontes que a página
+// renderiza: FAQ e OFFER de content/offer.ts, as frentes de content/fronts.ts,
+// o consultor de content/consultant.ts. É isso que impede o defeito antigo, em
+// que o schema e a tela contavam histórias diferentes — e o crawler sabia mais
+// que o comprador.
+//
+// O QUE FALTAVA (GEO-01, ago/2026)
+//
+// Havia dois blocos: ProfessionalService e FAQPage. Para um motor generativo
+// isso responde "existe um negócio" e "ele responde estas perguntas", e não
+// responde nenhuma das três coisas que ele precisa saber para CITAR a página:
+//
+//   qual é o site      -> WebSite, com publisher e idioma
+//   o que se vende     -> Service, uma por frente, ligada ao provedor
+//   como é a marca     -> logo, image, telephone
+//
+// Sem o Service, as três frentes existiam só como texto solto no HTML: o motor
+// tinha que INFERIR que "Agente SDR 24/7" era um serviço à venda. Com ele, a
+// oferta é declarada. É a diferença entre ser lido e ser citado — que é
+// exatamente o que a Frente 1 do catálogo vende.
 
-  if (FAQ) {
-    blocks.push({
-      '@context': 'https://schema.org',
-      '@type': 'FAQPage',
-      mainEntity: FAQ.map((item) => ({
-        '@type': 'Question',
-        name: item.question,
-        acceptedAnswer: { '@type': 'Answer', text: item.answer },
-      })),
-    });
-  } else {
-    console.warn('[prerender] content/offer.ts não pôde ser carregado — FAQPage não foi gerado.');
+/** `@id` estáveis, para os blocos se referenciarem em vez de se repetirem. */
+const ID_ORG = `${publicUrl('/')}#organizacao`;
+const ID_SITE = `${publicUrl('/')}#site`;
+
+const ORG_NAME = 'RIA — Revolução da Inteligência Artificial';
+const ORG_DESCRIPTION =
+  'Consultoria de IA para empresas brasileiras. O trabalho começa por medir onde está o gargalo — engenharia de produção aplicada a inteligência artificial.';
+
+/** O que a imagem de compartilhamento mostra. Ver scripts/generate-og.js. */
+const OG_IMAGE_ALT =
+  'RIA — Revolução da Inteligência Artificial. Consultoria em IA para empresas, Brasil.';
+
+function assetUrl(file) {
+  return `${SITE_URL}${SITE_BASE.replace(/\/$/, '')}/${file}`;
+}
+
+function buildOrganization() {
+  const org = {
+    '@context': 'https://schema.org',
+    '@type': 'ProfessionalService',
+    '@id': ID_ORG,
+    name: ORG_NAME,
+    description: ORG_DESCRIPTION,
+    url: publicUrl('/'),
+    /**
+     * PNG e não o favicon.svg: a orientação do Google para `logo` pede um
+     * raster (jpg/png/gif) de pelo menos 112x112. O apple-touch-icon é a marca
+     * em 180x180 e já está publicado — não há por que gerar outro arquivo.
+     */
+    logo: assetUrl('apple-touch-icon.png'),
+    image: assetUrl('og-image.png'),
+    telephone: PHONE_E164,
+    areaServed: { '@type': 'Country', name: 'Brasil' },
+    serviceType: 'Consultoria em Inteligência Artificial',
+    founder: {
+      '@type': 'Person',
+      name: CONSULTANT.name,
+      // Vem de content/consultant.ts pela ponte do entry-server. Antes era
+      // copiado à mão aqui, com um comentário admitindo que a concordância era
+      // manual — e um cargo divergente faria o schema afirmar algo que a tela
+      // não mostra.
+      jobTitle: CONSULTANT.role,
+      alumniOf: {
+        '@type': 'CollegeOrUniversity',
+        name: 'Universidade Federal de São Carlos',
+      },
+      knowsAbout: [
+        'diagnóstico de gargalo de processo',
+        'engenharia de produção',
+        'agentes de IA',
+        'automação de processos',
+        'otimização para busca generativa (GEO)',
+      ],
+    },
+  };
+
+  // Só declara `sameAs` se houver perfil verificado. Ver a nota em
+  // constants/links.ts: associar a marca ao perfil errado é silencioso, e
+  // desfazer depois custa mais do que não afirmar agora.
+  if (SOCIAL_PROFILES && SOCIAL_PROFILES.length > 0) {
+    org.sameAs = SOCIAL_PROFILES;
   }
 
+  return org;
+}
+
+function buildWebSite() {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    '@id': ID_SITE,
+    name: ORG_NAME,
+    url: publicUrl('/'),
+    inLanguage: 'pt-BR',
+    publisher: { '@id': ID_ORG },
+    // Sem `potentialAction: SearchAction`: esta página não tem busca. Declarar
+    // uma caixa de busca que não existe é convidar o Google a exibir um recurso
+    // que quebra no clique.
+  };
+}
+
+/** Uma Service por frente, do MESMO array que os cartões renderizam. */
+function buildServices() {
+  if (!FRONTS) {
+    console.warn('[prerender] content/fronts.ts não chegou — nenhuma Service foi gerada.');
+    return [];
+  }
+  return FRONTS.map((front) => ({
+    '@context': 'https://schema.org',
+    '@type': 'Service',
+    '@id': `${publicUrl('/')}#frente-${front.id}`,
+    name: front.label,
+    description: front.promise,
+    serviceType: front.tag,
+    provider: { '@id': ID_ORG },
+    areaServed: { '@type': 'Country', name: 'Brasil' },
+  }));
+}
+
+function buildFaq() {
+  if (!FAQ) {
+    console.warn('[prerender] content/offer.ts não pôde ser carregado — FAQPage não foi gerado.');
+    return null;
+  }
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: FAQ.map((item) => ({
+      '@type': 'Question',
+      name: item.question,
+      acceptedAnswer: { '@type': 'Answer', text: item.answer },
+    })),
+  };
+}
+
+/**
+ * Trilha de navegação. Só para rota interna: numa home o breadcrumb é um item
+ * apontando para si mesma, que o Google ignora e que só ocupa bytes.
+ */
+function buildBreadcrumb(route) {
+  if (route === '/') return null;
+
+  /**
+   * O nome do degrau, não o <title>.
+   *
+   * `metaFor('/privacidade').title` é "RIA — Política de Privacidade", e todo
+   * título do site carrega esse prefixo de marca. Numa trilha ele sairia como
+   * "Início › RIA — Política de Privacidade", repetindo a marca dentro do
+   * caminho dela mesma. O degrau é só o nome da página.
+   */
+  const nome = metaFor(route).title.replace(/^RIA\s*[—–-]\s*/, '');
+
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Início', item: publicUrl('/') },
+      { '@type': 'ListItem', position: 2, name: nome, item: publicUrl(route) },
+    ],
+  };
+}
+
+/**
+ * O JSON-LD de UMA rota.
+ *
+ * Era emitido só na home, e o efeito colateral era que /privacidade não
+ * declarava nem onde estava. Agora cada rota recebe o que lhe cabe: a home
+ * carrega o negócio, o site, a oferta e o FAQ; as internas carregam a trilha.
+ */
+function buildJsonLd(route) {
+  const blocks =
+    route === '/'
+      ? [buildOrganization(), buildWebSite(), ...buildServices(), buildFaq()]
+      : [buildBreadcrumb(route)];
+
   return blocks
+    .filter(Boolean)
     .map((b) => `<script type="application/ld+json">${JSON.stringify(b)}</script>`)
     .join('\n    ');
 }
@@ -132,7 +267,7 @@ function buildJsonLd() {
 function applyHead(html, route) {
   const meta = metaFor(route);
   const canonical = publicUrl(route);
-  const ogImage = `${SITE_URL}${SITE_BASE.replace(/\/$/, '')}/og-image.png`;
+  const ogImage = assetUrl('og-image.png');
 
   /**
    * O build de subpath (/v2) sai NOINDEX, e isso não é detalhe.
@@ -173,13 +308,19 @@ function applyHead(html, route) {
     <meta property="og:image" content="${ogImage}" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
+    <!-- og:image:alt é o texto que leitores de tela anunciam quando o card é
+         compartilhado no LinkedIn ou no WhatsApp. Sem ele, o card chega mudo:
+         a imagem carrega TODO o nome da marca em texto desenhado, que nenhuma
+         tecnologia assistiva alcança. -->
+    <meta property="og:image:alt" content="${OG_IMAGE_ALT}" />
 
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="${meta.title}" />
     <meta name="twitter:description" content="${meta.description}" />
     <meta name="twitter:image" content="${ogImage}" />
+    <meta name="twitter:image:alt" content="${OG_IMAGE_ALT}" />
 
-    ${route === '/' ? buildJsonLd() : ''}
+    ${buildJsonLd(route)}
   `;
 
   return out.replace('</head>', `${head}\n  </head>`);

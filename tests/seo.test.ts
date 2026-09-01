@@ -2,6 +2,9 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync, existsSync } from 'fs';
 import { resolve } from 'path';
 import { ROUTE_META, metaFor } from '../src/content/meta';
+import { FRONTS } from '../src/content/fronts';
+import { CONSULTANT } from '../src/content/consultant';
+import { SOCIAL_PROFILES } from '../src/constants/links';
 
 /**
  * SEO / GEO — testado sobre o que é PUBLICADO, não sobre o template.
@@ -250,5 +253,162 @@ describe('SEO — o título sobrevive à hidratação', () => {
       expect(ROUTE_META[rota], `rota ${rota} não tem entrada em ROUTE_META`).toBeDefined();
       expect(metaFor(rota).description.length).toBeLessThanOrEqual(160);
     }
+  });
+});
+
+/**
+ * GEO-01 — o schema declara o negócio, o site e a OFERTA.
+ *
+ * O que havia até ago/2026: dois blocos, `ProfessionalService` e `FAQPage`.
+ * Para um motor generativo isso responde "existe um negócio" e "ele responde
+ * estas perguntas". Não responde qual é o site, nem o que está à venda.
+ *
+ * As três frentes existiam só como texto solto no HTML — o motor tinha que
+ * INFERIR que "Agente SDR 24/7" era um serviço. E o bloco do negócio não
+ * declarava marca nem contato: sem `logo`, sem `image`, sem `telephone`.
+ *
+ * A ironia é o motivo de isto ser um achado e não um capricho: a Frente 1 do
+ * catálogo vende exatamente "site que o ChatGPT e o Perplexity conseguem ler e
+ * CITAR". Ser lido, o prerender resolveu. Ser citado depende de declarar.
+ */
+describe.skipIf(!built)('GEO-01 — schema.org completo', () => {
+  const ld = (html: string) =>
+    [...html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map((b) =>
+      JSON.parse(b[1])
+    );
+
+  const blocos = built ? ld(home) : [];
+  const tipo = (t: string) => blocos.filter((b) => b['@type'] === t);
+  const org = () => tipo('ProfessionalService')[0];
+
+  it('GEO-07: a home declara negócio, site, uma oferta por frente e o FAQ', () => {
+    expect(tipo('ProfessionalService')).toHaveLength(1);
+    expect(tipo('WebSite')).toHaveLength(1);
+    expect(tipo('FAQPage')).toHaveLength(1);
+    expect(tipo('Service').length, 'nenhuma frente virou Service').toBe(FRONTS.length);
+  });
+
+  it('GEO-08: marca e contato declarados, e os arquivos existem de verdade', () => {
+    /**
+     * Um `logo` apontando para 404 é pior que `logo` ausente: o Google tenta
+     * buscar, falha, e o cartão de conhecimento fica sem imagem sem dizer por
+     * quê. Então o teste confere o arquivo, não só o campo.
+     */
+    const o = org();
+    expect(o.logo, 'falta logo').toBeTruthy();
+    expect(o.image, 'falta image').toBeTruthy();
+    expect(o.telephone, 'falta telephone').toMatch(/^\+\d{12,13}$/);
+
+    for (const url of [o.logo, o.image]) {
+      const arquivo = url.split('/').pop();
+      expect(existsSync(resolve(dist, arquivo)), `${arquivo} não existe em dist/`).toBe(true);
+    }
+
+    // PNG e não SVG: a orientação do Google para `logo` pede raster.
+    expect(o.logo).toMatch(/\.(png|jpg|gif)$/);
+  });
+
+  it('GEO-09: sameAs só existe se houver perfil verificado', () => {
+    /**
+     * `sameAs` afirma "estas contas são a mesma entidade que este site". Um
+     * perfil errado não devolve erro — ele associa a marca a outra coisa, em
+     * silêncio. Aqui morava um `LINKEDIN_URL = '#'`, e é exatamente o valor que
+     * teria acabado nesta lista.
+     */
+    if (SOCIAL_PROFILES.length === 0) {
+      expect(
+        'sameAs' in org(),
+        'sameAs declarado sem nenhum perfil verificado em constants/links.ts'
+      ).toBe(false);
+    } else {
+      expect(org().sameAs).toEqual(SOCIAL_PROFILES);
+      for (const url of org().sameAs) expect(url).toMatch(/^https:\/\//);
+    }
+  });
+
+  it('GEO-10: o que a Service promete é o que o cartão promete', () => {
+    /**
+     * O ponto do achado inteiro. As Services saem do MESMO array que os
+     * cartões renderizam — uma frente cortada do catálogo some do schema no
+     * mesmo build, em vez de continuar sendo oferecida a um motor de busca
+     * depois de deixar de ser oferecida ao visitante.
+     */
+    const services = tipo('Service');
+    const texto = visibleText(home);
+
+    for (const frente of FRONTS) {
+      const s = services.find((x) => x.name === frente.label);
+      expect(s, `nenhuma Service para "${frente.label}"`).toBeDefined();
+      expect(s.description).toBe(frente.promise);
+      expect(s.serviceType).toBe(frente.tag);
+
+      // E a promessa do schema tem que estar na tela, não só no schema.
+      expect(texto, `a promessa de "${frente.label}" não aparece na página`).toContain(
+        frente.promise
+      );
+    }
+  });
+
+  it('GEO-11: toda referência por @id aponta para um bloco que existe', () => {
+    // Um `provider: {@id}` órfão faz o grafo inteiro perder o vínculo com o
+    // negócio — e falha em silêncio, porque o JSON continua válido.
+    const ids = new Set(blocos.map((b) => b['@id']).filter(Boolean));
+    const refs = [
+      ...tipo('Service').map((s) => s.provider?.['@id']),
+      tipo('WebSite')[0]?.publisher?.['@id'],
+    ].filter(Boolean);
+
+    expect(refs.length).toBeGreaterThan(0);
+    for (const ref of refs) expect(ids, `@id órfão: ${ref}`).toContain(ref);
+  });
+
+  it('GEO-12: /privacidade declara a trilha, e a home não desperdiça bytes com ela', () => {
+    const priv = readFileSync(resolve(dist, 'privacidade/index.html'), 'utf-8');
+    const trilha = ld(priv).find((b) => b['@type'] === 'BreadcrumbList');
+
+    expect(trilha, '/privacidade sem BreadcrumbList').toBeDefined();
+    expect(trilha.itemListElement).toHaveLength(2);
+    expect(trilha.itemListElement[0].item).toMatch(/^https:\/\//);
+    expect(trilha.itemListElement[1].item).toContain('/privacidade');
+
+    // O degrau é o nome da página, não o <title>: "Início › RIA — Política de
+    // Privacidade" repetiria a marca dentro do caminho dela mesma.
+    expect(trilha.itemListElement[1].name).toBe('Política de Privacidade');
+    expect(trilha.itemListElement[1].name).not.toMatch(/^RIA/);
+
+    // Na home o breadcrumb apontaria para si mesmo: o Google ignora e só ocupa
+    // espaço no documento que mais precisa ser leve.
+    expect(tipo('BreadcrumbList')).toHaveLength(0);
+  });
+
+  it('GEO-13: o card compartilhado não chega mudo', () => {
+    /**
+     * A og-image carrega TODO o nome da marca em texto DESENHADO — nenhuma
+     * tecnologia assistiva alcança pixel. Sem `og:image:alt`, quem recebe o
+     * link no WhatsApp por leitor de tela ouve "imagem" e mais nada.
+     */
+    for (const [rota, arquivo] of [
+      ['/', 'index.html'],
+      ['/privacidade', 'privacidade/index.html'],
+    ]) {
+      const html = readFileSync(resolve(dist, arquivo), 'utf-8');
+      const alt = html.match(/property="og:image:alt" content="([^"]+)"/)?.[1];
+      expect(alt, `${rota} sem og:image:alt`).toBeTruthy();
+      expect(alt!.length).toBeGreaterThan(20);
+      expect(html).toMatch(/name="twitter:image:alt"/);
+    }
+  });
+
+  it('GEO-14: o cargo do schema vem de content/consultant.ts, não de uma cópia', () => {
+    // O comentário que estava aqui admitia a duplicação: "a concordancia e
+    // manual, e divergir aqui faz o schema afirmar um cargo que a tela nao
+    // mostra". Agora atravessa pela mesma ponte que o FAQ e os metadados.
+    expect(org().founder.jobTitle).toBe(CONSULTANT.role);
+    expect(org().founder.name).toBe(CONSULTANT.name);
+    const prerender = readFileSync(resolve(process.cwd(), 'scripts/prerender.js'), 'utf-8');
+    expect(prerender).toContain('CONSULTANT.role');
+    expect(prerender, 'o cargo voltou a ser copiado à mão').not.toMatch(
+      /jobTitle:\s*'Engenheiro/
+    );
   });
 });

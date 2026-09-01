@@ -71,3 +71,23 @@ export { FAQ, OFFER_TERMS } from './content/offer';
  * Ver src/content/meta.ts.
  */
 export { ROUTE_META, metaFor } from './content/meta';
+
+/**
+ * O resto do que o JSON-LD precisa, pela mesma ponte e pelo mesmo motivo.
+ *
+ * O bloco `ProfessionalService` do prerender copiava à mão o `jobTitle` do
+ * consultor, com um comentário admitindo que a concordância era manual e que
+ * divergir ali faria o schema afirmar um cargo que a tela não mostra. Não
+ * precisa ser manual: `CONSULTANT` atravessa por aqui como todo o resto.
+ *
+ * `FRONTS` entra porque cada frente agora vira um `Service` próprio no schema.
+ * São as MESMAS três que os cartões renderizam — uma frente cortada do catálogo
+ * some do schema no mesmo build, em vez de continuar sendo oferecida a um motor
+ * de busca depois de deixar de ser oferecida ao visitante.
+ *
+ * `SOCIAL_PROFILES` e `PHONE_E164` fecham o bloco de contato. Ver a nota em
+ * constants/links.ts sobre por que o primeiro está vazio de propósito.
+ */
+export { FRONTS } from './content/fronts';
+export { CONSULTANT } from './content/consultant';
+export { SOCIAL_PROFILES, PHONE_E164 } from './constants/links';
