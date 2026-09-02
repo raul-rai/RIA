@@ -23,7 +23,10 @@ export default function CredibilitySection() {
   return (
     <div className="w-full max-w-6xl mx-auto px-4 flex flex-col justify-center pointer-events-auto">
       <div className="text-center mb-6 md:mb-8">
-        <div className="glass-chip glass-accent inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full mb-3">
+        {/* `flex w-fit mx-auto` e nao `inline-flex`: ver a nota em
+            FrontsSection. A etiqueta e o <h2> `inline-block` dividiam a mesma
+            linha, com a etiqueta jogada para a esquerda do titulo. */}
+        <div className="glass-chip glass-accent flex w-fit mx-auto items-center gap-2 px-3.5 py-1.5 rounded-full mb-3">
           <LineChart size={14} className="text-accent" />
           <span className="text-accent-dark text-[10px] md:text-xs uppercase tracking-[0.2em] font-black">
             Parcerias frutíferas
@@ -126,7 +129,11 @@ export default function CredibilitySection() {
       */}
 
       <div className="glass-panel rounded-3xl p-6 md:p-8">
-        <div className="grid grid-cols-1 md:grid-cols-[auto_1fr] gap-6 md:gap-8 items-center">
+        {/* `items-start`: com `items-center` a foto ficava centralizada contra
+            uma coluna de texto tres vezes mais alta, flutuando no meio de uma
+            faixa vazia. No topo ela encosta no nome e na funcao, que e o que
+            ela legenda. */}
+        <div className="grid grid-cols-1 md:grid-cols-[auto_1fr] gap-6 md:gap-8 items-start">
           <div className="mx-auto md:mx-0">
             {PHOTO_SRC ? (
               <img
