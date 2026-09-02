@@ -10,3 +10,7 @@ coverage/
 .superpowers/
 
 .vercel
+dist-ssr
+dist-v2
+dist-site
+.worktree-home

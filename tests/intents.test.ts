@@ -1,4 +1,6 @@
 import { describe, it, expect } from 'vitest';
+import { readFileSync } from 'fs';
+import { resolve } from 'path';
 import { INTENTS, readCampaignRef, REF_LABEL, GREETING, NO_WEBSITE_GREETING } from '../src/content/intents';
 import type { IntentContext, IntentId } from '../src/content/intents';
 import { FRONTS } from '../src/content/fronts';
@@ -16,7 +18,7 @@ const base: IntentContext = {
   ref: null,
   websiteScore: null,
   hasNoWebsite: false,
-  frontsChecked: [false, false, false, false, false, false],
+  frontsChecked: [false, false, false, false, false],
 };
 
 /** Todos os estados de borda que o site consegue produzir. */
@@ -30,9 +32,9 @@ const CONTEXTS: IntentContext[] = [
   { ...base, websiteScore: 63 },
   { ...base, websiteScore: 100 },
   { ...base, hasNoWebsite: true },
-  { ...base, frontsChecked: [true, false, false, false, false, false] },
-  { ...base, frontsChecked: [true, true, true, true, true, false] },
-  { ...base, frontsChecked: [true, true, true, true, true, true] },
+  { ...base, frontsChecked: [true, false, false, false, false] },
+  { ...base, frontsChecked: [true, true, true, true, false] },
+  { ...base, frontsChecked: [true, true, true, true, true] },
   ...FRONTS.map((front) => ({ ...base, front })),
 ];
 
@@ -79,6 +81,30 @@ describe('hero-cold: o lead frio, com ou sem campanha', () => {
     expect(INTENTS['hero-cold'].userMessage({ ...base, ref: 'industria' })).toBe(
       'Tenho uma indústria e quero parar de rasgar dinheiro. Por onde eu começo?'
     );
+  });
+
+  /**
+   * A trava que faltava.
+   *
+   * INT-05 e INT-06 afirmam a string, mas nada as amarrava ao BOTAO. O rotulo
+   * do hero virou "Pare de rasgar dinheiro" e esta intencao ficou meses dizendo
+   * "quero achar o meu gargalo" — o lead abria a conversa afirmando algo que
+   * nunca leu na tela, e os dois testes continuaram verdes porque concordavam
+   * um com o outro. Aqui a fonte da verdade e o componente.
+   */
+  it('INT-25: a fala do lead ecoa o rotulo real do CTA do hero', () => {
+    const landing = readFileSync(
+      resolve(process.cwd(), 'src/pages/LandingPage.tsx'),
+      'utf-8'
+    );
+    const rotulo = landing.match(/<span>([^<]*rasgar[^<]*)<\/span>/i)?.[1];
+    expect(rotulo, 'CTA do hero nao encontrado em LandingPage.tsx').toBeTruthy();
+
+    // "Pare de rasgar dinheiro" -> o nucleo "rasgar dinheiro" precisa aparecer
+    // na fala. Comparar a frase inteira seria rigido demais: o botao e
+    // imperativo, a fala e em primeira pessoa.
+    const nucleo = rotulo!.toLowerCase().replace(/^pare de\s+/, '').trim();
+    expect(INTENTS['hero-cold'].userMessage(base).toLowerCase()).toContain(nucleo);
   });
 
   it('INT-24: a resposta para de ecoar a saudacao do balao 1', () => {
@@ -137,42 +163,42 @@ describe('front-pick: uma frente escolhida no cartao', () => {
 describe('fronts-agenda: a pauta muda com o que foi marcado', () => {
   it('INT-11: zero marcadas tem frase propria, sem contagem', () => {
     expect(INTENTS['fronts-agenda'].userMessage(base)).toBe(
-      'Não cubro nenhuma das seis frentes. Quero montar minha pauta.'
+      'Não cubro nenhuma das três frentes. Quero montar minha pauta.'
     );
   });
 
   it('INT-12: parcial lista as faltantes com "e" antes da ultima', () => {
     const texto = INTENTS['fronts-agenda'].userMessage({
       ...base,
-      frontsChecked: [true, false, false, false, false, false],
+      frontsChecked: [true, false, false],
     });
     expect(texto).toBe(
-      'Marquei 1 de 6. Faltam Agente SDR, Conteúdo, Automação, Sistema sob medida e Dados e decisão. Quero montar minha pauta.'
+      'Marquei 1 de 3. Faltam Agente SDR e Automação. Quero montar minha pauta.'
     );
   });
 
   it('INT-20: resta uma frente, o verbo concorda no singular ("Falta")', () => {
     const texto = INTENTS['fronts-agenda'].userMessage({
       ...base,
-      frontsChecked: [true, true, true, true, true, false],
+      frontsChecked: [true, true, false],
     });
-    expect(texto).toBe('Marquei 5 de 6. Falta Dados e decisão. Quero montar minha pauta.');
+    expect(texto).toBe('Marquei 2 de 3. Falta Automação. Quero montar minha pauta.');
   });
 
   it('INT-21: restam duas frentes, o verbo concorda no plural ("Faltam")', () => {
     const texto = INTENTS['fronts-agenda'].userMessage({
       ...base,
-      frontsChecked: [true, true, true, true, false, false],
+      frontsChecked: [true, false, false],
     });
     expect(texto).toBe(
-      'Marquei 4 de 6. Faltam Sistema sob medida e Dados e decisão. Quero montar minha pauta.'
+      'Marquei 1 de 3. Faltam Agente SDR e Automação. Quero montar minha pauta.'
     );
   });
 
-  it('INT-13: seis marcadas viram conversa de otimizacao, nao de pauta', () => {
-    const ctx = { ...base, frontsChecked: [true, true, true, true, true, true] };
+  it('INT-13: tres marcadas viram conversa de otimizacao, nao de pauta', () => {
+    const ctx = { ...base, frontsChecked: [true, true, true] };
     expect(INTENTS['fronts-agenda'].userMessage(ctx)).toBe(
-      'Marquei as seis frentes. Quero saber o que ainda dá pra melhorar.'
+      'Marquei as três frentes. Quero saber o que ainda dá pra melhorar.'
     );
     expect(INTENTS['fronts-agenda'].agentReply(ctx)).not.toContain('Pauta anotada');
   });
@@ -180,7 +206,7 @@ describe('fronts-agenda: a pauta muda com o que foi marcado', () => {
   it('INT-14: a resposta abre pela primeira frente descoberta', () => {
     const resposta = INTENTS['fronts-agenda'].agentReply({
       ...base,
-      frontsChecked: [true, false, false, false, false, false],
+      frontsChecked: [true, false, false],
     });
     expect(resposta).toContain(FRONTS[1].label);
   });

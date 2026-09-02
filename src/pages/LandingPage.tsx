@@ -1,14 +1,14 @@
-import { Fragment, useCallback, useEffect, useMemo } from 'react';
-import { motion, useScroll, useMotionValue, useSpring } from 'motion/react';
+import { Fragment, useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react';
+import { m, useScroll, useMotionValue, useSpring } from 'motion/react';
 import { ArrowRight, Target, ChevronDown } from 'lucide-react';
 import DataWave3D from '../components/DataWave3D';
 import ChapterSection from '../components/ChapterSection';
 import { useActiveChapter } from '../hooks/useActiveChapter';
 import EliteHUD from '../components/EliteHUD';
-
+import BrandMark from '../components/BrandMark';
 import AIChatAgent from '../components/AIChatAgent';
-import OfferSection from '../components/OfferSection';
 import PotentialDiagnostic from '../components/PotentialDiagnostic';
+import MarketEvidenceSection from '../components/MarketEvidenceSection';
 import SocialProofSection from '../components/SocialProofSection';
 import WhatsAppFab from '../components/WhatsAppFab';
 import { prefersReducedMotion } from '../lib/canvas-quality';
@@ -18,6 +18,9 @@ import { AgentIntentProvider, useAgentIntent } from '../context/AgentIntentConte
 import { REF_LABEL } from '../content/intents';
 import FrontsSection from '../components/FrontsSection';
 import CredibilitySection from '../components/CredibilitySection';
+import SiteFooter from '../components/SiteFooter';
+import { metaFor } from '../content/meta';
+import { SESSION_MINUTES } from '../content/offer';
 
 /** Capitulo que concentra a oferta e o agente. Todo CTA aponta para ca. */
 const CTA_CHAPTER = 5;
@@ -36,7 +39,7 @@ function MagneticButton({ children, onClick, className }: { children: React.Reac
   }
 
   return (
-    <motion.button
+    <m.button
       style={{ x: mouseXSpring, y: mouseYSpring }}
       onMouseMove={handleMouseMove}
       onMouseLeave={() => { x.set(0); y.set(0); }}
@@ -46,110 +49,124 @@ function MagneticButton({ children, onClick, className }: { children: React.Reac
       className={className}
     >
       {children}
-    </motion.button>
+    </m.button>
   );
 }
 
 // ─── Capitulo 0: A AMEACA ────────────────────────────────────────────────────
+
+/**
+ * As manchetes, por segmento de campanha.
+ *
+ * Sempre duas linhas: a primeira neutra, a segunda em accent. Eram quatro
+ * blocos `if/else if` construindo JSX quase idêntico; virou tabela porque a
+ * unica coisa que muda entre elas é o texto — e porque o escalonamento da
+ * entrada precisa contar as palavras da primeira linha para continuar a
+ * contagem na segunda.
+ */
+const HEADLINES: Record<string, readonly [string, string]> = {
+  default: ['Sua empresa está preparada para enfrentar', 'a maior mudança de mercado da história?'],
+  industria: ['Qual etapa da sua produção', 'custa mais hora do que deveria?'],
+  servicos: ['Quantas horas da sua equipe', 'vão para o que não é o serviço?'],
+  varejo: ['Quanto do seu atendimento', 'acontece depois que você fecha?'],
+};
+
+/**
+ * Passo entre palavras na entrada da manchete.
+ *
+ * Era 0,12s, herdado do `staggerChildren` do motion. Com treze palavras, a
+ * última só começava a aparecer 1,54s depois do primeiro frame — e era ela que
+ * segurava o LCP. A 0,045s a manchete inteira fecha em ~1,1s e o escalonamento
+ * continua legível como escalonamento.
+ */
+const WORD_STEP_S = 0.045;
+
+/** Atraso de entrada, lido pelo CSS em `animation-delay: var(--d)`. */
+const enterAt = (seconds: number) => ({ '--d': `${seconds}s` }) as CSSProperties;
+
+/**
+ * Uma linha da manchete, palavra a palavra.
+ *
+ * `offset` é a posição da primeira palavra desta linha na frase inteira, para o
+ * escalonamento atravessar a quebra de linha sem reiniciar.
+ *
+ * Sem `motion` de propósito: a entrada é CSS (`.hero-word` em index.css), o que
+ * tira a primeira pintura da dependência do bundle. Ver a nota longa lá.
+ */
+function HeroLine({
+  text, offset, accent = false,
+}: { text: string; offset: number; accent?: boolean }) {
+  const words = text.split(' ');
+  return (
+    <span className={accent ? 'text-accent-dark font-semibold italic' : undefined}>
+      {words.map((word, i) => (
+        <Fragment key={word + i}>
+          <span className="hero-word" style={enterAt((offset + i) * WORD_STEP_S)}>
+            {word}
+          </span>
+          {i < words.length - 1 ? ' ' : ''}
+        </Fragment>
+      ))}
+    </span>
+  );
+}
+
 function SceneHero({ onUnderstandMore }: { onUnderstandMore: () => void }) {
   const { requestIntent } = useAgentIntent();
-  const searchParams = new URLSearchParams(window.location.search);
-  const ref = searchParams.get('ref')?.toLowerCase();
+  const [ref, setRef] = useState<string | undefined>(undefined);
+  useEffect(() => {
+    setRef(new URLSearchParams(window.location.search).get('ref')?.toLowerCase());
+  }, []);
 
-  /**
-   * Cada palavra anima sozinha, mas o espaco entre elas e um no de texto real —
-   * nao margem. Sem isso o textContent do H1 sai grudado ("OTsunamidaIA...") e
-   * fica ilegivel para leitor de tela, copy-paste e crawler generativo.
-   */
-  const animatedText = (text: string, isAccent?: boolean) => {
-    const words = text.split(' ');
-    return (
-      <span className={isAccent ? 'text-accent-dark font-semibold italic' : ''}>
-        {words.map((word, i) => (
-          <Fragment key={word + i}>
-            <motion.span
-              variants={{
-                hidden: { opacity: 0, y: 30, filter: 'blur(8px)' },
-                visible: { opacity: 1, y: 0, filter: 'blur(0px)' },
-              }}
-              transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
-              className="inline-block"
-            >
-              {word}
-            </motion.span>
-            {i < words.length - 1 ? ' ' : ''}
-          </Fragment>
-        ))}
-      </span>
-    );
-  };
+  const [lead, accent] = (ref && HEADLINES[ref]) || HEADLINES.default;
+  /** Onde a segunda linha entra na contagem de palavras. */
+  const accentOffset = lead.split(' ').length;
 
-  let headline = (
+  const headline = (
     <>
-      <span className="block pb-2">{animatedText('O Tsunami da IA está chegando!')}</span>{' '}
-      <span className="block pb-4">{animatedText('É o fim da ineficiência humana.', true)}</span>
+      <span className="block pb-2">
+        <HeroLine text={lead} offset={0} />
+      </span>{' '}
+      <span className="block pb-4">
+        <HeroLine text={accent} offset={accentOffset} accent />
+      </span>
     </>
   );
 
-  if (ref === 'industria') {
-    headline = (
-      <>
-        <span className="block pb-2">{animatedText('Sua produção manual')}</span>{' '}
-        <span className="block pb-4">{animatedText('é o gargalo que vai te afogar.', true)}</span>
-      </>
-    );
-  } else if (ref === 'servicos') {
-    headline = (
-      <>
-        <span className="block pb-2">{animatedText('Vender horas humanas')}</span>{' '}
-        <span className="block pb-4">{animatedText('é um modelo com os dias contados.', true)}</span>
-      </>
-    );
-  } else if (ref === 'varejo') {
-    headline = (
-      <>
-        <span className="block pb-2">{animatedText('O estoque parado')}</span>{' '}
-        <span className="block pb-4">{animatedText('não é seu único custo.', true)}</span>
-      </>
-    );
-  }
-
   return (
-    <div className="w-full max-w-4xl mx-auto px-4 flex flex-col items-center text-center pointer-events-auto relative z-10">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="glass-chip inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-5 md:mb-6"
-      >
-        <Target className="text-accent animate-pulse" size={16} />
+    <div className="w-full max-w-4xl mx-auto px-4 flex flex-col items-center text-center pointer-events-auto relative z-10 min-h-[calc(100svh-11rem)] md:min-h-[calc(100svh-12rem)] justify-between">
+      <div className="flex flex-col items-center">
+      <div className="hero-rise glass-chip inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-5 md:mb-6">
+        <Target className="text-accent animate-pulse motion-reduce:animate-none" size={16} />
         <span className="text-slate-900 font-sans tracking-[0.1em] md:tracking-[0.15em] uppercase text-[10px] md:text-xs font-black whitespace-nowrap">
           {ref && REF_LABEL[ref] ? `Estratégia para ${REF_LABEL[ref]}` : 'Conhecimento relevante para todo empresário'}
         </span>
-      </motion.div>
+      </div>
 
-      <motion.h1
-        initial="hidden"
-        animate="visible"
-        variants={{ visible: { transition: { staggerChildren: 0.12, delayChildren: 0.1 } }, hidden: {} }}
-        className="heading-hero mb-5 md:mb-6 text-slate-950 font-bold tracking-tight"
-      >
+      <h1 className="heading-hero text-slate-950 font-bold tracking-tight">
         {headline}
-      </motion.h1>
+      </h1>
+      </div>
 
-      <motion.p
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.6, duration: 1 }}
-        className="glass text-[15px] md:text-xl text-slate-800 max-w-2xl mb-8 md:mb-10 font-sans font-medium leading-relaxed px-4 py-3 rounded-2xl"
+      <div
+        aria-hidden="true"
+        className="flex-1 min-h-[8svh] md:min-h-[18svh] [@media(max-height:600px)]:min-h-0"
+      />
+
+      <div className="flex flex-col items-center w-full">
+      <p
+        style={enterAt(0.3)}
+        className="hero-rise glass text-[15px] md:text-xl text-slate-800 max-w-2xl mb-6 md:mb-10 font-sans font-medium leading-relaxed px-4 py-3 rounded-2xl"
       >
-        Se você ainda não utiliza inteligência artificial em <strong className="font-bold text-slate-950">TODOS OS SEUS PROJETOS</strong>, você está rasgando dinheiro.
-      </motion.p>
+        A Inteligência Artificial não é coisa do futuro, é <strong className="font-bold text-slate-950">necessidade atual</strong> de empresários que se adaptam, para continuar prosperando.
+      </p>
 
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.8, duration: 1 }}
-        className="flex flex-col sm:flex-row items-center justify-center gap-3.5 md:gap-4 w-full sm:w-auto pointer-events-auto"
+      {/* Os dois CTAs entravam com `delay: 0.8` no motion — ou seja, só depois
+          de o bundle inteiro hidratar E de mais 800 ms. Eram os últimos
+          elementos da primeira dobra a existir, sendo os únicos que convertem. */}
+      <div
+        style={enterAt(0.42)}
+        className="hero-rise flex flex-col sm:flex-row items-center justify-center gap-3.5 md:gap-4 w-full sm:w-auto pointer-events-auto"
       >
         <MagneticButton
           onClick={() => {
@@ -169,38 +186,22 @@ function SceneHero({ onUnderstandMore }: { onUnderstandMore: () => void }) {
           <span>Entenda melhor</span>
           <ChevronDown size={16} className="group-hover:translate-y-0.5 transition-transform duration-300" />
         </MagneticButton>
-      </motion.div>
+      </div>
+      </div>
     </div>
   );
 }
 
-// ─── Capitulo 5: O AGENTE E A AGENDA ─────────────────────────────────────────
-// Um caminho so. Antes eram tres saidas competindo — cartao de oferta, chat e
-// FAB — e a conversao real era um link de WhatsApp com dados parciais. A oferta
-// vira faixa de contexto acima do agente: informacao disponivel, sem disputar
-// o clique.
+// ─── Capitulo 5: O AGENTE ─────────────────────────────────────────────────────
 function SceneCTA() {
   return (
     <div className="w-full max-w-4xl mx-auto px-2 md:px-4 flex flex-col justify-center items-center text-center pointer-events-auto">
-      <div className="w-full mb-4 md:mb-5">
-        <h2 className="reading-surface text-2xl md:text-5xl font-serif text-slate-900 mb-2 px-4 py-2 inline-block">
-          Trinta minutos, <span className="italic font-normal text-slate-500">e você sai com um mapa.</span>
-        </h2>
-        {/* reading-surface e obrigatorio aqui: nesta dobra a onda ja fechou
-            sobre a camera e o fundo do canvas e azul profundo. Sem a superficie
-            clara, este e o unico texto do capitulo que ficaria escuro sobre
-            escuro — os demais ja vivem dentro de cartoes de vidro. */}
-        <p className="reading-surface inline-block px-4 py-2 text-slate-700 text-[13px] md:text-base max-w-xl mx-auto font-sans leading-relaxed">
-          Conte ao agente o que sua empresa faz. Ele já sabe o que você respondeu até aqui, e marca
-          a sessão comigo.
-        </p>
-      </div>
+      <h2 className="reading-surface inline-block px-4 py-2 mb-3 md:mb-4 max-w-2xl font-sans text-[13px] md:text-lg text-slate-700 leading-relaxed">
+        Converse com o agente para agendar seu{' '}
+        <span className="font-semibold text-slate-900">Diagnóstico de Gargalo</span> e uma reunião de {SESSION_MINUTES} minutos com o especialista.
+      </h2>
 
-      <div className="w-full mb-4">
-        <OfferSection />
-      </div>
-
-      <div className="w-full h-[78svh] lg:h-auto lg:min-h-[560px]">
+      <div className="w-full h-[calc(100svh-280px)] min-h-[380px] lg:h-[calc(100svh-290px)] lg:min-h-[420px] lg:max-h-[680px]">
         <AIChatAgent />
       </div>
     </div>
@@ -208,27 +209,44 @@ function SceneCTA() {
 }
 
 // ─── Pagina ──────────────────────────────────────────────────────────────────
-// Seis dobras. A ordem e a espinha narrativa: ameaca -> validacao externa ->
-// tensao pessoal (a nota do site) -> o caminho (o catalogo) -> confianca ->
-// acao. O que quebrava antes era o degrau entre tensao e caminho: a pagina
-// subia a tensao e respondia com metodologia de ROI.
+/**
+ * Os capítulos.
+ *
+ * Cada um tinha também um `title`, escrito em `document.title` a cada troca de
+ * capítulo. Esse campo saiu: o Googlebot executa o JavaScript e lê o título
+ * DEPOIS, então o título indexado passava a ser "RIA — A Ameaça Silenciosa" em
+ * vez do que o prerender injetou — sem "gargalo", sem "ferramenta de IA". Ver
+ * a nota em src/content/meta.ts.
+ *
+ * O `label` continua fazendo o trabalho que importa: é o `aria-label` de cada
+ * <section> e o rótulo do evento de analytics.
+ */
 const CHAPTERS = [
-  { label: 'A ameaça silenciosa', title: 'RIA — A Ameaça Silenciosa' },
-  { label: 'Vozes do mercado', title: 'RIA — Vozes do Mercado' },
-  { label: 'Diagnóstico de saúde digital', title: 'RIA — Diagnóstico de Saúde Digital' },
-  { label: 'As seis frentes', title: 'RIA — As Seis Frentes' },
-  { label: 'Prova e quem executa', title: 'RIA — Prova e Quem Executa' },
-  { label: 'O agente e a agenda', title: 'RIA — Agende sua Sessão' },
+  { label: 'A ameaça silenciosa' },
+  { label: 'Vozes do mercado' },
+  { label: 'Diagnóstico de saúde digital' },
+  { label: 'As três frentes' },
+  { label: 'Prova e quem executa' },
+  { label: 'O agente e a agenda' },
 ];
 
 export default function LandingPage() {
   const { scrollYProgress } = useScroll();
   const { active, setRef } = useActiveChapter(CHAPTERS.length);
 
+  /**
+   * Restaura o título da home na navegação client-side — voltar de
+   * /privacidade pelo link do topo não recarrega o documento, e sem isto a home
+   * herdaria o título da política. Roda UMA vez, na montagem: não é função do
+   * capítulo ativo.
+   */
+  useEffect(() => {
+    document.title = metaFor('/').title;
+  }, []);
+
   useEffect(() => {
     const chapter = CHAPTERS[active];
     if (!chapter) return;
-    document.title = chapter.title;
     track('chapter_view', { index: active, label: chapter.label });
   }, [active]);
 
@@ -240,16 +258,19 @@ export default function LandingPage() {
   }, []);
 
   const goToCta = useCallback(() => goToChapter(CTA_CHAPTER), [goToChapter]);
-  const goToMarketVoices = useCallback(() => goToChapter(1), [goToChapter]);
+  const goToSocialProof = useCallback(() => goToChapter(1), [goToChapter]);
 
   const chapterContent = useMemo(() => [
-    <SceneHero onUnderstandMore={goToMarketVoices} />,
-    <SocialProofSection />,
+    <SceneHero onUnderstandMore={goToSocialProof} />,
+    <div className="w-full flex flex-col gap-8 md:gap-16">
+      <MarketEvidenceSection />
+      <SocialProofSection />
+    </div>,
     <PotentialDiagnostic />,
     <FrontsSection />,
     <CredibilitySection />,
     <SceneCTA />,
-  ], [goToMarketVoices]);
+  ], [goToSocialProof]);
 
   return (
     <VulnerabilityProvider>
@@ -273,18 +294,9 @@ export default function LandingPage() {
           ))}
         </main>
 
-        {/* Marca — recolhida no mobile, onde competia com o indice pelo topo. */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.5 }}
-          className="hidden md:block fixed top-6 left-6 z-30 pointer-events-none"
-        >
-          <div className="glass-chip flex items-center gap-3 px-4 py-2 rounded-full">
-            <div className="w-2 h-2 rounded-full bg-accent animate-pulse" />
-            <span className="text-slate-900 text-xs tracking-[0.35em] uppercase font-black">RIA</span>
-          </div>
-        </motion.div>
+        <SiteFooter />
+
+        <BrandMark />
 
         <WhatsAppFab hideOnChapter={CTA_CHAPTER} />
         </div>
@@ -292,3 +304,4 @@ export default function LandingPage() {
     </VulnerabilityProvider>
   );
 }
+

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { m, AnimatePresence } from 'motion/react';
 import { Send, User, Bot, Sparkles, TrendingUp, ArrowRight, MessageCircle, CalendarCheck } from 'lucide-react';
 import { config } from '../config';
 import { useVulnerability } from '../context/VulnerabilityContext';
@@ -9,6 +9,7 @@ import QualificationFlow from './QualificationFlow';
 import BookingEmbed from './BookingEmbed';
 import { buildQualificationPayload, labelFor, type Qualification } from '../lib/qualification';
 import { FRONTS } from '../content/fronts';
+import { SESSION_MINUTES } from '../content/offer';
 import {
   INTENTS,
   readCampaignRef,
@@ -151,7 +152,7 @@ export default function AIChatAgent({ webhookUrl = config.chatWebhook }: AIChatA
   const bookingFallbackMessage = useMemo(() => {
     if (!qualification) return '';
     return [
-      'Olá Raul, completei a qualificação no site e quero marcar a sessão de 30 minutos.',
+      `Olá Raul, completei a qualificação no site e quero marcar a sessão de ${SESSION_MINUTES} minutos.`,
       '',
       `Empresa: ${qualification.company}`,
       `E-mail: ${qualification.email}`,
@@ -369,7 +370,7 @@ export default function AIChatAgent({ webhookUrl = config.chatWebhook }: AIChatA
           </div>
         </div>
         <div className="glass-inset glass-accent flex items-center gap-2 px-3 py-1 rounded-full">
-          <Sparkles size={12} className="text-accent animate-pulse" />
+          <Sparkles size={12} className="text-accent animate-pulse motion-reduce:animate-none" />
           <span className="text-[9px] font-bold uppercase tracking-widest text-accent-dark">Ativo</span>
         </div>
       </div>
@@ -378,7 +379,7 @@ export default function AIChatAgent({ webhookUrl = config.chatWebhook }: AIChatA
       <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 md:p-6 space-y-5 scrollbar-hide">
         <AnimatePresence initial={false}>
           {messages.map((msg, i) => (
-            <motion.div
+            <m.div
               key={i}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -404,7 +405,7 @@ export default function AIChatAgent({ webhookUrl = config.chatWebhook }: AIChatA
                   {msg.content}
 
                   {msg.data && (
-                    <motion.div
+                    <m.div
                       initial={{ opacity: 0, scale: 0.96 }}
                       animate={{ opacity: 1, scale: 1 }}
                       className="glass-raised glass-accent mt-4 p-4 rounded-xl"
@@ -428,7 +429,7 @@ export default function AIChatAgent({ webhookUrl = config.chatWebhook }: AIChatA
                       >
                         Agendar minha sessão <ArrowRight size={12} />
                       </button>
-                    </motion.div>
+                    </m.div>
                   )}
 
                   {msg.handoff && (
@@ -445,20 +446,20 @@ export default function AIChatAgent({ webhookUrl = config.chatWebhook }: AIChatA
                   )}
                 </div>
               </div>
-            </motion.div>
+            </m.div>
           ))}
 
           {isTyping && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex gap-3">
+            <m.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex gap-3">
               <div className="w-8 h-8 rounded-full bg-accent/10 border border-accent/30 flex items-center justify-center">
                 <Bot size={14} className="text-accent" />
               </div>
               <div className="glass-inset p-4 rounded-2xl flex items-center gap-1">
-                <div className="w-1.5 h-1.5 bg-accent rounded-full animate-bounce [animation-delay:-0.3s]" />
-                <div className="w-1.5 h-1.5 bg-accent rounded-full animate-bounce [animation-delay:-0.15s]" />
-                <div className="w-1.5 h-1.5 bg-accent rounded-full animate-bounce" />
+                <div className="w-1.5 h-1.5 bg-accent rounded-full animate-bounce motion-reduce:animate-none [animation-delay:-0.3s]" />
+                <div className="w-1.5 h-1.5 bg-accent rounded-full animate-bounce motion-reduce:animate-none [animation-delay:-0.15s]" />
+                <div className="w-1.5 h-1.5 bg-accent rounded-full animate-bounce motion-reduce:animate-none" />
               </div>
-            </motion.div>
+            </m.div>
           )}
         </AnimatePresence>
 
@@ -472,7 +473,7 @@ export default function AIChatAgent({ webhookUrl = config.chatWebhook }: AIChatA
               }}
               className="w-full px-4 py-3 bg-slate-900 text-white rounded-xl font-black text-[11px] uppercase tracking-widest hover:bg-accent active:scale-[0.99] transition-all inline-flex items-center justify-center gap-2"
             >
-              <CalendarCheck size={14} /> Agendar minha sessão de 30 min
+              <CalendarCheck size={14} /> Agendar minha sessão de {SESSION_MINUTES} min
             </button>
           </div>
         )}
@@ -492,7 +493,7 @@ export default function AIChatAgent({ webhookUrl = config.chatWebhook }: AIChatA
 
         {/* Sugestoes de primeira mensagem — o vazio de 350px sai daqui */}
         {showSuggestions && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
@@ -507,7 +508,7 @@ export default function AIChatAgent({ webhookUrl = config.chatWebhook }: AIChatA
                 {s}
               </button>
             ))}
-          </motion.div>
+          </m.div>
         )}
       </div>
 
@@ -521,7 +522,7 @@ export default function AIChatAgent({ webhookUrl = config.chatWebhook }: AIChatA
               onKeyDown={(e) => e.key === 'Enter' && send(input)}
               aria-label="Mensagem para o agente de IA"
               placeholder="Digite sua resposta..."
-              className="glass-field w-full rounded-xl py-4 pl-4 pr-14 text-base md:text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-accent/20 placeholder:text-slate-400"
+              className="glass-field w-full rounded-xl py-4 pl-4 pr-14 text-base md:text-sm text-slate-900 placeholder:text-slate-400"
             />
             {/* 44x44: o botao tinha 32px de lado, o menor alvo da pagina — e o
                 unico que envia a mensagem. */}

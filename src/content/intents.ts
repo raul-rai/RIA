@@ -46,7 +46,7 @@ export const GREETING =
   'Olá. Sou o Agente de Inteligência da RIA. Me conte em uma frase o que sua empresa faz e onde o tempo da equipe está indo — eu volto com onde a IA paga mais rápido.';
 
 export const NO_WEBSITE_GREETING =
-  'Você ainda nem tem um site para surfar a era da inteligência artificial. Por isso seu índice bateu 101%: não existe página para o ChatGPT, o Gemini ou o Perplexity citarem quando alguém procura o que você vende. Me diga em uma frase o que sua empresa faz — eu volto com o que precisa estar no ar primeiro.';
+  'Você ainda nem tem um site para surfar a era da inteligência artificial. Por isso eu marco seu índice fora da escala, em 101% — não é uma medição, é a forma de dizer que não existe página para o ChatGPT, o Gemini ou o Perplexity citarem quando alguém procura o que você vende. Me diga em uma frase o que sua empresa faz — eu volto com o que precisa estar no ar primeiro.';
 
 export interface IntentContext {
   /** Segmento da campanha, ja validado por readCampaignRef. */
@@ -77,6 +77,12 @@ export const INTENTS: Record<IntentId, IntentDefinition> = {
     id: 'hero-cold',
     userMessage: (ctx) => {
       const abertura = ctx.ref ? REF_PHRASE[ctx.ref] : undefined;
+      // A frase ecoa o texto LITERAL do botao e so entao se completa. E essa
+      // repeticao que faz o chat parecer continuacao do clique, e nao um
+      // formulario novo. Se o rotulo do CTA do hero mudar, esta string muda
+      // junto — e ja ficou dessincronizada uma vez: o botao virou "Pare de
+      // rasgar dinheiro" e aqui continuou "quero achar o meu gargalo", entao o
+      // lead abria a conversa dizendo algo que nunca leu na tela.
       return abertura
         ? `${abertura} e quero parar de rasgar dinheiro. Por onde eu começo?`
         : 'Quero parar de rasgar dinheiro. Por onde eu começo?';
@@ -127,18 +133,18 @@ export const INTENTS: Record<IntentId, IntentDefinition> = {
     userMessage: (ctx) => {
       const faltando = uncoveredFronts(FRONTS, ctx.frontsChecked);
       const marcadas = FRONTS.length - faltando.length;
-      if (marcadas === 0) return 'Não cubro nenhuma das seis frentes. Quero montar minha pauta.';
+      if (marcadas === 0) return 'Não cubro nenhuma das três frentes. Quero montar minha pauta.';
       if (faltando.length === 0)
-        return 'Marquei as seis frentes. Quero saber o que ainda dá pra melhorar.';
+        return 'Marquei as três frentes. Quero saber o que ainda dá pra melhorar.';
       const verbo = faltando.length === 1 ? 'Falta' : 'Faltam';
-      return `Marquei ${marcadas} de ${FRONTS.length}. ${verbo} ${formatList(
+      return `Marquei ${marcadas} de 3. ${verbo} ${formatList(
         faltando.map((f) => f.tag)
       )}. Quero montar minha pauta.`;
     },
     agentReply: (ctx) => {
       const faltando = uncoveredFronts(FRONTS, ctx.frontsChecked);
       if (faltando.length === 0)
-        return 'Seis de seis é raro. Então a conversa deixa de ser sobre o que falta e passa a ser sobre o que está rodando abaixo do que poderia. Me diz o que sua empresa faz e qual dessas seis te dá mais trabalho hoje.';
+        return 'Três de três é raro. Então a conversa deixa de ser sobre o que falta e passa a ser sobre o que está rodando abaixo do que poderia. Me diz o que sua empresa faz e qual dessas três te dá mais trabalho hoje.';
       const primeira = faltando[0];
       const fecho =
         faltando.length === 1

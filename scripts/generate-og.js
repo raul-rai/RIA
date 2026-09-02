@@ -16,7 +16,7 @@ import { statSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
-const BRAND = '#00838F';
+const BRAND = '#00707A';
 const BRAND_DARK = '#005662';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));

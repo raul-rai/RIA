@@ -1,7 +1,6 @@
-import { motion } from 'motion/react';
-import { LineChart, Ruler, Target, Timer, Hammer, Check, ArrowUpRight, Award } from 'lucide-react';
+import { m } from 'motion/react';
+import { LineChart, Hammer, Check, ArrowUpRight, Award } from 'lucide-react';
 import { CASES } from '../content/cases';
-import { FRONTS } from '../content/fronts';
 import { CONSULTANT, PHOTO_SRC, PHOTO_ALT } from '../content/consultant';
 import { track } from '../lib/analytics';
 import { useAgentIntent } from '../context/AgentIntentContext';
@@ -11,18 +10,13 @@ import { useAgentIntent } from '../context/AgentIntentContext';
  *
  * Estavam separadas em ProofSection e ConsultantSection. Para consultor solo
  * sao a mesma prova: nao adianta o caso funcionar se o visitante nao sabe quem
- * fez, nem adianta a credencial sem caso. Cada caso entra etiquetado com a
- * frente que prova — e essa etiqueta que costura esta dobra com a dobra 3.
+ * fez, nem adianta a credencial sem caso.
+ *
+ * A dobra carrega DUAS coisas: os casos e quem executa. Tudo o que nao for uma
+ * dessas duas — etiqueta de frente, grade de metodo — foi retirado, porque numa
+ * dobra que ja empilha tres cartoes mais um painel de consultor, cada elemento
+ * a mais custa atencao no ponto exato em que a prova precisa dela.
  */
-
-const METHOD = [
-  { icon: Ruler, title: 'Medimos antes', body: 'Horas e volume da rotina, por 30 dias, no seu sistema.' },
-  { icon: Target, title: 'Um gargalo por vez', body: 'A primeira entrega ataca o de maior custo por hora.' },
-  { icon: Timer, title: 'Prazo na proposta', body: 'Não entrou em produção na data? A etapa não é cobrada.' },
-  { icon: LineChart, title: 'Medimos depois', body: 'Mesmo indicador, mesma fonte. O número é seu.' },
-];
-
-const frontTag = (id: number) => FRONTS.find((f) => f.id === id)?.tag ?? '';
 
 export default function CredibilitySection() {
   const { requestIntent } = useAgentIntent();
@@ -32,17 +26,25 @@ export default function CredibilitySection() {
         <div className="glass-chip glass-accent inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full mb-3">
           <LineChart size={14} className="text-accent" />
           <span className="text-accent-dark text-[10px] md:text-xs uppercase tracking-[0.2em] font-black">
-            Já atravessei isso com outros
+            Parcerias frutíferas
           </span>
         </div>
+        {/*
+          O título já foi "Cada frente, com um caso atrás." e depois "Três
+          operações, o mesmo método." Os dois descreviam a seção para dentro —
+          contavam o que ELA é. Este aponta para fora: os cartões abaixo são
+          parcerias que deram fruto, e a única coisa que o visitante precisa
+          fazer com essa informação é se ver no próximo cartão.
+        */}
         <h2 className="text-2xl md:text-4xl lg:text-5xl font-serif text-slate-900 leading-tight reading-surface glass-md-none inline-block px-4 py-2">
-          Cada frente, <span className="italic font-normal text-slate-500">com um caso atrás.</span>
+          A sua empresa pode ser a{' '}
+          <span className="italic font-normal text-slate-500">próxima.</span>
         </h2>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-5 mb-8">
         {CASES.map((c, i) => (
-          <motion.article
+          <m.article
             key={c.segment}
             initial={{ opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -61,9 +63,14 @@ export default function CredibilitySection() {
               </span>
             </div>
 
-            <span className="glass-inset glass-accent self-start px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest text-accent-dark">
-              Prova a frente {c.front} · {frontTag(c.front)}
-            </span>
+            {/*
+              A etiqueta "Prova a frente N · Tag" saiu daqui. Ela repetia, em
+              caixa alta e a três centímetros de distância, o que a dobra 3
+              acabou de dizer — e cobrava do leitor um cruzamento de índices
+              ("frente 2 era qual mesmo?") no exato momento em que ele deveria
+              estar lendo o resultado. O campo `front` continua em cases.ts:
+              o vínculo segue existindo no conteúdo, só não é mais desenhado.
+            */}
 
             <p className="text-lg md:text-xl font-serif text-slate-900 leading-tight">{c.headline}</p>
 
@@ -82,35 +89,36 @@ export default function CredibilitySection() {
               </div>
             </dl>
 
-            {c.measurement && (
+            {/*
+              A linha de apuração é o que separa "resultado" de "alegação".
+              Antes ela simplesmente sumia quando ausente — e o cartão ficava
+              com um número grande, sem nenhum sinal de que ninguém o auditou.
+              Era o pior dos mundos: a seção anunciava rigor no cabeçalho
+              ("Como o número é apurado") e omitia a ausência em silêncio.
+              Agora a falta é declarada. Some assim que `measurement` existir.
+            */}
+            {c.measurement ? (
               <p className="text-[11px] text-slate-500 border-t border-slate-900/10 pt-2.5 mt-auto">
                 {c.measurement}
               </p>
-            )}
-          </motion.article>
+            ) : c.kind === 'resultado' ? (
+              <p className="text-[11px] text-amber-800/90 border-t border-slate-900/10 pt-2.5 mt-auto">
+                Número informado pelo cliente, ainda sem apuração independente publicada.
+              </p>
+            ) : null}
+          </m.article>
         ))}
       </div>
 
-      <div className="mb-8">
-        <h3 className="text-center text-xs md:text-sm font-bold uppercase tracking-[0.18em] text-slate-700 mb-5">
-          E o número dá para auditar
-        </h3>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          {METHOD.map((m) => {
-            const Icon = m.icon;
-            return (
-              <div
-                key={m.title}
-                className="glass-card rounded-2xl p-4 flex flex-col gap-1.5 text-left"
-              >
-                <Icon size={14} className="text-accent" />
-                <h4 className="text-xs md:text-sm font-bold text-slate-900 font-serif">{m.title}</h4>
-                <p className="text-[11px] md:text-xs text-slate-600 leading-snug">{m.body}</p>
-              </div>
-            );
-          })}
-        </div>
-      </div>
+      {/*
+        Aqui ficava a grade "Como o número é apurado" — quatro cartões de
+        método (medimos antes, um gargalo por vez, prazo na proposta, medimos
+        depois). Saiu: eram doze cartões empilhados numa dobra só, e o método
+        competia por atenção com a prova sem ser o que fecha a venda. A
+        exigência de apuração continua onde ela de fato morde: cada cartão de
+        caso ainda declara sua `measurement`, e ainda imprime o aviso de "sem
+        apuração independente" quando ela falta.
+      */}
 
       <div className="glass-panel rounded-3xl p-6 md:p-8">
         <div className="grid grid-cols-1 md:grid-cols-[auto_1fr] gap-6 md:gap-8 items-center">
@@ -141,9 +149,13 @@ export default function CredibilitySection() {
               {CONSULTANT.name}
             </h3>
             <p className="text-slate-500 text-xs md:text-sm italic mb-3">{CONSULTANT.role}</p>
-            <p className="text-slate-600 text-xs md:text-sm leading-relaxed mb-4 max-w-xl mx-auto md:mx-0">
-              {CONSULTANT.bio}
-            </p>
+            <div className="flex flex-col gap-3 mb-4 max-w-xl mx-auto md:mx-0">
+              {CONSULTANT.bio.map((paragrafo) => (
+                <p key={paragrafo} className="text-slate-600 text-xs md:text-sm leading-relaxed">
+                  {paragrafo}
+                </p>
+              ))}
+            </div>
 
             <ul className="flex flex-col gap-2 mb-5 text-left max-w-xl mx-auto md:mx-0">
               {CONSULTANT.credentials.map((c) => (
@@ -162,7 +174,7 @@ export default function CredibilitySection() {
                 }}
                 className="px-6 py-3.5 w-full md:w-auto bg-slate-900 text-white rounded-xl font-black text-xs uppercase tracking-widest hover:bg-accent active:scale-95 transition-all inline-flex items-center justify-center gap-2 shadow-lg"
               >
-                Falar com o agente <ArrowUpRight size={14} />
+                Fale com nosso agente <ArrowUpRight size={14} />
               </button>
             </div>
           </div>

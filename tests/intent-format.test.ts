@@ -22,18 +22,18 @@ describe('formatList: lista que cabe dentro de uma frase', () => {
 });
 
 describe('uncoveredFronts: a pauta da sessao', () => {
-  it('FMT-05: sem nada marcado, sobram as seis na ordem do catalogo', () => {
-    const result = uncoveredFronts(FRONTS, [false, false, false, false, false, false]);
-    expect(result.map((f) => f.id)).toEqual([1, 2, 3, 4, 5, 6]);
+  it('FMT-05: sem nada marcado, sobram as tres na ordem do catalogo', () => {
+    const result = uncoveredFronts(FRONTS, [false, false, false]);
+    expect(result.map((f) => f.id)).toEqual([1, 2, 3]);
   });
 
   it('FMT-06: com tudo marcado, nao sobra nenhuma', () => {
-    expect(uncoveredFronts(FRONTS, [true, true, true, true, true, true])).toEqual([]);
+    expect(uncoveredFronts(FRONTS, [true, true, true])).toEqual([]);
   });
 
   it('FMT-07: devolve exatamente as nao marcadas, preservando a ordem', () => {
-    const result = uncoveredFronts(FRONTS, [true, false, true, false, false, false]);
-    expect(result.map((f) => f.id)).toEqual([2, 4, 5, 6]);
+    const result = uncoveredFronts(FRONTS, [true, false, true]);
+    expect(result.map((f) => f.id)).toEqual([2]);
   });
 });
 

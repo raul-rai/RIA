@@ -1,17 +1,37 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Inter", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  --font-serif: "Playfair Display", serif;
-  --font-display: "Playfair Display", serif;
+  /* "… Variable" e o nome que o @fontsource registra para a fonte variavel.
+     O nome antigo fica logo atras: quem tiver a fonte instalada localmente
+     continua servido, e um erro de carregamento cai numa Inter de verdade
+     antes de cair no Helvetica. Os arquivos sao importados em main.tsx —
+     ver a nota la sobre por que deixaram de vir do Google. */
+  --font-sans: "Inter Variable", "Inter", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-serif: "Playfair Display Variable", "Playfair Display", Georgia, serif;
+  --font-display: "Playfair Display Variable", "Playfair Display", Georgia, serif;
   
   --color-bg-base: #ffffff;
   --color-bg-alt: #f8fafc;
   
   --color-primary: #0f172a;
-  --color-accent: #00838F;
+  --color-accent: #00707A;
   --color-accent-dark: #005662;
   --color-muted: #64748b;
+
+  /* Cor do anel de foco. NAO e o accent, e a diferenca tem conta.
+
+     O anel precisa de 3:1 contra o que estiver ATRAS dele, e esta pagina tem
+     dois fundos muito diferentes: o vidro quase branco das primeiras dobras e
+     a agua azul-marinho OPACA das ultimas (rgb 6,38,66, ver underwaterStops).
+     Uma cor so tem que servir aos dois.
+
+       #00707A (o accent)   vidro 5.78   agua 2.64   <- reprova na agua
+       #0093A0 (esta)       vidro 3.66   agua 4.17   <- passa nos dois
+       #00B4D8 (o ciano)    vidro 2.44   agua 6.25   <- reprova no vidro
+
+     Usar o accent aqui deixaria o foco invisivel exatamente na dobra do
+     agente, que e onde ha formulario. */
+  --color-focus: #0093A0;
   
   --radius-xl: 1.5rem;
   --radius-2xl: 2rem;
@@ -52,7 +72,7 @@
 @property --glass-edge-hover {
   syntax: "<color>";
   inherits: true;
-  initial-value: rgba(0, 131, 143, 0.42);
+  initial-value: rgba(0, 112, 122, 0.42);
 }
 
 @property --glass-specular {
@@ -123,6 +143,80 @@
   
   h1, h2, h3, h4, h5, h6 {
     @apply font-serif tracking-tight leading-[1.2] md:leading-tight text-slate-900;
+  }
+
+  /* ── O anel de foco, um so para a pagina inteira ─────────────────────────
+
+     O QUE ISTO CONSERTA
+
+     Tres campos matavam o proprio indicador de foco:
+
+       PotentialDiagnostic  focus:outline-none        <- sem substituto nenhum
+       QualificationFlow    focus:outline-none        <- so a borda do .glass-field
+       AIChatAgent          focus:ring-accent/20      <- 20% de opacidade
+
+     Sao justamente os campos por onde passam URL, e-mail, telefone e faixa de
+     faturamento. Quem navega por teclado digitava sem saber onde estava.
+
+     E o resto da pagina — umas quarenta superficies clicaveis — dependia do
+     anel PADRAO do navegador, que muda de forma entre navegadores e some sobre
+     fundo escuro. Quatro componentes tinham anel proprio, cada um com a sua
+     receita. Ou seja: nao havia sistema, havia excecoes.
+
+     POR QUE `outline` E NAO `box-shadow`
+
+     O box-shadow (o `ring-*` do Tailwind) e cortado por qualquer ancestral com
+     overflow:hidden — e o painel do chat, o carrossel e os cartoes de
+     autoridade sao todos overflow:hidden. O outline moderno acompanha o
+     border-radius sozinho e nao entra na pilha de sombras do vidro, que ja
+     carrega o reflexo, a elevacao e o anel de selecao.
+
+     `:focus-visible`, nao `:focus`: quem clica com o mouse nao ve anel nenhum;
+     quem chega pelo teclado ve sempre. */
+  :focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
+  }
+
+  /* Onde o anel nao cabe do lado de fora.
+
+     O botao de play cobre a imagem inteira (`absolute inset-0`) dentro de um
+     cartao com overflow:hidden. Um anel deslocado para fora seria recortado
+     pela quina do cartao e o usuario nao veria nada — entao ele cresce para
+     dentro. */
+  .focus-ring-inset:focus-visible {
+    outline-offset: -3px;
+  }
+}
+
+/* ── O contexto de posicionamento do vidro ────────────────────────────────────
+   Toda superficie de vidro precisa ser um contexto de posicionamento, porque o
+   ::before que desenha o reflexo especular usa `inset: 0`. Mas essa declaracao
+   NAO pode morar junto com o resto da fisica do vidro, la embaixo em
+   @layer utilities: aquele bloco vem depois do @import "tailwindcss", entao
+   `position: relative` ganhava de `.absolute` e `.fixed` por ordem de origem.
+
+   O sintoma era mudo e caro. O cartao do indice de vulnerabilidade e a linha do
+   tempo da IA (EliteHUD) declaram `absolute top-6 right-6` e `absolute bottom-8
+   left-8`, mas viravam blocos `relative` de largura total: o indice esticava por
+   toda a tela e a timeline subia do rodape para o topo, uma em cima da outra.
+   Como `position: relative` aceita `top`/`right` como deslocamento, nada
+   quebrava visivelmente o suficiente para parecer um erro de CSS.
+
+   Em @layer components a mesma regra perde para qualquer utilitario de posicao —
+   que e exatamente a precedencia que se espera de uma classe de componente. */
+@layer components {
+  .glass,
+  .glass-panel,
+  .glass-card,
+  .glass-chip,
+  .reading-surface,
+  .premium-glass,
+  .glass-inset,
+  .glass-raised,
+  .glass-field,
+  .glass-rail {
+    position: relative;
   }
 }
 
@@ -202,14 +296,15 @@
     --glass-blur: 20px;
     --glass-sat: 170%;
     --glass-edge: rgba(15, 23, 42, 0.10);
-    --glass-edge-hover: rgba(0, 131, 143, 0.42);
+    --glass-edge-hover: rgba(0, 112, 122, 0.42);
     --glass-specular: rgba(255, 255, 255, 0.75);
     --glass-sheen: rgba(0, 180, 216, 0.10);
     --glass-lift: 0 1px 2px rgba(15, 23, 42, 0.04),
       0 10px 24px -12px rgba(15, 23, 42, 0.18),
       0 28px 56px -28px rgba(8, 47, 73, 0.20);
 
-    position: relative;
+    /* position: relative vive em @layer components, no topo do arquivo — daqui
+       ele vencia os utilitarios .absolute/.fixed. Ver o comentario de la. */
     background-color: rgb(var(--glass-tint) / var(--glass-alpha));
     backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
     -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
@@ -320,12 +415,12 @@
 
   .glass-accent {
     --glass-tint: 228 248 251;
-    --glass-edge: rgba(0, 131, 143, 0.30);
-    --glass-edge-hover: rgba(0, 131, 143, 0.48);
+    --glass-edge: rgba(0, 112, 122, 0.30);
+    --glass-edge-hover: rgba(0, 112, 122, 0.48);
     --glass-sheen: rgba(0, 180, 216, 0.18);
     --inset-tint: 0 131 143;
     --inset-alpha: 0.10;
-    --inset-edge: rgba(0, 131, 143, 0.28);
+    --inset-edge: rgba(0, 112, 122, 0.28);
   }
 
   /* Vidro escuro — o modal de video, unica superficie sobre fundo preto. */
@@ -356,7 +451,7 @@
     /* Sem defaults de --inset-* aqui: eles moram no @property la em cima,
        fora da cascata, para que os tons possam vencê-los. Ver o comentario
        do registro. */
-    position: relative;
+    /* position: relative vive em @layer components, no topo do arquivo. */
     transition:
       background-color 0.3s ease,
       border-color 0.3s ease,
@@ -394,7 +489,7 @@
   .glass-field:focus,
   .glass-field:focus-within {
     background-color: rgba(255, 255, 255, 0.82);
-    border-color: rgba(0, 131, 143, 0.55);
+    border-color: rgba(0, 112, 122, 0.55);
   }
 
   /* Faixa: cabecalho e rodape colados na quina de um painel de vidro. Sem
@@ -437,7 +532,7 @@
         inset 0 1px 0 rgba(255, 255, 255, 0.9),
         inset 0 -1px 0 rgba(15, 23, 42, 0.04),
         0 1px 2px rgba(15, 23, 42, 0.05),
-        0 16px 32px -14px rgba(0, 131, 143, 0.24),
+        0 16px 32px -14px rgba(0, 112, 122, 0.24),
         0 36px 64px -32px rgba(8, 47, 73, 0.22);
     }
 
@@ -466,7 +561,7 @@
         inset 0 1px 0 rgba(255, 255, 255, 0.9),
         inset 0 -1px 0 rgba(15, 23, 42, 0.04),
         0 1px 2px rgba(15, 23, 42, 0.05),
-        0 18px 36px -16px rgba(0, 131, 143, 0.28),
+        0 18px 36px -16px rgba(0, 112, 122, 0.28),
         0 40px 72px -36px rgba(8, 47, 73, 0.24);
     }
 
@@ -606,6 +701,79 @@
     @apply text-[30px] sm:text-[36px] md:text-[42px] lg:text-[52px] font-serif leading-[1.12];
   }
 
+  /* ── Entrada do hero, em CSS e não no motion ───────────────────────────────
+
+     O QUE ISTO CONSERTA
+
+     A primeira dobra era animada por `motion` com `initial={{ opacity: 0 }}`.
+     O motion serializa a variante inicial no SSR, então o dist/index.html
+     PUBLICADO saía com 28 elementos assim:
+
+         <span class="inline-block"
+               style="opacity:0;filter:blur(8px);transform:translateY(30px)">Sua</span>
+
+     — o chip, o H1 palavra a palavra, o parágrafo de apoio e OS DOIS CTAs. O
+     efeito medido: FCP e LCP idênticos em 1672 ms mesmo em localhost com o
+     bundle em cache, porque nada pintava antes de o JavaScript baixar,
+     executar e hidratar. O prerender resolveu o crawler e criou o problema
+     humano: quem chega por 4G olha uma tela vazia, e quem chega com o JS
+     bloqueado nunca vê a manchete nem os botões.
+
+     A CORREÇÃO
+
+     A animação passa a ser CSS. Duas propriedades fazem todo o trabalho:
+
+     1. O estado de REPOUSO é o normal da folha de estilo — visível. Nenhuma
+        regra aqui declara `opacity: 0` sobre o elemento; quem declara é o
+        keyframe, e keyframe só existe enquanto a animação existe. Sem suporte
+        a animação, com `prefers-reduced-motion`, ou se o JS nunca rodar, o
+        texto simplesmente está lá.
+
+     2. `animation-fill-mode: backwards` aplica o primeiro quadro durante o
+        atraso, que é o que dá o escalonamento sem precisar de um orquestrador
+        em JavaScript.
+
+     E, principalmente: a folha de estilo já é render-blocking (13 KB gzip). A
+     primeira pintura passa a depender dela, não do bundle de 156 KB.
+
+     O passo entre palavras caiu de 0,12s (o staggerChildren do motion) para
+     0,045s: a 0,12s a última das treze palavras só começava a aparecer 1,5s
+     depois do primeiro frame, e era ela que segurava o LCP. */
+  @keyframes hero-word-in {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+      filter: blur(8px);
+    }
+  }
+
+  @keyframes hero-rise-in {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+  }
+
+  .hero-word {
+    display: inline-block;
+    animation: hero-word-in 0.62s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+    animation-delay: var(--d, 0s);
+  }
+
+  .hero-rise {
+    animation: hero-rise-in 0.7s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+    animation-delay: var(--d, 0s);
+  }
+
+  /* Aqui o respeito à preferência sai de graça — era o que o motion não fazia
+     em nenhuma das 28 animações de entrada da página. */
+  @media (prefers-reduced-motion: reduce) {
+    .hero-word,
+    .hero-rise {
+      animation: none;
+    }
+  }
+
   /* Superficie de leitura para titulo que cai sobre a onda. Herda o mesmo
      vidro dos cartoes, mas devolve quina e elevacao: e um veu de contraste
      atras do texto, nao mais uma caixa na pilha. */
@@ -718,6 +886,38 @@
       text-shadow: -0.025em 0 0 rgba(255, 0, 0, 0.75),
         -0.025em -0.025em 0 rgba(0, 255, 0, 0.75),
         -0.025em -0.05em 0 rgba(0, 0, 255, 0.75);
+    }
+  }
+
+  /* As animações INFINITAS declaradas neste arquivo.
+   *
+   * O `<MotionConfig reducedMotion="user">` do App resolve tudo que é motion, e
+   * as utilitárias infinitas do Tailwind (`animate-pulse`, `animate-ping`,
+   * `animate-bounce`) levam `motion-reduce:` no ponto de uso. Sobram estas
+   * três, que são CSS deste arquivo e não passariam por nenhum dos dois
+   * caminhos.
+   *
+   * `.scanline` e `.glitch-text` não têm uso hoje. Entram aqui mesmo assim: uma
+   * classe com `infinite` no corpo é uma armadilha armada esperando o dia em
+   * que alguém a aplicar, e a guarda custa duas linhas.
+   *
+   * Fica de fora, de propósito, o `animate-spin` do botão de varredura. Ele só
+   * existe enquanto a análise roda e é o único sinal na tela de que ela ainda
+   * está viva; parar aquele seria trocar um incômodo por uma tela que parece
+   * travada. É a exceção de conteúdo essencial do próprio critério 2.2.2.
+   *
+   * ESTE BLOCO PRECISA FICAR DEPOIS DAS TRÊS DEFINIÇÕES, e é por isso que ele
+   * está no fim do arquivo em vez de junto do bloco do hero, onde nasceu.
+   * `@media` não acrescenta especificidade: `.glitch-text { animation: none }`
+   * aqui dentro e `.glitch-text { animation: glitch 500ms infinite }` lá em
+   * cima valem exatamente o mesmo, e quem vence é o último. Escrito antes, o
+   * bloco compilava, passava em teste que só procurasse o nome da classe, e não
+   * parava uma única animação. */
+  @media (prefers-reduced-motion: reduce) {
+    .animate-pulse-subtle,
+    .scanline,
+    .glitch-text {
+      animation: none;
     }
   }
 }

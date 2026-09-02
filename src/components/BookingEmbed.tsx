@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
-import { motion } from 'motion/react';
+import { m } from 'motion/react';
 import { CalendarCheck, MessageCircle } from 'lucide-react';
 import { config } from '../config';
 import { buildBookingUrl } from '../lib/booking';
 import { whatsappWithMessage } from '../constants/links';
 import { track } from '../lib/analytics';
+import { SESSION_MINUTES } from '../content/offer';
 
 /** Prazo para o iframe carregar antes de considerarmos a agenda como falha. */
 const LOAD_TIMEOUT_MS = 6000;
@@ -87,7 +88,7 @@ export default function BookingEmbed({ name, email, notes, fallbackMessage }: Bo
   }
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       className="glass-raised glass-accent mt-3 rounded-xl overflow-hidden text-left"
@@ -95,16 +96,16 @@ export default function BookingEmbed({ name, email, notes, fallbackMessage }: Bo
       <div className="glass-rail flex items-center gap-2 px-4 py-2.5 border-b border-slate-900/10">
         <CalendarCheck size={14} className="text-accent" />
         <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-slate-600">
-          Escolha o horário — 30 minutos
+          Escolha o horário — {SESSION_MINUTES} minutos
         </span>
       </div>
       <iframe
         src={url}
-        title="Agenda da sessão estratégica de 30 minutos"
+        title={`Agenda da sessão estratégica de ${SESSION_MINUTES} minutos`}
         onLoad={handleLoad}
         onError={() => setFailed(true)}
         className="w-full h-[420px] border-0"
       />
-    </motion.div>
+    </m.div>
   );
 }

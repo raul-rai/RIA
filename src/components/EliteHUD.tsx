@@ -1,4 +1,4 @@
-import { motion } from 'motion/react';
+import { m, useReducedMotion } from 'motion/react';
 import { useState, useEffect } from 'react';
 import { useVulnerability } from '../context/VulnerabilityContext';
 
@@ -20,6 +20,7 @@ function toneOf(index: number, hasNoWebsite: boolean) {
 
 export default function EliteHUD({ activeScene = 0 }: { activeScene?: number }) {
   const { vulnerabilityIndex, assessed, hasNoWebsite } = useVulnerability();
+  const reduzMovimento = useReducedMotion();
   const [logs, setLogs] = useState<{ year: string; text: string }[]>([]);
 
   useEffect(() => {
@@ -80,16 +81,48 @@ export default function EliteHUD({ activeScene = 0 }: { activeScene?: number }) 
             Vulnerability Index
           </span>
 
+          {/*
+            A ÚNICA animação infinita da página, e por isso a única que precisa
+            de guarda explícita.
+
+            O `<MotionConfig reducedMotion="user">` do App já cobriria: `height`
+            está no conjunto de chaves posicionais do motion, então a transição
+            viraria `{type: false}` sob a preferência do usuário. Mas depender
+            disso seria depender de um detalhe INTERNO da biblioteca — o dia em
+            que `height` sair daquele conjunto, estas barras voltam a pulsar
+            para sempre e ninguém fica sabendo.
+
+            Aqui a decisão fica na superfície: com movimento reduzido as barras
+            são estáticas, na altura de repouso. Elas continuam desenhando o
+            perfil do índice pela COR, que é onde mora a informação — o
+            balanço sempre foi enfeite. É o critério 2.2.2 (Pausar, Parar,
+            Ocultar): conteúdo em movimento automático que dura mais de cinco
+            segundos precisa ter como parar, e "para sempre" é bem mais que
+            cinco segundos.
+          */}
           <div className="flex items-end gap-1.5 h-6 w-full justify-end">
             {[55, 65, 80, 65, 50, 60, 78, 50, 75, 65].map((base, i) => {
               const threshold = Math.floor((val / 100) * 10);
               const isCritical = i >= Math.max(2, 10 - threshold);
               return (
-                <motion.div
+                <m.div
                   key={i}
-                  animate={{ height: [`${base}%`, `${Math.min(100, base + 12)}%`, `${base}%`] }}
-                  transition={{ duration: 2.5, repeat: Infinity, repeatType: 'reverse', delay: i * 0.1, ease: 'easeInOut' }}
-                  style={{ backgroundColor: isCritical ? tone.bar : '#cbd5e1' }}
+                  animate={
+                    reduzMovimento
+                      ? undefined
+                      : { height: [`${base}%`, `${Math.min(100, base + 12)}%`, `${base}%`] }
+                  }
+                  transition={
+                    reduzMovimento
+                      ? undefined
+                      : { duration: 2.5, repeat: Infinity, repeatType: 'reverse', delay: i * 0.1, ease: 'easeInOut' }
+                  }
+                  // A altura precisa vir do style quando não há animação: sem
+                  // ela a barra nasce com 0 de altura e o gráfico some.
+                  style={{
+                    backgroundColor: isCritical ? tone.bar : '#cbd5e1',
+                    ...(reduzMovimento ? { height: `${base}%` } : null),
+                  }}
                   className="w-1.5 rounded-full transition-colors duration-500"
                 />
               );
@@ -121,7 +154,7 @@ export default function EliteHUD({ activeScene = 0 }: { activeScene?: number }) 
           <span className="text-accent-dark font-black tracking-widest text-[10px]">AI_Timeline_Sync</span>
         </div>
         {logs.map((log, i) => (
-          <motion.div
+          <m.div
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1 - i * 0.12, x: 0 }}
             key={`${log.year}-${i}`}
@@ -129,7 +162,7 @@ export default function EliteHUD({ activeScene = 0 }: { activeScene?: number }) 
           >
             <span className="text-[9px] font-black text-cyan-800">{`[${log.year}]`}</span>
             <span className={i === 0 ? 'text-slate-950 font-bold' : 'text-slate-600 font-medium'}>{log.text}</span>
-          </motion.div>
+          </m.div>
         ))}
       </div>
     </div>

@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { motion } from 'motion/react';
+import { m } from 'motion/react';
 import { Check, Layers, ArrowRight } from 'lucide-react';
 import { FRONTS } from '../content/fronts';
 import { resolveFirstFront, countChecked } from '../lib/fronts';
@@ -40,31 +40,44 @@ export default function FrontsSection() {
 
   return (
     <div className="w-full max-w-5xl mx-auto px-4 flex flex-col justify-center pointer-events-auto">
-      <div className="text-center mb-4 md:mb-6 flex flex-col items-center">
-        <div className="glass-chip glass-accent inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full mb-2.5">
+      <div className="text-center mb-6 md:mb-8">
+        <div className="glass-chip glass-accent inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full mb-4">
           <Layers size={14} className="text-cyan-700" />
           <span className="text-cyan-800 text-[10px] md:text-xs font-black uppercase tracking-[0.2em]">
-            As seis frentes
+            As três frentes
           </span>
         </div>
+        {/*
+          O véu de leitura, resgatado do aceaf08.
 
-        {/* Veu de leitura. O titulo e o apoio caiam direto sobre a onda, que
-            nesta dobra esta no tom mais escuro do gradiente: slate-900 sobre
-            azul-petroleo nao tinha contraste e o paragrafo font-light sumia.
-            Diferente da dobra 5, aqui o veu NAO leva glass-md-none — quem
-            perde a leitura e justamente o desktop. */}
+          Este cabeçalho cai DIRETO sobre a onda, e nesta dobra a onda está no
+          tom mais escuro do gradiente. Sem véu, o `text-slate-900` do título e
+          o `text-slate-600` do parágrafo disputam contraste com a água — é o
+          mesmo problema que CredibilitySection e o cabeçalho do CTA já
+          resolvem com esta classe.
+
+          O commit que trouxe isto na `main` (aceaf08) foi descartado por outro
+          motivo: ele subia o catálogo de três para seis frentes, e a decisão
+          registrada foi manter três. Mas a correção de legibilidade não tinha
+          nada a ver com a contagem, e jogá-la fora junto seria perder um
+          conserto de contraste por tabela.
+
+          SEM `glass-md-none`, ao contrário da dobra do CTA: lá quem perde a
+          leitura é o mobile; aqui é o desktop, onde o cabeçalho é maior e
+          cobre mais área escura.
+        */}
         <div className="reading-surface inline-block px-5 py-3.5 md:px-8 md:py-4 max-w-2xl">
-          <h2 className="text-2xl md:text-4xl font-serif text-slate-900 mb-2.5">
-            É aqui que a IA entra <span className="italic font-normal text-slate-600">na sua operação.</span>
+          <h2 className="text-2xl md:text-5xl font-serif text-slate-900 mb-3">
+            É aqui que a IA entra <span className="italic font-normal text-slate-500">na sua operação.</span>
           </h2>
-          <p className="text-slate-700 text-xs md:text-sm max-w-xl mx-auto leading-relaxed">
-            Seis frentes, e é isso que eu faço. Marque as que a sua empresa já cobre — as que sobrarem
-            são a pauta da sua sessão.
+          <p className="text-slate-600 text-xs md:text-sm max-w-xl mx-auto font-light leading-relaxed">
+            Três frentes, e é isso que eu implanto. Elas entram DEPOIS de o diagnóstico dizer qual delas
+            paga primeiro — marque as que a sua empresa já cobre.
           </p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-w-5xl mx-auto w-full">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 max-w-4xl mx-auto w-full">
         {FRONTS.map((front, i) => {
           const isChecked = frontsChecked[i];
           const destacada = i === 0 && primeiraVazia && !isChecked;
@@ -78,7 +91,7 @@ export default function FrontsSection() {
                toggle "ja cubro" e o atalho "falar sobre" sao irmaos, nunca
                aninhados — <button> dentro de <button> e HTML invalido. */
             <div key={front.id} className={`glass-card glass-hover flex flex-col rounded-2xl ${tom}`}>
-              <motion.button
+              <m.button
                 type="button"
                 onClick={() => {
                   toggleFront(i);
@@ -86,7 +99,7 @@ export default function FrontsSection() {
                 }}
                 whileTap={{ scale: 0.98 }}
                 aria-pressed={isChecked}
-                className="text-left flex gap-3.5 p-4 pb-2.5"
+                className="text-left flex gap-3.5 p-4"
               >
                 <span
                   className={`w-6 h-6 rounded-lg border-2 shrink-0 flex items-center justify-center mt-0.5 ${
@@ -117,7 +130,7 @@ export default function FrontsSection() {
                     </span>
                   )}
                 </span>
-              </motion.button>
+              </m.button>
 
               {/* So nos cartoes vazios: pedir uma frente que voce acabou de
                   declarar coberta nao e um estado que precise existir. */}
@@ -128,7 +141,7 @@ export default function FrontsSection() {
                     track('cta_click', { location: 'front_card', front_id: front.id });
                     requestIntent('front-pick', front.id);
                   }}
-                  className="self-start mx-4 mb-2 py-2.5 inline-flex items-center gap-1.5 text-[11px] font-bold text-accent hover:text-accent-dark underline underline-offset-2"
+                  className="self-start mx-4 mb-3 py-2.5 min-h-11 inline-flex items-center gap-1.5 text-[11px] font-bold text-accent hover:text-accent-dark underline underline-offset-2"
                 >
                   Falar sobre esta frente <ArrowRight size={12} />
                 </button>
@@ -138,13 +151,9 @@ export default function FrontsSection() {
         })}
       </div>
 
-      {/* Contagem e CTA na mesma linha a partir do sm: empilhados, seis
-          cartoes faziam o botao cair para fora da dobra em notebook. */}
-      <div className="mt-4 md:mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
-        {/* Mesmo veu do cabecalho: com seis cartoes a contagem desceu para a
-            faixa escura da onda, onde slate-800 sozinho nao se le. */}
-        <p className="reading-surface px-4 py-2 text-center text-sm md:text-base text-slate-800 font-semibold">
-          Você cobre <span className="font-serif text-lg md:text-2xl">{marcadas}</span> de {FRONTS.length}.
+      <div className="text-center mt-6 md:mt-8">
+        <p className="text-sm md:text-base text-slate-800 font-semibold mb-4">
+          Você cobre <span className="font-serif text-lg md:text-2xl">{marcadas}</span> de 3.
           {faltam > 0 && (
             <>
               {' '}As {faltam} que faltam são a pauta da sua sessão.
@@ -153,12 +162,10 @@ export default function FrontsSection() {
         </p>
         <button
           onClick={() => {
-            /* Valor mantido apesar do rename do componente: troca-lo agora
-               partiria a serie historica deste passo do funil. */
-            track('cta_click', { location: 'five_fronts' });
+            track('cta_click', { location: 'fronts_section' });
             requestIntent('fronts-agenda');
           }}
-          className="shrink-0 px-6 py-3.5 bg-slate-900 text-white rounded-xl font-black text-xs uppercase tracking-widest hover:bg-accent active:scale-95 transition-all inline-flex items-center gap-2 shadow-lg"
+          className="px-6 py-3.5 bg-slate-900 text-white rounded-xl font-black text-xs uppercase tracking-widest hover:bg-accent active:scale-95 transition-all inline-flex items-center gap-2 shadow-lg"
         >
           Montar minha pauta <ArrowRight size={14} />
         </button>
