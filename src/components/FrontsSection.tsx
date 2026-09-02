@@ -47,13 +47,34 @@ export default function FrontsSection() {
             As três frentes
           </span>
         </div>
-        <h2 className="text-2xl md:text-5xl font-serif text-slate-900 mb-3">
-          É aqui que a IA entra <span className="italic font-normal text-slate-500">na sua operação.</span>
-        </h2>
-        <p className="text-slate-600 text-xs md:text-sm max-w-xl mx-auto font-light leading-relaxed">
-          Três frentes, e é isso que eu implanto. Elas entram DEPOIS de o diagnóstico dizer qual delas
-          paga primeiro — marque as que a sua empresa já cobre.
-        </p>
+        {/*
+          O véu de leitura, resgatado do aceaf08.
+
+          Este cabeçalho cai DIRETO sobre a onda, e nesta dobra a onda está no
+          tom mais escuro do gradiente. Sem véu, o `text-slate-900` do título e
+          o `text-slate-600` do parágrafo disputam contraste com a água — é o
+          mesmo problema que CredibilitySection e o cabeçalho do CTA já
+          resolvem com esta classe.
+
+          O commit que trouxe isto na `main` (aceaf08) foi descartado por outro
+          motivo: ele subia o catálogo de três para seis frentes, e a decisão
+          registrada foi manter três. Mas a correção de legibilidade não tinha
+          nada a ver com a contagem, e jogá-la fora junto seria perder um
+          conserto de contraste por tabela.
+
+          SEM `glass-md-none`, ao contrário da dobra do CTA: lá quem perde a
+          leitura é o mobile; aqui é o desktop, onde o cabeçalho é maior e
+          cobre mais área escura.
+        */}
+        <div className="reading-surface inline-block px-5 py-3.5 md:px-8 md:py-4 max-w-2xl">
+          <h2 className="text-2xl md:text-5xl font-serif text-slate-900 mb-3">
+            É aqui que a IA entra <span className="italic font-normal text-slate-500">na sua operação.</span>
+          </h2>
+          <p className="text-slate-600 text-xs md:text-sm max-w-xl mx-auto font-light leading-relaxed">
+            Três frentes, e é isso que eu implanto. Elas entram DEPOIS de o diagnóstico dizer qual delas
+            paga primeiro — marque as que a sua empresa já cobre.
+          </p>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 max-w-4xl mx-auto w-full">
