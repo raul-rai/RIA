@@ -774,6 +774,26 @@
     }
   }
 
+  /* A marca no canto entra no carregamento, como o hero — não ao rolar. Mesmo
+     truque do `.hero-rise`: `backwards` segura o estado inicial durante o
+     atraso, e o repouso (sem animação nenhuma) é opacity 1. */
+  .marca-rise {
+    animation: marca-rise-in 0.5s ease-out backwards;
+    animation-delay: 0.3s;
+  }
+
+  @keyframes marca-rise-in {
+    from {
+      opacity: 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .marca-rise {
+      animation: none;
+    }
+  }
+
   /* Superficie de leitura para titulo que cai sobre a onda. Herda o mesmo
      vidro dos cartoes, mas devolve quina e elevacao: e um veu de contraste
      atras do texto, nao mais uma caixa na pilha. */

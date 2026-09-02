@@ -87,14 +87,18 @@ export default function BrandMark() {
   const settled = phase === 'done';
 
   return (
-    <m.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      // Sem movimento reduzido a marca entra com um respiro. Com ele, o chip ja
-      // nasce pronto: nao faz sentido atrasar em 0,3s um estado que existe
-      // justamente para nao ter transicao nenhuma.
-      transition={reduced ? { duration: 0 } : { delay: 0.3 }}
-      className="hidden md:block fixed top-6 left-6 z-30 pointer-events-none"
+    <div
+      // A MARCA nao pode depender de JavaScript para existir.
+      //
+      // Isto era motion, e o `initial={{opacity:0}}` saia SERIALIZADO no HTML
+      // do prerender: o nome do site chegava invisivel e so acendia depois da
+      // hidratacao. Agora e `.marca-rise`, CSS puro com fill-mode backwards —
+      // o repouso, sem animacao nenhuma, e opacity 1.
+      //
+      // A guarda de movimento reduzido vive na propria classe (index.css), o
+      // que dispensa o `reduced ? ...` que existia aqui: com a preferencia
+      // ligada o chip ja nasce pronto, que era exatamente a intencao.
+      className="marca-rise hidden md:block fixed top-6 left-6 z-30 pointer-events-none"
     >
       <div className="glass-chip flex items-center gap-3 px-4 py-2 rounded-full">
         {/* O ponto assenta por ultimo. O espaco dele fica reservado desde o
@@ -152,6 +156,6 @@ export default function BrandMark() {
           })}
         </m.span>
       </div>
-    </m.div>
+    </div>
   );
 }

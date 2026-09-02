@@ -17,8 +17,11 @@ export default function AuthorityCard({ authority, index, checked, onToggle, onP
 
   return (
     <m.div
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
+      // Sem `opacity` na entrada: o motion serializa a variante inicial no SSR,
+      // e com ela estes cartões saíam publicados invisíveis. Só o deslocamento
+      // sobrevive ao HTML. Ver a nota longa em MarketEvidenceSection.
+      initial={{ y: 20 }}
+      whileInView={{ y: 0 }}
       transition={{ delay: index * 0.1 }}
       className={`glass-card glass-hover group flex flex-col justify-between rounded-2xl overflow-hidden ${
         checked ? 'glass-emerald glass-selected' : ''

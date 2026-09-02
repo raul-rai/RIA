@@ -51,11 +51,35 @@ export default function MarketEvidenceSection() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 max-w-5xl mx-auto w-full">
         {EVIDENCE.map((e, i) => {
           const Icon = e.icon;
+          /*
+            A ENTRADA NÃO MEXE MAIS NA OPACIDADE, e é essa a correção.
+
+            Era `initial={{ opacity: 0, y: 16 }}`. O motion serializa a variante
+            inicial durante o SSR, então estes quatro cartões saíam no HTML
+            publicado com `style="opacity:0"` — invisíveis até o JavaScript
+            baixar, executar e hidratar. Mesmo defeito do PERF-01, só que abaixo
+            da dobra, onde ninguém tinha ido olhar.
+
+            Tirar só a opacidade resolve sem perder a animação: o HTML publicado
+            agora traz `transform:translateY(16px)` e mais nada. Sem JavaScript o
+            cartão está LÁ, legível, dezesseis pixels fora do lugar — o que
+            ninguém percebe. Com JavaScript, a subida acontece igual a antes.
+
+            Tentei antes fazer a entrada inteira em CSS com
+            `animation-timeline: view()`. Não sobreviveu à medição: o `body`
+            desta página tem `overflow-x: hidden`, o que faz o `overflow-y`
+            computar para `auto` e transforma o body num scroll container de
+            6750px que nunca rola. A `view()` resolve contra esse scrollport e
+            devolve progresso negativo — os cartões ficavam presos em
+            `opacity: 0` PARA SEMPRE, com JavaScript e tudo. Medido no
+            navegador: -74,8% num cartão inteiramente visível. Trocar "invisível
+            sem JS" por "invisível com JS" não é conserto.
+          */
           return (
             <m.article
               key={e.source}
-              initial={{ opacity: 0, y: 16 }}
-              whileInView={{ opacity: 1, y: 0 }}
+              initial={{ y: 16 }}
+              whileInView={{ y: 0 }}
               viewport={{ once: true, amount: 0.25 }}
               transition={{ delay: i * 0.07 }}
               className="glass-card rounded-2xl p-5 flex flex-col gap-2 text-left"

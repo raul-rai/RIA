@@ -46,8 +46,13 @@ export default function CredibilitySection() {
         {CASES.map((c, i) => (
           <m.article
             key={c.segment}
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            // Sem `opacity` na entrada: o motion serializa a variante inicial
+            // no SSR, e com ela estes três cartões saíam publicados
+            // invisíveis. Só o deslocamento sobrevive ao HTML — sem
+            // JavaScript o cartão está lá, 16px fora do lugar. Ver a nota
+            // longa em MarketEvidenceSection.
+            initial={{ y: 16 }}
+            whileInView={{ y: 0 }}
             viewport={{ once: true, amount: 0.3 }}
             transition={{ delay: i * 0.08 }}
             className="glass-card glass-hover rounded-2xl p-5 flex flex-col gap-2 text-left"

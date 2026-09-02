@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { readFileSync, readdirSync } from 'fs';
+import { readFileSync, readdirSync, existsSync } from 'fs';
 import { resolve, join } from 'path';
 
 /**
@@ -349,3 +349,120 @@ describe('DOC-01 — nenhum comentário afirma o contrário do código', () => {
     expect(ler('src/components/SocialProofSection.tsx')).not.toContain('useVulnerability');
   });
 });
+
+/**
+ * D8 — o irmao do PERF-01, abaixo da dobra.
+ *
+ * O PERF-01 tirou o hero do motion porque a variante `initial` e SERIALIZADA
+ * durante o SSR: a primeira dobra saia publicada com `style="opacity:0"` e so
+ * acendia depois que o JavaScript baixava, executava e hidratava.
+ *
+ * Corrigido o hero, sobrou o mesmo defeito em DOZE elementos abaixo da dobra —
+ * quatro cartoes de evidencia, tres de caso, tres de autoridade, a marca do
+ * canto e um chip do chat. O prerender entregava o texto ao crawler, entao
+ * nenhum teste de GEO reclamava; quem nao via era o visitante sem JavaScript.
+ *
+ * A correcao NAO foi mover a entrada para CSS com `animation-timeline: view()`.
+ * Aquilo foi tentado e medido: o `body` desta pagina tem `overflow-x: hidden`,
+ * o que faz o `overflow-y` computar para `auto` e transforma o body num scroll
+ * container de 6750px que nunca rola. A `view()` resolve contra esse scrollport
+ * e devolve progresso negativo (-74,8% num cartao inteiramente visivel), com os
+ * cartoes presos em opacity 0 PARA SEMPRE — inclusive com JavaScript.
+ *
+ * O que ficou: a entrada perde a OPACIDADE e mantem o deslocamento. Sem
+ * JavaScript o cartao esta la, legivel, 16px fora do lugar.
+ */
+describe('D8 — nada de conteudo depende de JavaScript para ser visivel', () => {
+  const semOpacidadeNaEntrada = [
+    'src/components/MarketEvidenceSection.tsx',
+    'src/components/CredibilitySection.tsx',
+    'src/components/AuthorityCard.tsx',
+  ];
+
+  it('MOV-17: nenhuma entrada de cartao anima a opacidade a partir do zero', () => {
+    for (const arquivo of semOpacidadeNaEntrada) {
+      // Sem os comentários: eles CITAM o defeito antigo
+      // (`initial={{ opacity: 0, y: 16 }}`) para explicar o que saiu, e a
+      // primeira versão deste teste reprovou na própria explicação.
+      const src = ler(arquivo)
+        .replace(/\/\*[\s\S]*?\*\//g, ' ')
+        .replace(/\{\/\*[\s\S]*?\*\/\}/g, ' ')
+        .replace(/(^|[^:])\/\/[^\n]*/g, '$1');
+
+      const iniciais = [...src.matchAll(/initial=\{\{([^}]*)\}\}/g)].map((m) => m[1]);
+      expect(iniciais.length, `${arquivo}: nenhum initial encontrado`).toBeGreaterThan(0);
+      for (const variante of iniciais) {
+        expect(
+          variante,
+          `${arquivo}: initial={{${variante}}} volta a publicar o cartao invisivel`
+        ).not.toMatch(/opacity:\s*0/);
+      }
+    }
+  });
+
+  it('MOV-18: a marca saiu do motion e entra por CSS', () => {
+    /**
+     * O nome do site nao pode depender de hidratacao para existir. `.marca-rise`
+     * e CSS puro com fill-mode backwards: o repouso, sem animacao nenhuma, e
+     * opacity 1.
+     */
+    const marca = ler('src/components/BrandMark.tsx');
+    expect(marca).toContain('marca-rise');
+    // A RAIZ do componente nao pode mais ser um motion com initial de opacidade.
+    expect(marca).not.toMatch(/<m\.div\s+initial=\{\{\s*opacity:\s*0\s*\}\}/);
+
+    const css = ler('src/index.css');
+    expect(css).toMatch(/\.marca-rise\s*\{[^}]*animation:\s*marca-rise-in/);
+    expect(css, 'sem backwards o estado inicial nao e segurado no atraso').toMatch(
+      /animation:\s*marca-rise-in[^;]*backwards/
+    );
+  });
+
+  it('MOV-19: `animation-timeline: view()` nao voltou', () => {
+    /**
+     * A guarda contra a tentativa que falhou. Enquanto o `body` for um scroll
+     * container que nao rola, uma timeline de rolagem prende o conteudo em
+     * opacity 0. Se alguem quiser tentar de novo, precisa primeiro trocar o
+     * `overflow-x: hidden` do body por `clip` — e este teste obriga a lembrar.
+     */
+    const css = ler('src/index.css');
+    expect(css, 'timeline de rolagem de volta sem trocar o overflow do body').not.toContain(
+      'animation-timeline'
+    );
+  });
+});
+
+describe.skipIf(!existsSync(resolve(raiz, 'dist/index.html')))(
+  'D8 — medido sobre o HTML publicado',
+  () => {
+    const home = ler('dist/index.html');
+
+    it('MOV-20: no maximo um elemento sai invisivel, e ele vive dentro do chat', () => {
+      /**
+       * Eram doze. O unico que sobra e a fileira de chips do AIChatAgent, e ele
+       * fica de proposito: vive dentro de uma superficie que ja e 100%
+       * JavaScript — sem JS o chat inteiro nao existe, entao esconder um chip
+       * nao tira nada de ninguem.
+       */
+      const invisiveis = [...home.matchAll(/style="opacity:0[^"]*"/g)];
+      expect(
+        invisiveis.length,
+        `${invisiveis.length} elementos publicados invisiveis`
+      ).toBeLessThanOrEqual(1);
+    });
+
+    it('MOV-21: os dez cartoes de conteudo estao no HTML e nenhum deles esta invisivel', () => {
+      // Se um cartao some do HTML, o teste acima passaria por omissao.
+      for (const marca of ['McKinsey', 'MIT Project NANDA', 'Cetic.br', 'Harvard Business Review']) {
+        expect(home, `${marca} sumiu do HTML publicado`).toContain(marca);
+      }
+      // E o unico invisivel restante nao pode ser um deles.
+      const contexto = home.match(/.{0,200}style="opacity:0[^"]*"/g) ?? [];
+      for (const trecho of contexto) {
+        expect(trecho, 'um cartao de conteudo voltou a ser publicado invisivel').not.toMatch(
+          /McKinsey|NANDA|Cetic|Harvard|glass-card/
+        );
+      }
+    });
+  }
+);
