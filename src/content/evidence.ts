@@ -2,14 +2,18 @@ import { Globe2, TrendingDown, MapPin, Timer } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 /**
- * Evidência de mercado (capítulo 1).
+ * Evidência de mercado — hoje só para o agente.
  *
- * Convive com "Vozes do mercado" (components/SocialProofSection) na mesma
- * dobra, e vem ANTES dela. Este arquivo já dizia que substituía aquele bloco;
- * não substituiu — o bloco continua na página, com os problemas dele
- * corrigidos no lugar (disclaimer de não-endosso em content/authorities.ts,
- * marcação que não pontua mais o índice). Ver o cabeçalho de
- * MarketEvidenceSection.
+ * Este arquivo já desenhou uma dobra ("O que os dados dizem", quatro cartões de
+ * estatística no capítulo 1). A dobra saiu: empilhava quatro cartões de número
+ * antes de "Vozes do mercado", e o visitante atravessava dois blocos de prova
+ * de terceiros antes de chegar ao que a RIA faz. O DADO ficou. Ele continua
+ * sendo lido em build por scripts/build-agent-context.ts, e é de lá que o
+ * agente tira número, fonte e ano quando alguém pergunta.
+ *
+ * Consequência a não esquecer: nenhum destes números aparece mais na tela. Se
+ * um dia voltarem, voltam com fonte visível e linkada — era isso que tornava a
+ * dobra citável por motor generativo, e é a única forma honesta de exibi-los.
  *
  * REGRA DE INTEGRIDADE (a mesma de cases.ts): todo número aqui vem de um estudo
  * público, nomeado, datado e linkado. Nenhum é estimado, arredondado para soar

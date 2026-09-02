@@ -221,11 +221,11 @@ describe.skipIf(!existsSync(root('dist/index.html')))('Terceiros — o que foi P
 
   it('TERC-09: o HTML publicado não BUSCA nada de fora', () => {
     /**
-     * Só tags de recurso. Os <a> para McKinsey, MIT, Cetic.br, HBR e wa.me são
-     * links de saída — o visitante decide clicar, e as citações são o produto
-     * da dobra de evidências. O que não pode existir é um <link>, <script>,
-     * <img> ou <iframe> apontando para fora: esses o navegador busca sozinho,
-     * sem o visitante saber.
+     * Só tags de recurso. O que sobra de saída hoje é o wa.me — os <a> para
+     * McKinsey, MIT, Cetic.br e HBR saíram junto com a dobra de evidências.
+     * Link de saída é o visitante decidindo clicar. O que não pode existir é
+     * um <link>, <script>, <img> ou <iframe> apontando para fora: esses o
+     * navegador busca sozinho, sem o visitante saber.
      */
     const externos = recursosExternos(home).filter((u) => !u.includes('raulvieira.vercel.app'));
     expect(externos, `o build publica requisição externa: ${externos.join(', ')}`).toEqual([]);

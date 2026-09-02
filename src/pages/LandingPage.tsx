@@ -8,7 +8,6 @@ import EliteHUD from '../components/EliteHUD';
 import BrandMark from '../components/BrandMark';
 import AIChatAgent from '../components/AIChatAgent';
 import PotentialDiagnostic from '../components/PotentialDiagnostic';
-import MarketEvidenceSection from '../components/MarketEvidenceSection';
 import SocialProofSection from '../components/SocialProofSection';
 import WhatsAppFab from '../components/WhatsAppFab';
 import { prefersReducedMotion } from '../lib/canvas-quality';
@@ -262,10 +261,7 @@ export default function LandingPage() {
 
   const chapterContent = useMemo(() => [
     <SceneHero onUnderstandMore={goToSocialProof} />,
-    <div className="w-full flex flex-col gap-8 md:gap-16">
-      <MarketEvidenceSection />
-      <SocialProofSection />
-    </div>,
+    <SocialProofSection />,
     <PotentialDiagnostic />,
     <FrontsSection />,
     <CredibilitySection />,

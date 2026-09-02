@@ -56,13 +56,36 @@ describe.skipIf(!built)('GEO — a página é legível sem JavaScript', () => {
     }
   });
 
-  it('GEO-04: as fontes das evidências estão citadas e linkadas', () => {
-    // Dado com fonte é a tática GEO que faz um motor generativo citar a página.
-    for (const fonte of ['McKinsey', 'MIT', 'Cetic.br', 'Harvard Business Review']) {
-      expect(home).toContain(fonte);
+  it('GEO-04: nenhum número de terceiro aparece sem a fonte junto', () => {
+    /**
+     * Este teste JÁ EXIGIU o contrário: que McKinsey, MIT, Cetic.br e HBR
+     * estivessem citados e linkados no HTML. Eles vinham da dobra "O que os
+     * dados dizem", que foi removida a pedido — e com ela saíram as quatro
+     * únicas citações com link da página.
+     *
+     * O QUE SE PERDEU, escrito para não ser redescoberto por acaso: dado +
+     * fonte + ano era a tática que fazia um motor generativo citar esta
+     * página. Hoje ela não tem nenhuma. Se as evidências voltarem, elas vêm de
+     * content/evidence.ts (que continua existindo, alimentando o agente) e
+     * este teste volta a exigir o link.
+     *
+     * O que a guarda protege ENQUANTO ISSO: número de terceiro solto, sem
+     * fonte ao lado, é pior que número nenhum — vira alegação. Se alguém
+     * colar "95% dos pilotos" numa headline, o domínio do estudo tem de
+     * aparecer no mesmo HTML.
+     */
+    const texto = visibleText(home);
+    const citacoes: Array<[RegExp, RegExp]> = [
+      [/\b88\s*%/, /McKinsey/],
+      [/\b95\s*%/, /MIT|NANDA/],
+      [/\b17\s*%/, /Cetic\.br/],
+      [/\b2,24 milh(õ|o)es de leads/, /Harvard Business Review/],
+    ];
+    for (const [numero, fonte] of citacoes) {
+      if (numero.test(texto)) {
+        expect(texto, `${numero} está na página sem nomear a fonte (${fonte})`).toMatch(fonte);
+      }
     }
-    expect(home).toContain('hbr.org');
-    expect(home).toContain('mckinsey.com');
   });
 
   it('GEO-05: o JSON-LD é válido e o FAQPage tem perguntas', () => {
