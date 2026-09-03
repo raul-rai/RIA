@@ -82,7 +82,9 @@ Entrada (campos do lead + contexto). Fluxo:
 2. **Inválido** → retorna `CAMPO_INVALIDO: <campo> — <instrução>`. Nada é gravado. (Quando chamado
    pela ferramenta do agente, o agente lê isso e repergunta.)
 3. **Válido** → `upsertRows` em `ria_leads` por `sessionId` (`atualizadoEm` sempre; `criadoEm` na
-   primeira vez). `completo = true` quando empresa, email, telefone, faturamento e dor existem.
+   primeira vez). `completo = true` quando há **empresa + e-mail válido + telefone válido** — o
+   conjunto "dá para contatar". Faturamento e dor são bônus (decisão do Raul 2026-09-03: um
+   formulário preenchido com contato válido é lead quente e avisa na hora).
 4. **Notificar** o Raul por Gmail **uma vez** — quando `completo && !notificado`; depois marca
    `notificado = true`. Chamadas repetidas (upsert incremental) não reenviam.
 5. Retorna `OK: lead registrado.`

@@ -83,10 +83,9 @@ let erro = null;
 if (!emailOk) erro = 'CAMPO_INVALIDO: email — peca o e-mail novamente.';
 else if (!telOk) erro = 'CAMPO_INVALIDO: telefone — peca o telefone com DDD, 10 ou 11 digitos.';
 
-const completo = Boolean(
-  String(j.empresa||'').trim() && emailOk && telOk &&
-  String(j.faturamento||'').trim() && String(j.dor||'').trim()
-);
+// Decisao Raul 2026-09-03: contato valido + empresa = lead quente, avisa na hora.
+// faturamento e dor sao bonus, nao travam a notificacao.
+const completo = Boolean(String(j.empresa||'').trim() && emailOk && telOk);
 
 return [{ json: { ...j, email, telefone: tel, valido: !erro, erro, completo } }];
 ```
@@ -164,9 +163,7 @@ curl -s -X POST https://libra-credito-n8n.usybav.easypanel.host/webhook/ria-agen
   -H 'Content-Type: application/json' \
   -d '{"sessionId":"teste-t3-001","action":"qualification","qualification":{"company":"Metalurgica Teste","email":"teste@exemplo.com.br","phone":"(16) 99999-8888","revenue":"100k-500k","aiBudget":"1k-5k"},"context":{"vulnerabilityIndex":88,"hasNoWebsite":false,"websiteScore":63,"frontsCovered":1,"frontsMissing":[2,3]}}'
 ```
-Esperado: 200. `n8n_manage_datatable getRows` (filter sessionId `teste-t3-001`) → 1 linha, `faturamento`="R$ 100 mil a R$ 500 mil/mês", `completo:false` (sem `dor`) — e **nenhum** e-mail (form sem dor não fecha `completo`). 
-
-> Nota de design confirmada aqui: o formulário do site não coleta `dor`, então o lead do form entra como incompleto até o Raul falar com ele. Se o desejado for notificar todo lead de formulário mesmo sem `dor`, ajustar a regra de `completo`/notificação — decisão a validar no Passo 6 (ver observação ao Raul).
+Esperado: 200. `n8n_manage_datatable getRows` (filter sessionId `teste-t3-001`) → 1 linha, `faturamento`="R$ 100 mil a R$ 500 mil/mês", `completo:true` (contato válido + empresa) — e **um** e-mail para o Raul (decisão 2026-09-03: form preenchido = lead quente, avisa na hora).
 
 - [ ] **Passo 7: Intent continua intacto**
 
@@ -264,10 +261,9 @@ Registrar no ledger: para reverter, reativar `spPSvr1rXOouVZWq` e desativar/repo
 - Cutover mantendo URL → Task 5. ✔
 - As 8 checagens do spec → distribuídas em Task 2 P6, Task 3 P6/P7, Task 4 P6/P7. ✔
 
-**Decisão aberta sinalizada:** o formulário do site não manda `dor`; então o lead do form entra
-`completo:false` e **não** dispara e-mail pela regra atual. Task 3 Passo 6 levanta isso para o Raul
-decidir: (a) notificar todo lead de formulário mesmo sem `dor`, ou (b) manter `completo` exigindo
-`dor` (só chat/whatsapp completa). Resolver antes de fechar a Task 3.
+**Decisão resolvida (2026-09-03):** `completo = empresa + e-mail válido + telefone válido`.
+Formulário preenchido com contato válido é lead quente e dispara o e-mail na hora; faturamento e dor
+são bônus. Aplicado no validador da Task 2 e na expectativa da Task 3 Passo 6.
 
 **Placeholders:** nenhum "TBD"; cada passo tem operação n8n concreta ou curl. Os textos longos
 (systemMessage completo) são montados na execução a partir do spec §Peça 3d — o plano fixa a
