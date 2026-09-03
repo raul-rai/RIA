@@ -138,7 +138,7 @@ function SceneHero({ onUnderstandMore }: { onUnderstandMore: () => void }) {
       <div className="hero-rise glass-chip inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-5 md:mb-6">
         <Target className="text-accent animate-pulse motion-reduce:animate-none" size={16} />
         <span className="text-slate-900 font-sans tracking-[0.1em] md:tracking-[0.15em] uppercase text-[10px] md:text-xs font-black whitespace-nowrap">
-          {ref && REF_LABEL[ref] ? `Estratégia para ${REF_LABEL[ref]}` : 'Conhecimento relevante para todo empresário'}
+          {ref && REF_LABEL[ref] ? `Estratégia para ${REF_LABEL[ref]}` : 'Sobrevivência é questão de adaptação'}
         </span>
       </div>
 
@@ -157,7 +157,7 @@ function SceneHero({ onUnderstandMore }: { onUnderstandMore: () => void }) {
         style={enterAt(0.3)}
         className="hero-rise glass text-[15px] md:text-xl text-slate-800 max-w-2xl mb-6 md:mb-10 font-sans font-medium leading-relaxed px-4 py-3 rounded-2xl"
       >
-        A Inteligência Artificial não é coisa do futuro, é <strong className="font-bold text-slate-950">necessidade atual</strong> de empresários que se adaptam, para continuar prosperando.
+        A Inteligência Artificial não é coisa do futuro, é <strong className="font-bold text-slate-950">necessidade do presente</strong> para continuar prosperando.
       </p>
 
       {/* Os dois CTAs entravam com `delay: 0.8` no motion — ou seja, só depois
@@ -174,7 +174,7 @@ function SceneHero({ onUnderstandMore }: { onUnderstandMore: () => void }) {
           }}
           className="w-full sm:w-auto group px-7 py-4 bg-slate-950 text-white rounded-xl font-black text-xs uppercase tracking-widest transition-all duration-300 hover:bg-accent shadow-2xl flex items-center justify-center gap-2.5 min-h-[52px]"
         >
-          <span>Pare de rasgar dinheiro</span>
+          <span>Consultoria gratuita</span>
           <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform duration-300" />
         </MagneticButton>
 

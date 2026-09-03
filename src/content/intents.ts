@@ -84,8 +84,8 @@ export const INTENTS: Record<IntentId, IntentDefinition> = {
       // rasgar dinheiro" e aqui continuou "quero achar o meu gargalo", entao o
       // lead abria a conversa dizendo algo que nunca leu na tela.
       return abertura
-        ? `${abertura} e quero parar de rasgar dinheiro. Por onde eu começo?`
-        : 'Quero parar de rasgar dinheiro. Por onde eu começo?';
+        ? `${abertura} e quero uma consultoria gratuita. Por onde eu começo?`
+        : 'Quero uma consultoria gratuita. Por onde eu começo?';
     },
     agentReply: () =>
       'Começa por saber onde está o vazamento. Na maioria das operações ele está em três lugares: lead que não é respondido, rotina que consome hora de gente cara, e decisão tomada no achismo. Me diz o que sua empresa faz — eu volto com qual dos três está te custando mais.',

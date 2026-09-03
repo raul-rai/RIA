@@ -68,7 +68,7 @@ describe.skipIf(!built)('Primeira pintura — a dobra de abertura sai visível d
     // texto limpo, não pela frase literal na marcação.
     const texto = hero.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
     expect(texto).toContain('Sua empresa está preparada para enfrentar');
-    expect(texto).toContain('Pare de rasgar dinheiro');
+    expect(texto).toContain('Consultoria gratuita');
     expect(texto).toContain('Entenda melhor');
   });
 

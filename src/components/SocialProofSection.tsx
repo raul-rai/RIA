@@ -56,7 +56,7 @@ export default function SocialProofSection() {
           </span>
         </div>
         <h2 className="text-2xl md:text-4xl lg:text-5xl font-serif text-slate-900 mb-2 leading-tight">
-          Não é só a <span className="italic font-normal text-slate-500">nossa opinião.</span>
+          Porque utilizar IA no <span className="italic font-normal text-slate-500">meu negócio?</span>
         </h2>
         <p className="text-slate-600 text-xs md:text-sm max-w-xl mx-auto font-light leading-relaxed">
           Três das vozes mais ouvidas do mercado brasileiro, falando sobre a mesma coisa.

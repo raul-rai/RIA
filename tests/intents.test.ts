@@ -73,13 +73,13 @@ describe('INTENTS: as seis intencoes cobrem todos os estados', () => {
 describe('hero-cold: o lead frio, com ou sem campanha', () => {
   it('INT-05: sem ref, a frase nao menciona segmento', () => {
     expect(INTENTS['hero-cold'].userMessage(base)).toBe(
-      'Quero parar de rasgar dinheiro. Por onde eu começo?'
+      'Quero uma consultoria gratuita. Por onde eu começo?'
     );
   });
 
   it('INT-06: com ref, o segmento abre a frase', () => {
     expect(INTENTS['hero-cold'].userMessage({ ...base, ref: 'industria' })).toBe(
-      'Tenho uma indústria e quero parar de rasgar dinheiro. Por onde eu começo?'
+      'Tenho uma indústria e quero uma consultoria gratuita. Por onde eu começo?'
     );
   });
 
@@ -97,13 +97,13 @@ describe('hero-cold: o lead frio, com ou sem campanha', () => {
       resolve(process.cwd(), 'src/pages/LandingPage.tsx'),
       'utf-8'
     );
-    const rotulo = landing.match(/<span>([^<]*rasgar[^<]*)<\/span>/i)?.[1];
+    const rotulo = landing.match(/<span>(Consultoria[^<]*)<\/span>/i)?.[1];
     expect(rotulo, 'CTA do hero nao encontrado em LandingPage.tsx').toBeTruthy();
 
-    // "Pare de rasgar dinheiro" -> o nucleo "rasgar dinheiro" precisa aparecer
-    // na fala. Comparar a frase inteira seria rigido demais: o botao e
-    // imperativo, a fala e em primeira pessoa.
-    const nucleo = rotulo!.toLowerCase().replace(/^pare de\s+/, '').trim();
+    // "Consultoria gratuita" -> o nucleo "consultoria gratuita" precisa aparecer
+    // na fala. Comparar a frase inteira seria rigido demais: o botao e um
+    // rotulo curto, a fala e em primeira pessoa.
+    const nucleo = rotulo!.toLowerCase().trim();
     expect(INTENTS['hero-cold'].userMessage(base).toLowerCase()).toContain(nucleo);
   });
 
