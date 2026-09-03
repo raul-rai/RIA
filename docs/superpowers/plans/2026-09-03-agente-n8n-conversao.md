@@ -1,5 +1,31 @@
 # Agente do n8n otimizado para conversão — Implementation Plan
 
+## Execução — CONCLUÍDA e no ar (2026-09-03)
+
+Todas as 5 tasks executadas e as 8 checagens verdes. O agente novo está em produção
+na URL que o site já usa (`/webhook/ria-agente`).
+
+**Artefatos no n8n** (instância `libra-credito-n8n.usybav.easypanel.host`, projeto
+`JBqlTYJZ0GOvmZb5` — pessoal do Raul):
+- Data Table `ria_leads` — id `7P1iBfRhL5JawgI4` (18 colunas).
+- Sub-workflow `[RIA] Registrar Lead` — id `LPMQvKZKmMafHN68` (ativo).
+- Agente novo `[RIA] Agente v2 (conversao)` — id `lRC539L3imrTQfAV` (ativo, path `ria-agente`).
+- Agente antigo `[RIA] Agente Consultor de IA — Landing Page` — id `spPSvr1rXOouVZWq`
+  (**desativado**, preservado para rollback).
+
+**Desvio do plano (registrado):** a ferramenta de captura de lead pelo chat do agente
+NÃO foi incluída (o `toolWorkflow` + resourceMapper não casa bem com o trigger
+`passthrough`). Decisão alinhada com o Raul: o agente empurra para o botão "Agendar
+minha sessão" (formulário), que é o caminho principal. A captura estruturada é o ramo
+`qualification`. Adicionar captura por chat fica como melhoria futura.
+
+**Rollback (um comando de cada lado):** reativar `spPSvr1rXOouVZWq` e, no `lRC539L3imrTQfAV`,
+voltar o path do webhook para `ria-agente-v2` (ou desativá-lo). A URL do site volta ao agente antigo.
+
+**Modelo:** subiu de `openai/gpt-4o-mini` para `openai/gpt-4o`, temperature 0.4.
+
+---
+
 > **For agentic workers:** este plano é executado contra uma instância n8n de PRODUÇÃO via as ferramentas `mcp__n8n-mcp__*`. Não há testes unitários de código: a verificação de cada task é feita por chamada de webhook (curl) e leitura de execução/Data Table. Passos usam checkbox (`- [ ]`).
 
 **Goal:** Fazer o agente do n8n aproveitar o que o site já coleta e converter mais — gravar o lead do formulário (hoje descartado) em `ria_leads` + e-mail, dar ao agente o contexto real do site, e falhar rápido.
