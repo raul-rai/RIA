@@ -111,22 +111,25 @@ describe('PERF-02 — a divisão em pacotes', () => {
     }
   });
 
-  it('PAC-05: o diálogo de vídeo é carregado sob demanda, e só ele', () => {
+  it('PAC-05: a parede de vídeos só monta o iframe do YouTube depois do clique', () => {
     /**
-     * A montagem condicional é o que torna o `lazy` seguro no prerender. Se
-     * alguém remover o `{selected && ...}` e deixar o componente sempre
-     * montado, o `renderToString` suspende e o build cai — mas cairia num erro
-     * obscuro de React, longe daqui. Este teste explica antes.
+     * O VideoModal saiu desta dobra (a parede de vídeos 3d tomou o lugar do
+     * diálogo lazy), então a garantia de "nada do YouTube antes do clique"
+     * não depende mais de `lazy`/`Suspense`: depende de VideoWall3D nunca
+     * montar o `<iframe>` enquanto `playing` for `null`, que é o estado
+     * inicial tanto no servidor quanto no cliente.
      */
     const secao = ler('src/components/SocialProofSection.tsx');
-    expect(secao).toMatch(/const VideoModal = lazy\(\(\) => import\('\.\/VideoModal'\)\)/);
-    expect(secao).toMatch(/\{selected && \(/);
-    expect(secao).toContain('<Suspense fallback={null}>');
+    expect(secao, 'VideoModal nao deveria mais aparecer nesta dobra').not.toMatch(/VideoModal/);
+    expect(secao).toContain("import VideoWall3D from './VideoWall3D'");
 
-    // E o import estático não pode ter sobrado: ele anularia o lazy em silêncio.
-    expect(secao, 'o import estático voltou e o lazy virou enfeite').not.toMatch(
-      /^import VideoModal from/m
-    );
+    const parede = ler('src/components/VideoWall3D.tsx');
+    expect(parede).toMatch(/useState<string \| null>\(null\)/);
+    const condicional = parede.indexOf('isPlaying ?');
+    const iframe = parede.indexOf('<iframe');
+    expect(condicional, 'nao achei a condicional que guarda o iframe').toBeGreaterThan(-1);
+    expect(iframe, 'nao achei o iframe do player').toBeGreaterThan(-1);
+    expect(condicional, 'o iframe e montado antes da guarda de isPlaying').toBeLessThan(iframe);
   });
 });
 
