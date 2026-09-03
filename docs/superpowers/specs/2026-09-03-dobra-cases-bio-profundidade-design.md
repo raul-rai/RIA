@@ -53,9 +53,10 @@ Testável isoladamente: dado um retângulo e uma posição de ponteiro, calcula
 
 Dentro de `CredibilitySection.tsx`, o `glass-panel` da bio:
 
-- **Foto grande:** sobe de `w-28/w-36` para uma coluna protagonista
-  (~`w-72`/`~300–340px` no desktop; grande e centralizada no topo no mobile). A
-  grade passa de `[auto_1fr]` para dar peso real à coluna da imagem.
+- **Foto grande e imponente:** sobe de `w-28/w-36` para uma coluna protagonista
+  de ~340px no desktop (`w-80`/`w-[340px]`), dominando a coluna da imagem; grande
+  e centralizada no topo no mobile. A grade passa de `[auto_1fr]` para
+  `[340px_1fr]` (ou equivalente) para dar peso real à imagem.
 - **Moldura cinematográfica:** anel/borda em gradiente ciano→azul (o mesmo
   `#38bdf8`/azul da onda em `DataWave3D`), sombra em camadas e um *glow* ciano
   suave na base. O glow é **estático** (ou transição no hover) — nunca uma
