@@ -940,4 +940,47 @@
       animation: none;
     }
   }
+
+  /*
+   * Tilt 3D de ponteiro — profundidade na dobra de cases e bio.
+   *
+   * O elemento que inclina (.tilt-3d) recebe o ref do usePointerTilt e le as vars
+   * que o hook escreve. A perspectiva mora no PAI (.tilt-scene): perspectiva no
+   * proprio elemento transformado nao se aplica a ele mesmo. `preserve-3d` deixa
+   * os filhos com .tilt-depth flutuarem num plano a frente, criando parallax.
+   *
+   * Nada aqui e `infinite` — transicao de transform dirigida por evento.
+   * Sob reduced-motion o hook nem arma (as vars ficam em 0), mas o bloco de guarda
+   * abaixo zera qualquer transform e transicao de qualquer jeito, para o caso
+   * continuar correto se um dia o tilt for aplicado sem passar pelo hook.
+   */
+  .tilt-scene {
+    perspective: 900px;
+  }
+
+  .tilt-3d {
+    transform: rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg))
+      translateY(var(--tilt-lift, 0px));
+    transform-style: preserve-3d;
+    transition: transform 140ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 200ms ease;
+    will-change: transform;
+  }
+
+  /* So os cartoes sobem no hover; o painel de bio nao. */
+  .tilt-card:hover {
+    --tilt-lift: -8px;
+  }
+
+  /* A camada da frente no parallax — a foto do Raul. */
+  .tilt-depth {
+    transform: translateZ(var(--tilt-depth, 40px));
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .tilt-3d,
+    .tilt-depth {
+      transform: none;
+      transition: none;
+    }
+  }
 }
