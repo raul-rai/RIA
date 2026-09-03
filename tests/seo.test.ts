@@ -56,30 +56,33 @@ describe.skipIf(!built)('GEO — a página é legível sem JavaScript', () => {
     }
   });
 
-  it('GEO-04: nenhum número de terceiro aparece sem a fonte junto', () => {
+  it('GEO-04: as fontes das evidências estão citadas e linkadas', () => {
     /**
-     * Este teste JÁ EXIGIU o contrário: que McKinsey, MIT, Cetic.br e HBR
-     * estivessem citados e linkados no HTML. Eles vinham da dobra "O que os
-     * dados dizem", que foi removida a pedido — e com ela saíram as quatro
-     * únicas citações com link da página.
-     *
-     * O QUE SE PERDEU, escrito para não ser redescoberto por acaso: dado +
-     * fonte + ano era a tática que fazia um motor generativo citar esta
-     * página. Hoje ela não tem nenhuma. Se as evidências voltarem, elas vêm de
-     * content/evidence.ts (que continua existindo, alimentando o agente) e
-     * este teste volta a exigir o link.
-     *
-     * O que a guarda protege ENQUANTO ISSO: número de terceiro solto, sem
-     * fonte ao lado, é pior que número nenhum — vira alegação. Se alguém
-     * colar "95% dos pilotos" numa headline, o domínio do estudo tem de
-     * aparecer no mesmo HTML.
+     * Dado + fonte + ano é a tática GEO que faz um motor generativo citar a
+     * página. Este teste já mediu isso sobre a dobra "O que os dados dizem";
+     * a dobra saiu e levou as citações junto, e por uma versão o teste só
+     * garantia que número solto não aparecesse sem fonte. As citações voltaram
+     * — agora na faixa de fontes do rodapé (components/SiteFooter), que lê o
+     * MESMO content/evidence.ts — então a exigência volta ao que sempre foi: a
+     * fonte tem de estar NO HTML e LINKADA, não só nomeada.
      */
     const texto = visibleText(home);
+    for (const fonte of ['McKinsey', 'MIT', 'Cetic.br', 'Harvard Business Review']) {
+      expect(texto, `a fonte "${fonte}" sumiu do HTML publicado`).toContain(fonte);
+    }
+    // O que separa citação de menção é o link para o estudo. Os domínios são
+    // os que os próprios `url` de content/evidence.ts apontam — a pesquisa do
+    // Cetic.br é publicada em cgi.br, não em cetic.br.
+    for (const dominio of ['mckinsey.com', 'cgi.br', 'hbr.org']) {
+      expect(home, `o link para ${dominio} sumiu`).toContain(dominio);
+    }
+
+    // E o par número↔fonte não pode se soltar: número de terceiro sem a fonte
+    // ao lado vira alegação.
     const citacoes: Array<[RegExp, RegExp]> = [
       [/\b88\s*%/, /McKinsey/],
       [/\b95\s*%/, /MIT|NANDA/],
       [/\b17\s*%/, /Cetic\.br/],
-      [/\b2,24 milh(õ|o)es de leads/, /Harvard Business Review/],
     ];
     for (const [numero, fonte] of citacoes) {
       if (numero.test(texto)) {

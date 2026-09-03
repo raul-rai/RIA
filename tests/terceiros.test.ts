@@ -55,10 +55,10 @@ const PERMITIDOS = [
 ];
 
 /**
- * As fontes das evidências são links de saída, e são o produto daquela dobra:
- * é por poder conferir cada estudo que o argumento pesa. Ler daqui, e não de
- * uma lista fixa, faz uma evidência nova ser aceita sozinha — e mantém a trava
- * fechada para qualquer OUTRO domínio que apareça no código.
+ * As fontes das evidências são links de saída, hoje na faixa de fontes do
+ * rodapé: é por poder conferir cada estudo que o argumento pesa. Ler daqui, e
+ * não de uma lista fixa, faz uma evidência nova ser aceita sozinha — e mantém a
+ * trava fechada para qualquer OUTRO domínio que apareça no código.
  */
 const CITACOES = EVIDENCE.map((e) => e.url);
 
@@ -221,11 +221,11 @@ describe.skipIf(!existsSync(root('dist/index.html')))('Terceiros — o que foi P
 
   it('TERC-09: o HTML publicado não BUSCA nada de fora', () => {
     /**
-     * Só tags de recurso. O que sobra de saída hoje é o wa.me — os <a> para
-     * McKinsey, MIT, Cetic.br e HBR saíram junto com a dobra de evidências.
-     * Link de saída é o visitante decidindo clicar. O que não pode existir é
-     * um <link>, <script>, <img> ou <iframe> apontando para fora: esses o
-     * navegador busca sozinho, sem o visitante saber.
+     * Só tags de recurso. Os <a> para McKinsey, MIT, Cetic.br, HBR (na faixa
+     * de fontes do rodapé) e wa.me são links de saída — o visitante decide
+     * clicar, e as citações são o que torna a página citável. O que não pode
+     * existir é um <link>, <script>, <img> ou <iframe> apontando para fora:
+     * esses o navegador busca sozinho, sem o visitante saber.
      */
     const externos = recursosExternos(home).filter((u) => !u.includes('raulvieira.vercel.app'));
     expect(externos, `o build publica requisição externa: ${externos.join(', ')}`).toEqual([]);

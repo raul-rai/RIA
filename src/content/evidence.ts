@@ -2,18 +2,23 @@ import { Globe2, TrendingDown, MapPin, Timer } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 /**
- * Evidência de mercado — hoje só para o agente.
+ * Evidência de mercado — dois consumidores hoje.
  *
  * Este arquivo já desenhou uma dobra ("O que os dados dizem", quatro cartões de
  * estatística no capítulo 1). A dobra saiu: empilhava quatro cartões de número
  * antes de "Vozes do mercado", e o visitante atravessava dois blocos de prova
- * de terceiros antes de chegar ao que a RIA faz. O DADO ficou. Ele continua
- * sendo lido em build por scripts/build-agent-context.ts, e é de lá que o
- * agente tira número, fonte e ano quando alguém pergunta.
+ * de terceiros antes de chegar ao que a RIA faz.
  *
- * Consequência a não esquecer: nenhum destes números aparece mais na tela. Se
- * um dia voltarem, voltam com fonte visível e linkada — era isso que tornava a
- * dobra citável por motor generativo, e é a única forma honesta de exibi-los.
+ * O DADO ficou, e agora alimenta dois lugares:
+ *   - o agente, via scripts/build-agent-context.ts, que lê número, fonte e ano
+ *     para responder quando alguém pergunta;
+ *   - a faixa de fontes do rodapé (components/SiteFooter), que republica cada
+ *     citação COM LINK no HTML publicado. Era isso que tornava a página
+ *     citável por motor generativo, e a dobra levava junto ao sair; o rodapé
+ *     devolve a citação sem devolver o desenho que competia com a conversão.
+ *
+ * Os dois leem o MESMO array. Mexer num número aqui muda o que o agente cita e
+ * o que o rodapé publica de uma vez — não existe versão divergente.
  *
  * REGRA DE INTEGRIDADE (a mesma de cases.ts): todo número aqui vem de um estudo
  * público, nomeado, datado e linkado. Nenhum é estimado, arredondado para soar
