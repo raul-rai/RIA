@@ -983,4 +983,198 @@
       transition: none;
     }
   }
+
+  /*
+   * Parede de videos 3D — dobra "Vozes do mercado".
+   *
+   * ENHANCEMENT PROGRESSIVO. O estado BASE (sem JS, ou reduced-motion) e uma
+   * grade plana e legivel: e o que o crawler e o prerender veem, e o que sobra
+   * se o hook nao armar. So quando useOrbitWall confirma que pode animar ele
+   * marca o stage com [data-armed="true"], e AI os paineis viram um arco 3D.
+   *
+   * As vars --panel-rot/--panel-z sao escritas inline pelo React (layoutPanels,
+   * puro, roda igual no servidor). --wall-rot-y/--wall-rot-x sao escritas pelo
+   * hook no .wall-rotor a cada frame.
+   */
+  .wall-stage {
+    position: relative;
+    width: 100%;
+  }
+
+  /* BASE: grade plana. Nenhuma perspectiva, nenhum absolute. */
+  .wall-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .wall-panel {
+    border-radius: 1rem;
+    overflow: hidden;
+    min-height: 12rem;
+  }
+
+  /* ARMADO: perspectiva no stage, rotor gira, paineis viram um arco. */
+  .wall-stage[data-armed='true'] {
+    perspective: 1100px;
+    touch-action: pan-y;
+    height: min(70svh, 520px);
+    overflow: visible;
+  }
+
+  .wall-stage[data-armed='true'] .wall-rotor {
+    position: absolute;
+    inset: 0;
+    transform-style: preserve-3d;
+    transform: translateZ(-560px) rotateX(var(--wall-rot-x, 0deg)) rotateY(var(--wall-rot-y, 0deg));
+    transition: transform 90ms linear;
+    will-change: transform;
+  }
+
+  .wall-stage[data-armed='true'] .wall-list {
+    display: block;
+    transform-style: preserve-3d;
+    height: 100%;
+  }
+
+  .wall-stage[data-armed='true'] .wall-panel {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 260px;
+    height: 168px;
+    margin: -84px 0 0 -130px;
+    transform: rotateY(var(--panel-rot, 0deg)) translateZ(var(--panel-z, 0px));
+    backface-visibility: hidden;
+    cursor: grab;
+  }
+
+  .wall-stage[data-armed='true'] .wall-panel:active {
+    cursor: grabbing;
+  }
+
+  /* Poster do video (identico em espirito ao AuthorityCard). */
+  .wall-poster {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: 100%;
+    background: #020617;
+    cursor: pointer;
+  }
+
+  .wall-poster-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 22%;
+    opacity: 0.6;
+  }
+
+  .wall-poster-grad {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, #020617, rgba(2, 6, 23, 0.35) 55%, transparent);
+  }
+
+  .wall-poster-meta {
+    position: absolute;
+    left: 0.75rem;
+    right: 0.75rem;
+    bottom: 0.75rem;
+    text-align: left;
+    display: block;
+  }
+
+  .wall-poster-title {
+    display: block;
+    font-family: ui-monospace, monospace;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: #67e8f9;
+    margin-bottom: 0.1rem;
+  }
+
+  .wall-poster-name {
+    display: block;
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.95rem;
+  }
+
+  .wall-play {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 9999px;
+    background: rgba(255, 255, 255, 0.9);
+    color: #020617;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  }
+
+  .wall-iframe {
+    width: 100%;
+    height: 100%;
+    border: 0;
+    display: block;
+  }
+
+  /* Painel de apoio: card de vidro simples. */
+  .wall-support {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 0.35rem;
+    padding: 1.25rem;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(8px);
+  }
+
+  .wall-support-value {
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: #0f172a;
+    line-height: 1.1;
+  }
+
+  .wall-support-label {
+    font-size: 0.8rem;
+    color: #475569;
+    line-height: 1.35;
+  }
+
+  /* reduced-motion: garante o estado plano mesmo que o hook um dia arme sem checar. */
+  @media (prefers-reduced-motion: reduce) {
+    .wall-stage[data-armed='true'] {
+      perspective: none;
+      height: auto;
+    }
+    .wall-stage[data-armed='true'] .wall-rotor {
+      position: static;
+      transform: none;
+    }
+    .wall-stage[data-armed='true'] .wall-list {
+      display: grid;
+    }
+    .wall-stage[data-armed='true'] .wall-panel {
+      position: static;
+      width: auto;
+      height: auto;
+      margin: 0;
+      transform: none;
+    }
+  }
 }
