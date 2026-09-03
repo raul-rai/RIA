@@ -2,6 +2,7 @@ import { useEffect, useId, useRef } from 'react';
 import { m } from 'motion/react';
 import { Link } from 'react-router-dom';
 import { X, Award, Quote } from 'lucide-react';
+import { playerSrc } from '../lib/youtube';
 
 interface VideoModalProps {
   isOpen: boolean;
@@ -11,41 +12,6 @@ interface VideoModalProps {
   bio?: string;
   startTime?: number;
   endTime?: number;
-}
-
-/**
- * O endereço do player, montado a partir do videoUrl da autoridade.
- *
- * IFRAME PURO, SEM A IFRAME API — e a troca não é de estilo.
- *
- * Antes este componente injetava `https://www.youtube.com/iframe_api` e montava
- * um `YT.Player`. Mesmo depois de o player passar para o domínio sem cookie, o
- * SCRIPT da API só existe em www.youtube.com: a requisição dele revelava o IP
- * do visitante e, para quem estivesse logado no YouTube, levava os cookies
- * daquele domínio junto. Ou seja, o `-nocookie` do player não fechava o buraco
- * — só o estreitava.
- *
- * A API era usada para UMA coisa: fechar o modal quando o trecho terminava,
- * consultando `getCurrentTime()` a cada 500 ms. Mas `start` e `end` são
- * parâmetros nativos do embed, então o recorte continua exato sem uma linha de
- * JavaScript de terceiro.
- *
- * MUDANÇA DE COMPORTAMENTO, declarada: o modal não se fecha mais sozinho no fim
- * do trecho. O vídeo para no ponto certo e o visitante fecha quando quiser.
- * Reproduzir o fechamento automático sem a API exigiria um `setTimeout` cego,
- * que fecharia o modal na cara de quem tivesse pausado.
- */
-function playerSrc(videoUrl: string, startTime?: number, endTime?: number): string {
-  const videoId = videoUrl.match(/(?:embed\/|v=)([^?&]+)/)?.[1] ?? '';
-  const params = new URLSearchParams({
-    autoplay: '1',
-    rel: '0',
-    modestbranding: '1',
-    playsinline: '1',
-    start: String(startTime ?? 0),
-  });
-  if (endTime) params.set('end', String(endTime));
-  return `https://www.youtube-nocookie.com/embed/${videoId}?${params.toString()}`;
 }
 
 /** O que o Tab alcança dentro do diálogo, na ordem do documento. */
