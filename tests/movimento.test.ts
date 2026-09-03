@@ -219,48 +219,6 @@ describe('A11Y-04 — "reduzir movimento" alcança a página inteira, não só o
   });
 });
 
-describe('A11Y-05 — o alvo do link de fonte chega aos 24px do critério 2.5.8', () => {
-  const secao = ler('src/components/MarketEvidenceSection.tsx');
-  const linkFonte = secao.match(/className="([^"]*underline-offset-2[^"]*)"/)?.[1] ?? '';
-
-  it('MOV-08: o link existe e é o do rodapé de fonte', () => {
-    expect(linkFonte, 'o link de fonte mudou de forma e o teste perdeu o alvo').toContain('text-[');
-  });
-
-  it('MOV-09: altura do alvo calculada a partir das classes, não confiada', () => {
-    /**
-     * A conta, e não a promessa: 11px de fonte com `leading-snug` (1.375) dão
-     * 15,1px de caixa de texto. Sozinho, o link media isso — abaixo dos 24px
-     * exigidos, e a isenção de "alvo em linha" não vale para um link autônomo
-     * no rodapé de um cartão.
-     *
-     * `py-1.5` acrescenta 6px de cada lado. 15,1 + 12 = 27,1px.
-     */
-    const fonte = Number(linkFonte.match(/text-\[(\d+)px\]/)?.[1]);
-    expect(fonte, 'tamanho de fonte não declarado em px — refazer a conta').toBeGreaterThan(0);
-
-    const leading = linkFonte.includes('leading-snug') ? 1.375 : 1.5;
-
-    const py = Number(linkFonte.match(/(?:^|\s)py-([\d.]+)(?:\s|$)/)?.[1] ?? 0);
-    const alturaAlvo = fonte * leading + py * 4 * 2;
-
-    expect(
-      alturaAlvo,
-      `alvo de ${alturaAlvo.toFixed(1)}px — o critério 2.5.8 (AA) pede 24`
-    ).toBeGreaterThanOrEqual(24);
-  });
-
-  it('MOV-10: o desenho não muda — a margem negativa devolve o espaço ao layout', () => {
-    /**
-     * Sem isso o padding empurraria o cartão inteiro. Cresce a área que responde
-     * ao toque, não a caixa. O que transborda para baixo cai sobre o texto do
-     * método, que não é clicável: nenhum alvo vizinho é atropelado.
-     */
-    const py = linkFonte.match(/(?:^|\s)py-([\d.]+)(?:\s|$)/)?.[1];
-    expect(linkFonte, 'padding sem margem negativa desloca o cartão').toContain(`-my-${py}`);
-  });
-});
-
 describe('CONF-02 — o bloco de Web Vitals diz de onde o número vem', () => {
   const diagnostico = ler('src/components/PotentialDiagnostic.tsx');
   const semComentarios = diagnostico
@@ -307,28 +265,22 @@ describe('CONF-02 — o bloco de Web Vitals diz de onde o número vem', () => {
 });
 
 describe('DOC-01 — nenhum comentário afirma o contrário do código', () => {
-  const landing = ler('src/pages/LandingPage.tsx');
-  const convivem =
-    landing.includes('<MarketEvidenceSection />') && landing.includes('<SocialProofSection />');
-
-  it('MOV-14: as duas seções realmente convivem no capítulo 1', () => {
-    expect(convivem).toBe(true);
-  });
-
-  it('MOV-15: ninguém diz "substitui" enquanto as duas estão na página', () => {
+  it('MOV-15: content/evidence.ts não se descreve como parte de uma dobra que saiu', () => {
     /**
-     * Dois arquivos afirmavam ter substituído o SocialProofSection. A
-     * substituição foi PLANEJADA e não aconteceu: o bloco teve os problemas
-     * dele corrigidos no lugar e ficou. Um comentário que descreve o plano em
-     * vez do código é pior que comentário nenhum — ele é lido com a confiança
-     * de documentação.
+     * O arquivo dizia substituir o SocialProofSection, e depois dizia conviver
+     * com ele no capítulo 1. Nenhuma das duas coisas é verdade desde que a
+     * dobra "O que os dados dizem" foi removida: EVIDENCE hoje alimenta só o
+     * contexto do agente (scripts/build-agent-context.ts). Um comentário que
+     * descreve um desenho que não existe mais é lido com a confiança de
+     * documentação — por isso a guarda fica.
      */
-    if (!convivem) return;
-    for (const arquivo of ['src/content/evidence.ts', 'src/components/MarketEvidenceSection.tsx']) {
-      expect(ler(arquivo), `${arquivo} ainda se diz substituto`).not.toMatch(
-        /Substitui (SocialProofSection|o antigo bloco)/
-      );
-    }
+    const evidencia = ler('src/content/evidence.ts');
+    expect(evidencia, 'evidence.ts ainda se diz substituto').not.toMatch(
+      /Substitui (SocialProofSection|o antigo bloco)/
+    );
+    expect(evidencia, 'evidence.ts ainda se diz uma dobra da página').not.toMatch(
+      /MarketEvidenceSection/
+    );
   });
 
   it('MOV-16: o checkbox não se descreve como algo que mexe no índice', () => {
@@ -374,7 +326,6 @@ describe('DOC-01 — nenhum comentário afirma o contrário do código', () => {
  */
 describe('D8 — nada de conteudo depende de JavaScript para ser visivel', () => {
   const semOpacidadeNaEntrada = [
-    'src/components/MarketEvidenceSection.tsx',
     'src/components/CredibilitySection.tsx',
     'src/components/AuthorityCard.tsx',
   ];
@@ -453,14 +404,14 @@ describe.skipIf(!existsSync(resolve(raiz, 'dist/index.html')))(
 
     it('MOV-21: os dez cartoes de conteudo estao no HTML e nenhum deles esta invisivel', () => {
       // Se um cartao some do HTML, o teste acima passaria por omissao.
-      for (const marca of ['McKinsey', 'MIT Project NANDA', 'Cetic.br', 'Harvard Business Review']) {
+      for (const marca of ['Raul Vieira', 'Parcerias frutíferas']) {
         expect(home, `${marca} sumiu do HTML publicado`).toContain(marca);
       }
       // E o unico invisivel restante nao pode ser um deles.
       const contexto = home.match(/.{0,200}style="opacity:0[^"]*"/g) ?? [];
       for (const trecho of contexto) {
         expect(trecho, 'um cartao de conteudo voltou a ser publicado invisivel').not.toMatch(
-          /McKinsey|NANDA|Cetic|Harvard|glass-card/
+          /Raul Vieira|glass-card/
         );
       }
     });

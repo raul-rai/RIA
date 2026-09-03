@@ -41,7 +41,23 @@ export default function FrontsSection() {
   return (
     <div className="w-full max-w-5xl mx-auto px-4 flex flex-col justify-center pointer-events-auto">
       <div className="text-center mb-6 md:mb-8">
-        <div className="glass-chip glass-accent inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full mb-4">
+        {/*
+          `flex w-fit mx-auto`, e NAO `inline-flex`.
+
+          Com `inline-flex` a etiqueta era uma caixa inline, e o irmao dela — o
+          `reading-surface` do titulo — e `inline-block`. Duas caixas inline
+          dentro de um bloco `text-center` cabem na MESMA linha enquanto
+          couberem na largura: 197px da etiqueta + 672px do titulo = 869px, e
+          havia 896px. A etiqueta nao ficava acima do titulo; ficava ao lado
+          dele, encostada na esquerda e alinhada pela linha de base de um bloco
+          de tres linhas — parecia solta no meio do nada.
+
+          `flex` tira a etiqueta do fluxo inline e a devolve para a linha
+          dela; `w-fit mx-auto` centraliza sem depender do `text-center` do
+          pai. Mesmo conserto em CredibilitySection, que tinha o defeito
+          identico.
+        */}
+        <div className="glass-chip glass-accent flex w-fit mx-auto items-center gap-2 px-3.5 py-1.5 rounded-full mb-4">
           <Layers size={14} className="text-cyan-700" />
           <span className="text-cyan-800 text-[10px] md:text-xs font-black uppercase tracking-[0.2em]">
             As três frentes
@@ -77,7 +93,17 @@ export default function FrontsSection() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 max-w-4xl mx-auto w-full">
+      {/*
+        Tres colunas, nao duas.
+
+        `lg:grid-cols-2` com tres cartoes deixava o terceiro sozinho na
+        esquerda e meia grade vazia na direita — o buraco era a primeira coisa
+        que se via na dobra. Tres colunas fecham a fileira, e sao a mesma
+        contagem que o titulo promete: "as tres frentes" viram tres cartoes
+        lado a lado. Tambem alinha o ritmo com a dobra seguinte, que ja usa
+        `md:grid-cols-3`.
+      */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 max-w-5xl mx-auto w-full">
         {FRONTS.map((front, i) => {
           const isChecked = frontsChecked[i];
           const destacada = i === 0 && primeiraVazia && !isChecked;

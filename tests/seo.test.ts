@@ -57,12 +57,38 @@ describe.skipIf(!built)('GEO — a página é legível sem JavaScript', () => {
   });
 
   it('GEO-04: as fontes das evidências estão citadas e linkadas', () => {
-    // Dado com fonte é a tática GEO que faz um motor generativo citar a página.
+    /**
+     * Dado + fonte + ano é a tática GEO que faz um motor generativo citar a
+     * página. Este teste já mediu isso sobre a dobra "O que os dados dizem";
+     * a dobra saiu e levou as citações junto, e por uma versão o teste só
+     * garantia que número solto não aparecesse sem fonte. As citações voltaram
+     * — agora na faixa de fontes do rodapé (components/SiteFooter), que lê o
+     * MESMO content/evidence.ts — então a exigência volta ao que sempre foi: a
+     * fonte tem de estar NO HTML e LINKADA, não só nomeada.
+     */
+    const texto = visibleText(home);
     for (const fonte of ['McKinsey', 'MIT', 'Cetic.br', 'Harvard Business Review']) {
-      expect(home).toContain(fonte);
+      expect(texto, `a fonte "${fonte}" sumiu do HTML publicado`).toContain(fonte);
     }
-    expect(home).toContain('hbr.org');
-    expect(home).toContain('mckinsey.com');
+    // O que separa citação de menção é o link para o estudo. Os domínios são
+    // os que os próprios `url` de content/evidence.ts apontam — a pesquisa do
+    // Cetic.br é publicada em cgi.br, não em cetic.br.
+    for (const dominio of ['mckinsey.com', 'cgi.br', 'hbr.org']) {
+      expect(home, `o link para ${dominio} sumiu`).toContain(dominio);
+    }
+
+    // E o par número↔fonte não pode se soltar: número de terceiro sem a fonte
+    // ao lado vira alegação.
+    const citacoes: Array<[RegExp, RegExp]> = [
+      [/\b88\s*%/, /McKinsey/],
+      [/\b95\s*%/, /MIT|NANDA/],
+      [/\b17\s*%/, /Cetic\.br/],
+    ];
+    for (const [numero, fonte] of citacoes) {
+      if (numero.test(texto)) {
+        expect(texto, `${numero} está na página sem nomear a fonte (${fonte})`).toMatch(fonte);
+      }
+    }
   });
 
   it('GEO-05: o JSON-LD é válido e o FAQPage tem perguntas', () => {

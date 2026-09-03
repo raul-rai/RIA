@@ -2,14 +2,23 @@ import { Globe2, TrendingDown, MapPin, Timer } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 /**
- * Evidência de mercado (capítulo 1).
+ * Evidência de mercado — dois consumidores hoje.
  *
- * Convive com "Vozes do mercado" (components/SocialProofSection) na mesma
- * dobra, e vem ANTES dela. Este arquivo já dizia que substituía aquele bloco;
- * não substituiu — o bloco continua na página, com os problemas dele
- * corrigidos no lugar (disclaimer de não-endosso em content/authorities.ts,
- * marcação que não pontua mais o índice). Ver o cabeçalho de
- * MarketEvidenceSection.
+ * Este arquivo já desenhou uma dobra ("O que os dados dizem", quatro cartões de
+ * estatística no capítulo 1). A dobra saiu: empilhava quatro cartões de número
+ * antes de "Vozes do mercado", e o visitante atravessava dois blocos de prova
+ * de terceiros antes de chegar ao que a RIA faz.
+ *
+ * O DADO ficou, e agora alimenta dois lugares:
+ *   - o agente, via scripts/build-agent-context.ts, que lê número, fonte e ano
+ *     para responder quando alguém pergunta;
+ *   - a faixa de fontes do rodapé (components/SiteFooter), que republica cada
+ *     citação COM LINK no HTML publicado. Era isso que tornava a página
+ *     citável por motor generativo, e a dobra levava junto ao sair; o rodapé
+ *     devolve a citação sem devolver o desenho que competia com a conversão.
+ *
+ * Os dois leem o MESMO array. Mexer num número aqui muda o que o agente cita e
+ * o que o rodapé publica de uma vez — não existe versão divergente.
  *
  * REGRA DE INTEGRIDADE (a mesma de cases.ts): todo número aqui vem de um estudo
  * público, nomeado, datado e linkado. Nenhum é estimado, arredondado para soar
@@ -62,7 +71,15 @@ export const EVIDENCE: Evidence[] = [
     source: 'MIT Project NANDA — The GenAI Divide',
     year: 2025,
     method: '52 entrevistas com executivos, 153 líderes pesquisados e 300 implantações públicas',
-    url: 'https://www.forbes.com/sites/jasonsnyder/2025/08/26/mit-finds-95-of-genai-pilots-fail-because-companies-avoid-friction/',
+    // EXCEÇÃO à regra "nunca um veículo que apenas noticiou", e o porquê para
+    // não ser "consertada" de volta para um link morto: o estudo é do MIT
+    // NANDA (por isso `source` é o MIT, não a Fortune), mas o MIT distribui o
+    // PDF só por trás de um formulário e tirou do ar a cópia direta que
+    // existia — nanda.media.mit.edu/ai_report_2025.pdf hoje redireciona (302)
+    // para um overview que nem cita o relatório. Sem primário linkável, a
+    // Fortune é a citação mais confiável que MOSTRA o dado (redação de
+    // verdade, não o blog de colaborador da Forbes que estava aqui antes).
+    url: 'https://fortune.com/2025/08/18/mit-report-95-percent-generative-ai-pilots-at-companies-failing-cfo/',
     icon: TrendingDown,
   },
   {
