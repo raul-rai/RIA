@@ -71,7 +71,15 @@ export const EVIDENCE: Evidence[] = [
     source: 'MIT Project NANDA — The GenAI Divide',
     year: 2025,
     method: '52 entrevistas com executivos, 153 líderes pesquisados e 300 implantações públicas',
-    url: 'https://www.forbes.com/sites/jasonsnyder/2025/08/26/mit-finds-95-of-genai-pilots-fail-because-companies-avoid-friction/',
+    // EXCEÇÃO à regra "nunca um veículo que apenas noticiou", e o porquê para
+    // não ser "consertada" de volta para um link morto: o estudo é do MIT
+    // NANDA (por isso `source` é o MIT, não a Fortune), mas o MIT distribui o
+    // PDF só por trás de um formulário e tirou do ar a cópia direta que
+    // existia — nanda.media.mit.edu/ai_report_2025.pdf hoje redireciona (302)
+    // para um overview que nem cita o relatório. Sem primário linkável, a
+    // Fortune é a citação mais confiável que MOSTRA o dado (redação de
+    // verdade, não o blog de colaborador da Forbes que estava aqui antes).
+    url: 'https://fortune.com/2025/08/18/mit-report-95-percent-generative-ai-pilots-at-companies-failing-cfo/',
     icon: TrendingDown,
   },
   {
