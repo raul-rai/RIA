@@ -38,13 +38,20 @@ export function useOrbitWall<T extends HTMLElement>(opts: OrbitWallOpts = {}) {
 
     stage.dataset.armed = 'true';
 
+    // Deslocamento minimo, em px, para um gesto virar arrasto em vez de toque.
+    const DRAG_THRESHOLD_PX = 6;
+
     let rotY = 0;
     let rotX = 0;
     let velY = 0;
-    let dragging = false;
+    let dragging = false; // arrasto horizontal armado (orbita)
+    let pointerDown = false; // pressionado sobre um painel, ainda sem decidir toque x arrasto
+    let downX = 0;
+    let downY = 0;
     let lastX = 0;
     let lastY = 0;
     let lastMoveTs = 0;
+    let activeId = -1;
     let paused = false; // dobra fora de vista ou aba oculta
     let last = performance.now();
     let frame = 0;
@@ -58,15 +65,19 @@ export function useOrbitWall<T extends HTMLElement>(opts: OrbitWallOpts = {}) {
       const dt = now - last;
       last = now;
       if (!paused) {
-        if (dragging) {
-          // segurando: o arrasto ja escreve rotY em onMove; nada a integrar.
+        if (pointerDown || dragging) {
+          // Pressionado (decidindo toque x arrasto) ou orbitando: o frame nao
+          // move sozinho. Congelar sob o dedo da um alvo estavel para o toque
+          // (senao o poster desliza e o clique de play erra), e enquanto orbita
+          // e o onMove que escreve.
         } else if (velY !== 0) {
           rotY = dragToAngle(rotY, velY * (dt / 1000), 1);
           velY = applyInertia(velY, damping);
+          write();
         } else {
           rotY = stepAutoRotate(rotY, dt, degPerSec);
+          write();
         }
-        write();
       }
       frame = requestAnimationFrame(tick);
     };
@@ -74,16 +85,38 @@ export function useOrbitWall<T extends HTMLElement>(opts: OrbitWallOpts = {}) {
     const onDown = (e: PointerEvent) => {
       const onPanel = (e.target as HTMLElement | null)?.closest('.wall-panel');
       if (!onPanel) return; // fundo/laterais: deixa a pagina rolar
-      dragging = true;
+      // NAO captura o ponteiro agora: capturar no pointerdown engoliria o
+      // `click` do poster e o play nunca dispararia. A decisao entre toque e
+      // arrasto vem no primeiro movimento (onMove).
+      pointerDown = true;
+      dragging = false;
       velY = 0;
+      downX = e.clientX;
+      downY = e.clientY;
       lastX = e.clientX;
       lastY = e.clientY;
       lastMoveTs = performance.now();
-      stage.setPointerCapture?.(e.pointerId);
+      activeId = e.pointerId;
     };
 
     const onMove = (e: PointerEvent) => {
-      if (!dragging) return;
+      if (!pointerDown || e.pointerId !== activeId) return;
+
+      if (!dragging) {
+        const adx = Math.abs(e.clientX - downX);
+        const ady = Math.abs(e.clientY - downY);
+        if (adx < DRAG_THRESHOLD_PX && ady < DRAG_THRESHOLD_PX) return; // ainda pode ser toque
+        if (adx <= ady) {
+          // Predominantemente vertical: nao e orbita. Solta o gesto para o
+          // `touch-action: pan-y` rolar a pagina — nada de capturar.
+          pointerDown = false;
+          return;
+        }
+        // Horizontal: arma a orbita e captura para receber os proximos eventos.
+        dragging = true;
+        stage.setPointerCapture?.(e.pointerId);
+      }
+
       const now = performance.now();
       const dx = e.clientX - lastX;
       const dy = e.clientY - lastY;
@@ -98,9 +131,14 @@ export function useOrbitWall<T extends HTMLElement>(opts: OrbitWallOpts = {}) {
     };
 
     const onUp = (e: PointerEvent) => {
-      if (!dragging) return;
+      if (e.pointerId !== activeId) return;
+      // Se nunca armou o arrasto, foi um toque: nao faz nada e deixa o `click`
+      // seguir para o poster (o play). Se armou, solta a captura; a inercia (em
+      // velY) assume no proximo frame.
+      if (dragging) stage.releasePointerCapture?.(e.pointerId);
+      pointerDown = false;
       dragging = false;
-      stage.releasePointerCapture?.(e.pointerId);
+      activeId = -1;
     };
 
     const io = new IntersectionObserver(
