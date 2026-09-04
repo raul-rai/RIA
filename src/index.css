@@ -990,7 +990,7 @@
    * ENHANCEMENT PROGRESSIVO. O estado BASE (sem JS, ou reduced-motion) e uma
    * grade plana e legivel: e o que o crawler e o prerender veem, e o que sobra
    * se o hook nao armar. So quando useOrbitWall confirma que pode animar ele
-   * marca o stage com [data-armed="true"], e AI os paineis viram um arco 3D.
+   * marca o stage com [data-armed="true"], e ai os paineis viram um arco 3D.
    *
    * As vars --panel-rot/--panel-z sao escritas inline pelo React (layoutPanels,
    * puro, roda igual no servidor). --wall-rot-y/--wall-rot-x sao escritas pelo

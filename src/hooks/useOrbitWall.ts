@@ -18,7 +18,7 @@ export interface OrbitWallOpts {
  * quem aplica o transform. Enhancement puro — se nao armar (reduced-motion), o
  * stage nunca ganha `data-armed` e o CSS mantem os paineis numa grade plana.
  *
- * NAO usa o gate de ponteiro fino do usePointerTilt: aqui o toque É bem-vindo.
+ * NAO usa o gate de ponteiro fino do usePointerTilt: aqui o toque e bem-vindo.
  * O gate do mobile e outro — so captura para orbitar quando o gesto comeca sobre
  * um `.wall-panel`; caso contrario o `touch-action: pan-y` do stage deixa a
  * pagina rolar. Toda leitura de `window` acontece dentro do effect (SSR seguro).
@@ -52,9 +52,20 @@ export function useOrbitWall<T extends HTMLElement>(opts: OrbitWallOpts = {}) {
     let lastY = 0;
     let lastMoveTs = 0;
     let activeId = -1;
-    let paused = false; // dobra fora de vista ou aba oculta
+    let intersecting = true; // dobra visivel no viewport
+    let hidden = false; // aba oculta
+    let paused = false; // = !intersecting || hidden
+    let didDrag = false; // houve arrasto neste gesto (engole o click seguinte)
     let last = performance.now();
     let frame = 0;
+
+    const syncPaused = () => {
+      const next = !intersecting || hidden;
+      // Ao despausar, zera o dt acumulado: sem isso o primeiro tick apos voltar
+      // aplicaria um salto de rotacao proporcional ao tempo parado.
+      if (paused && !next) last = performance.now();
+      paused = next;
+    };
 
     const write = () => {
       rotor.style.setProperty('--wall-rot-y', `${rotY.toFixed(2)}deg`);
@@ -90,6 +101,7 @@ export function useOrbitWall<T extends HTMLElement>(opts: OrbitWallOpts = {}) {
       // arrasto vem no primeiro movimento (onMove).
       pointerDown = true;
       dragging = false;
+      didDrag = false;
       velY = 0;
       downX = e.clientX;
       downY = e.clientY;
@@ -114,6 +126,7 @@ export function useOrbitWall<T extends HTMLElement>(opts: OrbitWallOpts = {}) {
         }
         // Horizontal: arma a orbita e captura para receber os proximos eventos.
         dragging = true;
+        didDrag = true;
         stage.setPointerCapture?.(e.pointerId);
       }
 
@@ -135,26 +148,44 @@ export function useOrbitWall<T extends HTMLElement>(opts: OrbitWallOpts = {}) {
       // Se nunca armou o arrasto, foi um toque: nao faz nada e deixa o `click`
       // seguir para o poster (o play). Se armou, solta a captura; a inercia (em
       // velY) assume no proximo frame.
-      if (dragging) stage.releasePointerCapture?.(e.pointerId);
+      if (dragging) {
+        stage.releasePointerCapture?.(e.pointerId);
+        // Se o dedo ja tinha parado antes de soltar, nao ha fling: zera para
+        // nao arremessar com a velocidade obsoleta do ultimo movimento.
+        if (performance.now() - lastMoveTs > 100) velY = 0;
+      }
       pointerDown = false;
       dragging = false;
       activeId = -1;
     };
 
+    // Um arrasto que termina sobre um poster dispara um `click` logo apos o
+    // pointerup. Se houve arrasto, engole esse unico click (fase de captura)
+    // para o play nao iniciar sem querer. Um toque puro nunca seta didDrag,
+    // entao o clique de play passa normalmente.
+    const onClickCapture = (e: MouseEvent) => {
+      if (!didDrag) return;
+      e.stopPropagation();
+      e.preventDefault();
+      didDrag = false;
+    };
+
     const io = new IntersectionObserver(
-      ([entry]) => { paused = !entry.isIntersecting || document.visibilityState === 'hidden'; },
+      ([entry]) => { intersecting = entry.isIntersecting; syncPaused(); },
       { threshold: 0.05 },
     );
     io.observe(stage);
 
     const onVisibility = () => {
-      if (document.visibilityState === 'hidden') paused = true;
+      hidden = document.visibilityState === 'hidden';
+      syncPaused();
     };
 
     stage.addEventListener('pointerdown', onDown);
     stage.addEventListener('pointermove', onMove);
     stage.addEventListener('pointerup', onUp);
     stage.addEventListener('pointercancel', onUp);
+    stage.addEventListener('click', onClickCapture, true);
     document.addEventListener('visibilitychange', onVisibility);
     frame = requestAnimationFrame(tick);
 
@@ -165,6 +196,7 @@ export function useOrbitWall<T extends HTMLElement>(opts: OrbitWallOpts = {}) {
       stage.removeEventListener('pointermove', onMove);
       stage.removeEventListener('pointerup', onUp);
       stage.removeEventListener('pointercancel', onUp);
+      stage.removeEventListener('click', onClickCapture, true);
       document.removeEventListener('visibilitychange', onVisibility);
       delete stage.dataset.armed;
     };
