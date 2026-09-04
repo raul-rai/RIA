@@ -118,11 +118,14 @@ describe('Terceiros — nada carrega sem ação do visitante', () => {
   });
 
   it('TERC-03: o player de vídeo usa o domínio sem cookie', () => {
-    const modal = semComentarios(readFileSync(root('src/components/VideoModal.tsx'), 'utf-8'));
-    expect(modal, 'o iframe do player não aponta para o domínio sem cookie').toContain(
+    // A URL do player e montada em src/lib/youtube.ts (playerSrc), extraida de
+    // VideoModal para ser reusada tambem pela parede de videos 3d. O dono do
+    // dominio sem cookie e esse lib agora.
+    const player = semComentarios(readFileSync(root('src/lib/youtube.ts'), 'utf-8'));
+    expect(player, 'o player não aponta para o domínio sem cookie').toContain(
       'https://www.youtube-nocookie.com/embed/'
     );
-    expect(modal, 'sobrou um embed no domínio com cookie').not.toMatch(
+    expect(player, 'sobrou um embed no domínio com cookie').not.toMatch(
       /https:\/\/www\.youtube\.com\/embed/
     );
 
@@ -167,7 +170,13 @@ describe('Terceiros — nada carrega sem ação do visitante', () => {
      * `start` e `end` são parâmetros nativos do embed, então o recorte do
      * trecho não precisa de JavaScript de terceiro nenhum.
      */
-    const codigo = semComentarios(readFileSync(root('src/components/VideoModal.tsx'), 'utf-8'));
+    // Le o VideoModal (que renderiza o iframe) E o lib youtube.ts (que monta a
+    // URL, extraido de VideoModal): a IFrame API poderia voltar em qualquer um,
+    // e o literal do dominio sem cookie agora mora no lib.
+    const codigo = semComentarios(
+      readFileSync(root('src/components/VideoModal.tsx'), 'utf-8') +
+        readFileSync(root('src/lib/youtube.ts'), 'utf-8'),
+    );
     expect(codigo, 'a IFrame API voltou').not.toContain('iframe_api');
     expect(codigo, 'YT.Player voltou').not.toContain('YT.Player');
     expect(codigo).toContain('youtube-nocookie.com/embed/');

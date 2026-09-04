@@ -154,13 +154,18 @@ describe.skipIf(!construido)('PERF-02 — medido sobre o que foi publicado', () 
     }
   });
 
-  it('PAC-07: o VideoModal está FORA do caminho crítico', () => {
-    const modal = js.find((f) => f.startsWith('VideoModal-'));
-    expect(modal, 'o VideoModal voltou para dentro do pacote principal').toBeDefined();
-    expect(
-      home.includes(modal!),
-      'o HTML pré-carrega o VideoModal — ele deixou de ser sob demanda'
-    ).toBe(false);
+  it('PAC-07: o player de vídeo está FORA do caminho crítico', () => {
+    /**
+     * O VideoModal lazy saiu desta dobra: o play agora e um `<iframe>` nativo
+     * montado so no clique, dentro da parede (VideoWall3D). O caminho critico e
+     * o HTML pre-renderizado, e nele nao pode existir player nenhum — nem iframe
+     * do YouTube, nem a URL de embed. Se a guarda de `isPlaying` quebrar e o
+     * iframe for montado no servidor, isto pega no nivel do build, complementando
+     * a checagem de fonte do PAC-05.
+     */
+    expect(home, 'o player do YouTube foi pré-renderizado no HTML inicial').not.toMatch(
+      /youtube(-nocookie)?\.com\/embed/
+    );
   });
 
   it('PAC-08: o primeiro carregamento encolheu, e continua encolhido', () => {
