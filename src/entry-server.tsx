@@ -45,6 +45,8 @@ export function render(url: string): string {
  */
 export const ROUTES = [
   { path: '/', changefreq: 'weekly', priority: '1.0' },
+  { path: '/sobre', changefreq: 'monthly', priority: '0.6' },
+  { path: '/contato', changefreq: 'monthly', priority: '0.6' },
   { path: '/privacidade', changefreq: 'yearly', priority: '0.3' },
 ] as const;
 
@@ -90,4 +92,19 @@ export { ROUTE_META, metaFor } from './content/meta';
  */
 export { FRONTS } from './content/fronts';
 export { CONSULTANT } from './content/consultant';
-export { SOCIAL_PROFILES, PHONE_E164 } from './constants/links';
+export { SOCIAL_PROFILES, PHONE_E164, WHATSAPP_URL } from './constants/links';
+
+/**
+ * Atravessam pela mesma ponte, e pelo mesmo motivo, para o prerender montar as
+ * variantes em Markdown (`/index.md`, `/sobre.md`, ...) e o `llms.txt` a partir
+ * das MESMAS fontes que a página renderiza. O agente que pede `Accept:
+ * text/markdown` recebe o mesmo conteúdo que o humano vê — não uma segunda
+ * cópia mantida à mão, que divergiria no primeiro deploy.
+ */
+export { EVIDENCE } from './content/evidence';
+export {
+  DIAGNOSTIC_PRICE,
+  IMPLEMENTATION_RANGE,
+  SESSION_MINUTES,
+} from './content/offer';
+export { PRIVACY_SECTIONS, CONTROLLER, LAST_UPDATED } from './content/privacy';

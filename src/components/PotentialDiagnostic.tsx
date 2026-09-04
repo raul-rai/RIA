@@ -420,6 +420,12 @@ export default function PotentialDiagnostic() {
               Diagnóstico de Presença Digital
             </span>
           </div>
+          {/* Único <h2> desta seção. Tudo o que vem abaixo — o laudo, os Core
+              Web Vitals, a presença em redes — desce a partir daqui em ordem
+              (<h3>, depois <h4>), sem pular nível. A hierarquia de títulos é
+              lida sem JavaScript pelos crawlers de IA que a Frente 1 promete
+              atender; um salto de <h2> para <h4> fazia o auditor de prontidão
+              ler a página como mal estruturada. */}
           <h2 className="text-2xl md:text-5xl font-serif text-slate-900 mb-2">
             Seu site sobrevive à <span className="italic font-normal text-slate-500">era dos motores de IA?</span>
           </h2>
@@ -619,10 +625,14 @@ export default function PotentialDiagnostic() {
                     </div>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h4 className="text-xs md:text-sm font-bold uppercase tracking-[0.16em] leading-none">
+                    {/* <h3>, não <h4>: filho direto do <h2> da seção. O laudo
+                        só aparece depois da interação, mas o Googlebot executa
+                        o JavaScript e lê a hierarquia resultante — então ela
+                        também precisa descer em ordem. */}
+                    <h3 className="text-xs md:text-sm font-bold uppercase tracking-[0.16em] leading-none">
                       <span className="text-slate-500">Status: </span>
                       <span className={overallTone.text}>{result.nivel_nome}</span>
-                    </h4>
+                    </h3>
                     <p className="text-slate-600 text-[11px] md:text-xs leading-relaxed mt-2">{result.leitura}</p>
                     <p className="text-slate-400 text-[9px] md:text-[10px] uppercase tracking-[0.15em] font-bold mt-2">
                       {SOURCE_LABEL[result.source]}
@@ -798,10 +808,12 @@ export default function PotentialDiagnostic() {
                     CrUX for observado de verdade, o campo entra AO LADO deste
                     bloco, nomeado como campo — nunca por cima dele.
                   */}
-                  <h5 className="text-[10px] md:text-[11px] font-mono font-bold uppercase tracking-[0.12em] md:tracking-[0.16em] text-slate-500 mb-3 flex items-start gap-1.5">
+                  {/* <h4>: desce do <h3> "Status" logo acima, dentro do mesmo
+                      laudo. Antes era <h5> e criava um salto de nível. */}
+                  <h4 className="text-[10px] md:text-[11px] font-mono font-bold uppercase tracking-[0.12em] md:tracking-[0.16em] text-slate-500 mb-3 flex items-start gap-1.5">
                     <Activity size={12} className="text-accent shrink-0 mt-[1px]" />
                     <span>Core Web Vitals — medidos em laboratório</span>
-                  </h5>
+                  </h4>
                   <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 md:gap-3">
                     {result.webVitals.map((v) => {
                       // A sigla e a traducao dividiam uma linha so, e "CLS
@@ -864,10 +876,15 @@ export default function PotentialDiagnostic() {
             duas coisas de uma vez. Agora a pergunta e uma so, e cada rede e um
             alvo — a resposta vira informacao, nao aproximacao. */}
         <div className="mt-6 pt-6 border-t border-slate-900/10 max-w-2xl mx-auto">
-          <h4 className="text-sm md:text-base font-bold text-slate-800 mb-1 text-center flex items-center justify-center gap-2">
+          {/* <h3>, não <h4>. Este é o título que aparece no HTML SEM
+              JavaScript, logo após o <h2> da seção — o laudo acima só existe
+              depois da interação. Como <h4>, era um salto de <h2> para <h4> no
+              HTML cru: exatamente o defeito que o auditor de prontidão para
+              agentes apontou. Como <h3>, a hierarquia servida é sequencial. */}
+          <h3 className="text-sm md:text-base font-bold text-slate-800 mb-1 text-center flex items-center justify-center gap-2">
             <Share2 size={15} className="text-accent shrink-0" />
             <span>Você consegue estar presente hoje em quais redes sociais?</span>
-          </h4>
+          </h3>
           <p className="text-[11px] text-slate-500 text-center mb-3.5">
             {marcadas === 0
               ? 'Marque todas em que sua empresa já publica.'

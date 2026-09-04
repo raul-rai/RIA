@@ -64,7 +64,23 @@ export default function SiteFooter() {
           <p className="text-[11px] text-slate-500 text-center sm:text-left leading-snug">
             {CONSULTANT.name} — {CONSULTANT.role}
           </p>
+          {/* Sobre e Contato entram ao lado da política: são as três páginas
+              de confiança que um agente de IA (e o jurídico do prospect) abre
+              para verificar que o negócio é real antes de recomendar. Sem link
+              no rodapé, existiriam só para quem já soubesse a URL. */}
           <nav className="flex items-center gap-4">
+            <Link
+              to="/sobre"
+              className="text-[11px] font-semibold text-slate-600 hover:text-accent underline underline-offset-2 py-2"
+            >
+              Sobre
+            </Link>
+            <Link
+              to="/contato"
+              className="text-[11px] font-semibold text-slate-600 hover:text-accent underline underline-offset-2 py-2"
+            >
+              Contato
+            </Link>
             <Link
               to="/privacidade"
               className="text-[11px] font-semibold text-slate-600 hover:text-accent underline underline-offset-2 py-2"

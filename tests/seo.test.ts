@@ -213,10 +213,15 @@ describe.skipIf(!built)('SEO — metadados por rota', () => {
   it('SEO-07: sitemap.xml lista exatamente as rotas prerenderizadas', () => {
     const sitemap = readFileSync(resolve(dist, 'sitemap.xml'), 'utf-8');
     const locs = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
-    expect(locs.length).toBe(2);
+    // As páginas-âncora de confiança (/sobre e /contato) entraram no mesmo
+    // build que o prerender, o sitemap e o llms.txt — as listas saem todas da
+    // constante ROUTES, então listar uma página inexistente (ou omitir uma que
+    // existe) é impossível por construção.
+    expect(locs.some((l) => l.endsWith('/sobre'))).toBe(true);
+    expect(locs.some((l) => l.endsWith('/contato'))).toBe(true);
     expect(locs.some((l) => l.endsWith('/privacidade'))).toBe(true);
-    // Sitemap que lista página inexistente (ou omite uma que existe) é o erro
-    // clássico; aqui as duas listas saem da mesma constante ROUTES.
+    // A home entra sem barra final (a raiz), não como '/'.
+    expect(locs.some((l) => /raulvieira\.vercel\.app$/.test(l))).toBe(true);
     for (const loc of locs) expect(loc).toMatch(/^https:\/\//);
   });
 });

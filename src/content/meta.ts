@@ -48,6 +48,16 @@ export const ROUTE_META: Record<string, RouteMeta> = {
     description:
       'Como a RIA trata os dados coletados no site: o que é coletado, para onde vai, com que base legal e como pedir exclusão.',
   },
+  '/sobre': {
+    title: 'RIA — Sobre a consultoria e quem conduz',
+    description:
+      'A RIA é uma consultoria de IA para empresas brasileiras: engenharia de produção aplicada a inteligência artificial. Quem conduz, o que faz e como começa.',
+  },
+  '/contato': {
+    title: 'RIA — Contato e como falar com a consultoria',
+    description:
+      'Fale com a RIA por WhatsApp: conversa de 15 minutos, gratuita, sobre a sua operação. Atende empresas em todo o Brasil, de forma remota.',
+  },
 };
 
 /**

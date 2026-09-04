@@ -78,12 +78,31 @@ describe('vercel.json: o contexto precisa ser SERVIDO, nao reescrito', () => {
     expect(Array.isArray(vercel.rewrites)).toBe(true);
   });
 
-  it('CTX-11: o rewrite de SPA nao engole o agent-context.json', () => {
-    // O site e SPA: tudo e reescrito para /index.html. Sem a excecao, o n8n
-    // baixaria HTML no lugar do contexto e o agente perderia o repertorio
-    // inteiro — em silencio, porque o HTTP continua 200.
-    const regex = new RegExp('^' + vercel.rewrites[0].source + '$');
-    expect(regex.test('/agent-context.json')).toBe(false);
-    expect(regex.test('/privacidade')).toBe(true);
+  it('CTX-11: nenhum rewrite engole o agent-context.json', () => {
+    // Antes o site reescrevia TUDO para /index.html e precisava de uma exceção
+    // para o contexto. Agora não há catch-all: só /onda (rota client-only, sem
+    // arquivo prerenderizado) é reescrita, e todo o resto — inclusive
+    // agent-context.json, sitemap.xml, llms.txt e os .md — é servido como
+    // arquivo estático. Se algum rewrite voltasse a capturar o contexto, o n8n
+    // baixaria HTML no lugar do JSON, em silêncio (o HTTP continua 200).
+    for (const { source } of vercel.rewrites) {
+      const regex = new RegExp('^' + source + '$');
+      expect(regex.test('/agent-context.json'), `rewrite ${source} captura o contexto`).toBe(false);
+    }
+    // A única rota client-only continua reescrita para o app shell.
+    expect(vercel.rewrites.some((r: { source: string }) => r.source === '/onda')).toBe(true);
+  });
+
+  it('CTX-12: caminho inexistente cai num 404 real, não no app shell', () => {
+    // Sem catch-all, um GET num caminho que não existe não é reescrito para
+    // /index.html (que devolveria 200 e faria o agente crer que toda rota
+    // existe). A Vercel serve dist/404.html com status 404. Aqui trancamos os
+    // dois lados do contrato: nenhum rewrite captura um caminho arbitrário, e o
+    // 404.html foi gerado.
+    const arbitrario = '/isto-nao-existe-em-lugar-nenhum';
+    for (const { source } of vercel.rewrites) {
+      const regex = new RegExp('^' + source + '$');
+      expect(regex.test(arbitrario), `rewrite ${source} captura caminho arbitrário`).toBe(false);
+    }
   });
 });
