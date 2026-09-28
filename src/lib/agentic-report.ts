@@ -144,3 +144,27 @@ export function classifyProblem(status: number, code: unknown): AgenticFailure {
   if (status === 400 || code === 'invalid_url') return 'invalid-url';
   return 'unreachable';
 }
+
+/**
+ * Endereco que vai para o scanner.
+ *
+ * Aceita so http/https: um `javascript:` ou `ftp:` digitado no campo nao pode
+ * virar requisicao nossa. Sem ponto no host nao e dominio publico — e mandar
+ * `localhost` para o scanner deles devolve laudo de nada.
+ */
+export function normalizeTarget(input: string): string | null {
+  const limpo = input.trim();
+  if (!limpo) return null;
+
+  const comEsquema = /^https?:\/\//i.test(limpo) ? limpo : `https://${limpo}`;
+  let url: URL;
+  try {
+    url = new URL(comEsquema);
+  } catch {
+    return null;
+  }
+
+  if (url.protocol !== 'http:' && url.protocol !== 'https:') return null;
+  if (!url.hostname.includes('.')) return null;
+  return url.toString();
+}

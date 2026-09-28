@@ -22,5 +22,13 @@ export const config = {
   bookingUrl: readEnv(import.meta.env.VITE_BOOKING_URL, 'VITE_BOOKING_URL'),
   pageSpeedApiUrl: 'https://www.googleapis.com/pagespeedonline/v5/runPagespeed',
   pageSpeedApiKey: import.meta.env.VITE_PAGESPEED_API_KEY || '',
+  /**
+   * Nossa funcao de borda que fala com o Is Agentic.
+   *
+   * E caminho relativo, nao URL: o endpoint DELES (is-agentic.com) mora so na
+   * funcao, em api/agentic-scan.ts, porque o disparo de scan nao tem CORS e
+   * portanto nunca pode ser chamado do navegador.
+   */
+  agenticScanPath: '/api/agentic-scan',
 } as const;
 
