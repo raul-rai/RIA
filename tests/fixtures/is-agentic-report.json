@@ -1,0 +1,40 @@
+{
+  "target": "https://raulvieira.vercel.app",
+  "display_target": "raulvieira.vercel.app",
+  "report_url": "https://is-agentic.com/scan/raulvieira.vercel.app",
+  "score": 72,
+  "score_label": "Ready with a few material gaps",
+  "scanned_at": "2026-09-07T15:35:19.037Z",
+  "eligible_checks": 16,
+  "score_breakdown": {
+    "essential": { "earned": 59, "available": 80, "passing": 4, "total": 7 },
+    "recommended": { "earned": 10.2, "available": 20, "passing": 3, "total": 9 },
+    "bonus": { "points": 2.3, "positive_signals": 9 }
+  },
+  "issues": [
+    {
+      "id": "agent-friendly-404",
+      "name": "Agent-friendly 404s",
+      "tier": "essential",
+      "result": "partial",
+      "details": "Nonexistent paths return a real HTTP 404. For full credit, include a short markdown body (site map links, where to look next) so agents can recover.",
+      "recommendation": "Return a real HTTP 404 (or 410) status for nonexistent paths."
+    },
+    {
+      "id": "markdown-negotiation-vary",
+      "name": "Markdown content negotiation (acceptmarkdown.com)",
+      "tier": "essential",
+      "result": "failed",
+      "details": "Not acceptmarkdown.com compliant: Accept: text/markdown returned text/html; charset=utf-8; Vary header missing Accept (got \"none\")",
+      "recommendation": "Add Accept to the Vary header (Vary: Accept, Accept-Encoding)."
+    },
+    {
+      "id": "trust-anchors",
+      "name": "Trust anchor pages",
+      "tier": "recommended",
+      "result": "failed",
+      "details": "No trust anchor pages found with sufficient content (About, Contact, Privacy)",
+      "recommendation": "Publish real /about, /contact, and /privacy pages with at least 500 characters of content each."
+    }
+  ]
+}
