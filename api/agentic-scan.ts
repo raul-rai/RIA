@@ -37,11 +37,15 @@ function sse(event: unknown): string {
 // sequencia (o TS so faz esse estreitamento com strictNullChecks ligado). Um
 // tipo unico com todos os campos sempre presentes evita depender disso.
 async function readReport(
-  target: string
+  target: string,
+  signal: AbortSignal
 ): Promise<{ ok: boolean; status: number; code: unknown; body: unknown }> {
   const endpoint = new URL('/api/v1/report', BASE);
   endpoint.searchParams.set('url', target);
-  const response = await fetch(endpoint, { headers: { Accept: 'application/json', 'User-Agent': UA } });
+  const response = await fetch(endpoint, {
+    headers: { Accept: 'application/json', 'User-Agent': UA },
+    signal,
+  });
   const body = await response.json().catch(() => null);
   const code = body && typeof body === 'object' ? (body as Record<string, unknown>).code : undefined;
   return { ok: response.ok, status: response.status, code, body };
@@ -50,29 +54,47 @@ async function readReport(
 export default async function handler(request: Request): Promise<Response> {
   const alvo = normalizeTarget(new URL(request.url).searchParams.get('url') ?? '');
 
+  // Cancela os dois fetch() de uma vez quando o visitante fecha a aba ou o
+  // cliente aborta. Sem isto a funcao segue consumindo o SSE deles ate o fim
+  // mesmo sem ninguem ouvindo, gastando o orcamento compartilhado de 10
+  // scans/min do site inteiro com uma varredura que ninguem mais quer.
+  const abortController = new AbortController();
+
   const stream = new ReadableStream({
     async start(controller) {
       const enfileira = (event: unknown) => controller.enqueue(new TextEncoder().encode(sse(event)));
 
+      // Unico ponto de fechamento: chamar `fechar()` de novo (ex.: try e
+      // finally chegando ao mesmo close) e inocuo. Fechar um stream que o
+      // cliente ja cancelou lancaria — o try/catch aqui absorve isso.
+      let fechado = false;
+      const fechar = () => {
+        if (fechado) return;
+        fechado = true;
+        try {
+          controller.close();
+        } catch {
+          // stream ja fechado pelo cancelamento do cliente — nada a fazer.
+        }
+      };
+
       if (!alvo) {
         enfileira({ type: 'failure', reason: 'invalid-url' });
-        controller.close();
+        fechar();
         return;
       }
 
       try {
         // 1. Laudo ja arquivado? Devolve na hora — e o caminho barato.
-        const pronto = await readReport(alvo);
+        const pronto = await readReport(alvo, abortController.signal);
         if (pronto.ok) {
           enfileira({ type: 'report', report: pronto.body });
-          controller.close();
           return;
         }
 
         // 404 e o unico erro que justifica gastar um scan. Os outros sao falha.
         if (pronto.status !== 404) {
           enfileira({ type: 'failure', reason: classifyProblem(pronto.status, pronto.code) });
-          controller.close();
           return;
         }
 
@@ -81,12 +103,12 @@ export default async function handler(request: Request): Promise<Response> {
         scan.searchParams.set('target', alvo);
         const upstream = await fetch(scan, {
           headers: { Accept: 'text/event-stream', 'Cache-Control': 'no-store', 'User-Agent': UA },
+          signal: abortController.signal,
         });
 
         if (!upstream.ok || !upstream.body) {
           const code = upstream.status === 429 ? 'rate_limit_exceeded' : undefined;
           enfileira({ type: 'failure', reason: classifyProblem(upstream.status, code) });
-          controller.close();
           return;
         }
 
@@ -116,7 +138,6 @@ export default async function handler(request: Request): Promise<Response> {
               arquivado = true;
             } else if (evento.type === 'error') {
               enfileira({ type: 'failure', reason: 'unreachable' });
-              controller.close();
               return;
             }
           }
@@ -124,20 +145,29 @@ export default async function handler(request: Request): Promise<Response> {
 
         if (!arquivado) {
           enfileira({ type: 'failure', reason: 'unreachable' });
-          controller.close();
           return;
         }
 
         // 3. O scan arquivou: rele o laudo, que agora existe.
-        const depois = await readReport(alvo);
+        const depois = await readReport(alvo, abortController.signal);
         if (depois.ok) enfileira({ type: 'report', report: depois.body });
         else enfileira({ type: 'failure', reason: classifyProblem(depois.status, depois.code) });
       } catch {
-        // Qualquer excecao vira falha nomeada. Nunca nota.
-        enfileira({ type: 'failure', reason: 'unreachable' });
+        // Aborto do cliente (visitante ja foi embora) nunca vira falha
+        // reportada — nao ha mais ninguem para ouvir. Qualquer outra excecao
+        // vira falha nomeada; nunca nota.
+        if (!abortController.signal.aborted) {
+          enfileira({ type: 'failure', reason: 'unreachable' });
+        }
       } finally {
-        controller.close();
+        fechar();
       }
+    },
+    cancel(reason) {
+      // O visitante fechou a aba ou o cliente abortou: derruba os fetch()
+      // upstream em vez de deixar o scan correr sozinho consumindo o
+      // orcamento compartilhado de 10/min do site inteiro.
+      abortController.abort(reason);
     },
   });
 

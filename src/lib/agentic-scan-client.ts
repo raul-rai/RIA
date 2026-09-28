@@ -13,7 +13,10 @@ export type ScanEvent =
   | { type: 'report'; report: AgenticReport }
   | { type: 'failure'; reason: AgenticFailure };
 
-export function scanUrl(target: string): string {
+// Interna: so `scanAgentic` e publico deste modulo (e o que SCAN-05/SCAN-07
+// e o plano de implementacao documentam como interface). Nada fora daqui
+// monta a URL da nossa ponte, entao nao ha razao para exportar.
+function scanUrl(target: string): string {
   return `${config.agenticScanPath}?url=${encodeURIComponent(target)}`;
 }
 
