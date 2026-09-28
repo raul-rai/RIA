@@ -29,7 +29,7 @@ export async function scanAgentic(
   try {
     response = await fetch(scanUrl(target), { signal });
   } catch {
-    onEvent({ type: 'failure', reason: 'unreachable' });
+    if (!signal?.aborted) onEvent({ type: 'failure', reason: 'unreachable' });
     return;
   }
 

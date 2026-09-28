@@ -6,6 +6,7 @@ import { resolve } from 'path';
 import { normalizeTarget } from '../src/lib/agentic-report';
 import { config } from '../src/config';
 import { parseSseFrames, sseData } from '../src/lib/sse';
+import { scanAgentic } from '../src/lib/agentic-scan-client';
 import handler from '../api/agentic-scan';
 
 const root = (p: string) => resolve(process.cwd(), p);
@@ -201,5 +202,29 @@ describe('SCAN: a função de borda (handler)', () => {
     await response.body!.cancel(new Error('cliente foi embora'));
 
     expect(capturedSignal!.aborted).toBe(true);
+  });
+});
+
+describe('SCAN: cliente direto da medicao', () => {
+  const fetchOriginal = globalThis.fetch;
+
+  afterEach(() => {
+    globalThis.fetch = fetchOriginal;
+  });
+
+  it('SCAN-13: abort durante fetch inicial nao emite failure', async () => {
+    const eventos: Array<{ type: string; reason?: string }> = [];
+    const controller = new AbortController();
+
+    globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+      controller.abort();
+      throw new DOMException('The operation was aborted', 'AbortError');
+    }) as typeof fetch;
+
+    await scanAgentic('exemplo.com.br', (event) => {
+      eventos.push(event);
+    }, controller.signal);
+
+    expect(eventos).toEqual([]);
   });
 });
