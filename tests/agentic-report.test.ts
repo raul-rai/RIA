@@ -54,6 +54,33 @@ describe('AGT: laudo do Is Agentic', () => {
     expect(classifyProblem(503, 'report_temporarily_unavailable')).toBe('unreachable');
     expect(classifyProblem(500, undefined)).toBe('unreachable');
   });
+
+  it('AGT-07: campo ausente do bucket vira null, nunca zero', () => {
+    const semPassing = JSON.parse(JSON.stringify(fixture));
+    delete semPassing.score_breakdown.essential.passing;
+    semPassing.score_breakdown.essential.total = null;
+    semPassing.score_breakdown.essential.available = 'oito';
+    const report = parseAgenticReport(semPassing)!;
+    expect(report.essential.passing).toBeNull();
+    expect(report.essential.total).toBeNull();
+    expect(report.essential.available).toBeNull();
+    expect(report.essential.earned).toBe(59);
+  });
+
+  it('AGT-08: zero medido de verdade continua zero, não vira null', () => {
+    const zerado = JSON.parse(JSON.stringify(fixture));
+    zerado.score_breakdown.essential.passing = 0;
+    const report = parseAgenticReport(zerado)!;
+    expect(report.essential.passing).toBe(0);
+  });
+
+  it('AGT-09: apontamento com `details` ou `recommendation` de tipo errado é descartado', () => {
+    const sujo = JSON.parse(JSON.stringify(fixture));
+    sujo.issues[0].details = 12345;
+    const report = parseAgenticReport(sujo)!;
+    expect(report.issues.find((i) => i.id === 'agent-friendly-404')).toBeUndefined();
+    expect(report.issues).toHaveLength(2);
+  });
 });
 
 describe('SSE: quadros', () => {

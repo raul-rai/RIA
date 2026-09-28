@@ -24,10 +24,15 @@ export interface AgenticIssue {
 }
 
 export interface AgenticBucket {
-  earned: number;
-  available: number;
-  passing: number;
-  total: number;
+  // Mesma regra do score: campo ausente ou de tipo errado vira `null`, nunca
+  // `0`. `0` so aparece aqui quando a API mandou `0` de verdade (por exemplo
+  // "0 de 7 checagens passaram" e um resultado medido, nao a ausencia dele).
+  // Quem renderiza a coluna do laudo ("N de M checagens passaram") decide o
+  // que exibir para `null` — nao esconde atras de um zero que parece reprovacao.
+  earned: number | null;
+  available: number | null;
+  passing: number | null;
+  total: number | null;
 }
 
 export interface AgenticReport {
@@ -47,9 +52,12 @@ function texto(value: unknown, fallback = ''): string {
   return typeof value === 'string' ? value : fallback;
 }
 
-function numero(value: unknown, fallback = 0): number {
-  const n = Number(value);
-  return Number.isFinite(n) ? n : fallback;
+// Mesma checagem do `score` em parseAgenticReport: Number(null) e 0, Number('')
+// e 0, Number(undefined) e NaN que cairia no fallback — qualquer coercao cega
+// fabricaria um "zero medido" para um campo que so esta ausente. So aceitamos
+// um `number` finito que a API realmente mandou; o resto vira `null`.
+function numero(value: unknown): number | null {
+  return typeof value === 'number' && Number.isFinite(value) ? value : null;
 }
 
 function bucket(raw: unknown): AgenticBucket {
@@ -62,21 +70,34 @@ function bucket(raw: unknown): AgenticBucket {
   };
 }
 
-/** Um apontamento so entra se tiver id, nome, nivel e resultado reconheciveis.
- *  Descartar o malformado e melhor que imprimir "undefined" num laudo. */
+/** Um apontamento so entra se tiver id, nome, nivel, resultado, `details` e
+ *  `recommendation` reconheciveis (todos string). Descartar o malformado e
+ *  melhor que imprimir "undefined" num laudo — e isso vale tambem para
+ *  `details`, que e a propria evidencia que faz do bloco um laudo: um
+ *  `details` de tipo errado nao vira `''` em silencio, derruba o apontamento
+ *  inteiro, do mesmo jeito que um `id` ou `tier` invalido ja derrubava. */
 function issue(raw: unknown): AgenticIssue | null {
   if (!raw || typeof raw !== 'object') return null;
   const i = raw as Record<string, unknown>;
   const tier = i.tier === 'essential' || i.tier === 'recommended' ? i.tier : null;
   const result = i.result === 'failed' || i.result === 'partial' ? i.result : null;
-  if (typeof i.id !== 'string' || typeof i.name !== 'string' || !tier || !result) return null;
+  if (
+    typeof i.id !== 'string'
+    || typeof i.name !== 'string'
+    || !tier
+    || !result
+    || typeof i.details !== 'string'
+    || typeof i.recommendation !== 'string'
+  ) {
+    return null;
+  }
   return {
     id: i.id,
     name: i.name,
     tier,
     result,
-    details: texto(i.details),
-    recommendation: texto(i.recommendation),
+    details: i.details,
+    recommendation: i.recommendation,
   };
 }
 
