@@ -46,9 +46,9 @@ describe('CAMINHOS: a dobra', () => {
 });
 
 describe('CAMINHOS: o agente', () => {
-  it('CAM-04: as intenções são as cinco novas', () => {
+  it('CAM-04: as intenções são as quatro que a página ainda usa', () => {
     expect(Object.keys(INTENTS).sort()).toEqual(
-      ['credibility', 'hero-cold', 'path-pick', 'report-result', 'sem-site'].sort()
+      ['credibility', 'path-pick', 'report-result', 'sem-site'].sort()
     );
   });
 

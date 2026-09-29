@@ -16,26 +16,17 @@ import { scoreBand, agenticBand } from '../lib/intent-format';
  */
 
 export type IntentId =
-  | 'hero-cold'
   | 'report-result'
   | 'sem-site'
   | 'path-pick'
   | 'credibility';
 
-/** Segmentos aceitos em ?ref=. Fonte unica: o hero le daqui para a etiqueta,
- *  a intencao le daqui para a mensagem. */
+/** Segmentos aceitos em ?ref=. Fonte unica: o hero le daqui para a etiqueta e
+ *  readCampaignRef valida o valor da URL contra estas chaves. */
 export const REF_LABEL: Record<string, string> = {
   industria: 'Indústria',
   servicos: 'Serviços',
   varejo: 'Varejo',
-};
-
-/** Como o segmento abre a fala do lead. Nao da para derivar de REF_LABEL:
- *  "Tenho uma Serviços" nao e portugues. */
-const REF_PHRASE: Record<string, string> = {
-  industria: 'Tenho uma indústria',
-  servicos: 'Tenho uma empresa de serviços',
-  varejo: 'Tenho um varejo',
 };
 
 /** Le o ?ref da campanha. Valor desconhecido vira null — a intencao degrada
@@ -52,7 +43,9 @@ export const NO_WEBSITE_GREETING =
   'Sem site, não existe página para o ChatGPT, o Gemini ou o Perplexity citarem quando alguém procura o que você vende. Me diga em uma frase o que sua empresa faz — eu volto com o que precisa estar no ar primeiro.';
 
 export interface IntentContext {
-  /** Segmento da campanha, ja validado por readCampaignRef. */
+  /** Segmento da campanha, ja validado por readCampaignRef. Nenhuma intencao le
+   *  este campo hoje: a unica que o lia, a hero-cold, saiu com o botao que a
+   *  disparava (set/2026). */
   ref: string | null;
   /** Nota do Google (Lighthouse). null = nao medida — nunca 0. */
   googleScore: number | null;
@@ -78,22 +71,6 @@ function pickedPath(ctx: IntentContext): SitePath {
 }
 
 export const INTENTS: Record<IntentId, IntentDefinition> = {
-  'hero-cold': {
-    id: 'hero-cold',
-    userMessage: (ctx) => {
-      const abertura = ctx.ref ? REF_PHRASE[ctx.ref] : undefined;
-      // A frase ecoa o que o hero oferece — medir o site — e so entao se
-      // completa. E essa repeticao que faz o chat parecer continuacao do que o
-      // lead acabou de ler, e nao um formulario novo. tests/intents.test.ts
-      // (INT-25) amarra a frase ao rotulo real do botao do scanner.
-      return abertura
-        ? `${abertura} e quero saber como está o meu site. Por onde eu começo?`
-        : 'Quero saber como está o meu site. Por onde eu começo?';
-    },
-    agentReply: () =>
-      'Começa medindo. São duas notas: a do Google, que diz se a página carrega e se estrutura direito, e a de prontidão para agentes, que diz se o ChatGPT consegue ler e citar você. Rode a medição aqui em cima e me diga o que sua empresa faz — eu leio o resultado com você.',
-  },
-
   'report-result': {
     id: 'report-result',
     userMessage: (ctx) => {

@@ -231,3 +231,45 @@ describe('LAUDO: duas notas, dois instrumentos', () => {
     expect(funcao(agentic, 'Bloco')).toMatch(/if \(itens\.length === 0\) return null;/);
   });
 });
+
+describe('LAUDO: o caminho do laudo até o agente', () => {
+  it('LAU-15: o chamado só aparece com o laudo fechado e ao menos uma nota', () => {
+    const pode = executar(secao, 'podeChamarAgente');
+    const nota = (score: number) => ({ score });
+
+    // Fechado + ao menos uma nota, em qualquer combinação.
+    expect(pode('done', nota(63), nota(41))).toBe(true);
+    expect(pode('done', nota(63), null)).toBe(true);
+    expect(pode('done', null, nota(41))).toBe(true);
+    // Zero medido é nota: presença, não valor. Tratar 0 como falsy esconderia
+    // o chamado justamente do pior laudo possível.
+    expect(pode('done', nota(0), null)).toBe(true);
+    expect(pode('done', null, nota(0))).toBe(true);
+
+    // Sem nota nenhuma não há o que o agente comentar.
+    expect(pode('done', null, null)).toBe(false);
+    // Medição em curso: a nota que falta é "ainda não chegou", não "não medida".
+    expect(pode('running', nota(63), null)).toBe(false);
+    expect(pode('running', nota(63), nota(41))).toBe(false);
+    expect(pode('idle', nota(63), nota(41))).toBe(false);
+  });
+
+  it('LAU-16: o botão dispara report-result, só depois das colunas e só quando liberado', () => {
+    const corpo = semComentarios(secao);
+    expect(corpo).toMatch(/const\s*\{\s*requestIntent\s*\}\s*=\s*useAgentIntent\(\)/);
+
+    // O botão mora dentro do teste de podeChamarAgente, alimentado pelo que o
+    // provedor entrega — não por uma cópia do estado.
+    const gate = corpo.indexOf('{podeChamarAgente(phase, google, agentic) && (');
+    expect(gate, 'o botão perdeu a trava de podeChamarAgente').toBeGreaterThan(-1);
+    const bloco = corpo.slice(gate, corpo.indexOf('\n      )}', gate));
+    expect(bloco).toContain("requestIntent('report-result')");
+    expect(bloco).toContain('Entender este laudo');
+    expect(bloco).toContain('<button');
+
+    // Depois das duas colunas: o visitante lê antes de ser convidado a conversar.
+    expect(gate).toBeGreaterThan(corpo.indexOf('<AgenticReportCard'));
+    // E nenhum outro pedido de intenção fora dele.
+    expect(corpo.match(/requestIntent\(/g) ?? []).toHaveLength(1);
+  });
+});

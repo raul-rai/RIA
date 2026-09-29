@@ -1,5 +1,10 @@
+import { ArrowUpRight } from 'lucide-react';
 import { useSiteScore } from '../context/SiteScoreContext';
-import { useScan } from '../hooks/useSiteScan';
+import { useAgentIntent } from '../context/AgentIntentContext';
+import { useScan, type ScanPhase } from '../hooks/useSiteScan';
+import type { GoogleReport } from '../lib/lighthouse-report';
+import type { AgenticReport } from '../lib/agentic-report';
+import { track } from '../lib/analytics';
 import GoogleReportCard from './GoogleReportCard';
 import AgenticReportCard from './AgenticReportCard';
 
@@ -14,9 +19,28 @@ import AgenticReportCard from './AgenticReportCard';
  * Consome `useScan()`, o leitor do provedor, e nunca a funcao de estado interna:
  * uma segunda instancia mediria aqui e o formulario do hero nao veria nada.
  */
+
+/**
+ * O chamado ao agente so aparece com o laudo fechado e ao menos uma nota na mao.
+ *
+ * Fechado: com o Lighthouse ja publicado e o Is Agentic ainda rodando, a fala do
+ * agente diria "a nota de prontidao nao foi medida" sobre uma medicao que so nao
+ * terminou. Ao menos uma nota: sem nenhuma, nao ha o que o agente comentar — o
+ * laudo ja imprime o motivo de cada falha, e a conversa nasce de outro botao.
+ * So testa presenca (`!== null`): a nota em si, zero inclusive, nao e lida aqui.
+ */
+function podeChamarAgente(
+  phase: ScanPhase,
+  google: GoogleReport | null,
+  agentic: AgenticReport | null
+): boolean {
+  return phase === 'done' && (google !== null || agentic !== null);
+}
+
 export default function ReportSection() {
   const { google, agentic, hasNoWebsite, target } = useSiteScore();
   const { googleFailure, agenticFailure, progress, phase } = useScan();
+  const { requestIntent } = useAgentIntent();
 
   if (hasNoWebsite) {
     return (
@@ -59,6 +83,21 @@ export default function ReportSection() {
         <GoogleReportCard report={google} failure={googleFailure} />
         <AgenticReportCard report={agentic} failure={agenticFailure} progress={progress} />
       </div>
+      {podeChamarAgente(phase, google, agentic) && (
+        <div className="flex justify-center mt-6">
+          <button
+            onClick={() => {
+              track('cta_click', { location: 'report' });
+              // A intencao le as duas notas do estado, cada uma na sua voz; a que
+              // nao foi medida chega como ausencia, nunca como zero.
+              requestIntent('report-result');
+            }}
+            className="px-6 py-3.5 w-full md:w-auto bg-slate-900 text-white rounded-xl font-black text-xs uppercase tracking-widest hover:bg-accent active:scale-95 transition-all inline-flex items-center justify-center gap-2 shadow-lg"
+          >
+            Entender este laudo <ArrowUpRight size={14} aria-hidden="true" />
+          </button>
+        </div>
+      )}
     </div>
   );
 }

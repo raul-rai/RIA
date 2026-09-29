@@ -1,11 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { readFileSync } from 'fs';
+import { readFileSync, readdirSync } from 'fs';
 import { resolve } from 'path';
 import { INTENTS, readCampaignRef, REF_LABEL, GREETING, NO_WEBSITE_GREETING } from '../src/content/intents';
 import type { IntentContext, IntentId } from '../src/content/intents';
 import { PATHS } from '../src/content/paths';
 
-const IDS: IntentId[] = ['hero-cold', 'report-result', 'sem-site', 'path-pick', 'credibility'];
+const IDS: IntentId[] = ['report-result', 'sem-site', 'path-pick', 'credibility'];
 
 const base: IntentContext = {
   ref: null,
@@ -39,8 +39,8 @@ const CONTEXTS: IntentContext[] = [
 
 const lerTexto = (p: string) => readFileSync(resolve(process.cwd(), p), 'utf-8');
 
-describe('INTENTS: as cinco intencoes cobrem todos os estados', () => {
-  it('INT-01: existem exatamente as cinco intencoes', () => {
+describe('INTENTS: as quatro intencoes cobrem todos os estados', () => {
+  it('INT-01: existem exatamente as quatro intencoes', () => {
     expect(Object.keys(INTENTS).sort()).toEqual([...IDS].sort());
   });
 
@@ -106,48 +106,34 @@ describe('INTENTS: as cinco intencoes cobrem todos os estados', () => {
   });
 });
 
-describe('hero-cold: o lead frio, com ou sem campanha', () => {
-  it('INT-05: sem ref, a frase nao menciona segmento', () => {
-    expect(INTENTS['hero-cold'].userMessage(base)).toBe(
-      'Quero saber como está o meu site. Por onde eu começo?'
-    );
+/** Todo .ts/.tsx sob src/, exceto o arquivo das próprias intenções. */
+function fontesDaInterface(dir = 'src'): string[] {
+  const raiz = resolve(process.cwd(), dir);
+  return readdirSync(raiz, { withFileTypes: true }).flatMap((e) => {
+    const rel = `${dir}/${e.name}`;
+    if (e.isDirectory()) return fontesDaInterface(rel);
+    return /\.tsx?$/.test(e.name) && rel !== 'src/content/intents.ts' ? [rel] : [];
   });
+}
 
-  it('INT-06: com ref, o segmento abre a frase', () => {
-    expect(INTENTS['hero-cold'].userMessage({ ...base, ref: 'industria' })).toBe(
-      'Tenho uma indústria e quero saber como está o meu site. Por onde eu começo?'
-    );
-  });
-
-  /**
-   * A trava que faltava.
-   *
-   * INT-05 e INT-06 afirmam a string, mas nada as amarrava ao que o hero
-   * OFERECE. O rotulo do botao do hero ja virou outra coisa uma vez e esta
-   * intencao ficou meses dizendo "quero achar o meu gargalo" — o lead abria a
-   * conversa afirmando algo que nunca leu na tela, e os dois testes continuaram
-   * verdes porque concordavam um com o outro. Aqui a fonte da verdade e o
-   * componente.
-   *
-   * O hero agora tem um botao so, o do scanner ("Medir meu site"). A fala do
-   * lead ecoa o objeto dele.
-   */
-  it('INT-25: a fala do lead ecoa o rotulo real do botao do scanner', () => {
-    const form = lerTexto('src/components/ScannerForm.tsx');
-    const rotulo = form.match(/'(Medir [^']*)'/)?.[1];
-    expect(rotulo, 'botao do scanner nao encontrado em ScannerForm.tsx').toBeTruthy();
-
-    // "Medir meu site" -> o nucleo "meu site" precisa aparecer na fala.
-    // Comparar a frase inteira seria rigido demais: o botao e um rotulo curto,
-    // a fala e em primeira pessoa.
-    const nucleo = rotulo!.replace(/^Medir /, '').toLowerCase().trim();
-    expect(INTENTS['hero-cold'].userMessage(base).toLowerCase()).toContain(nucleo);
-  });
-
-  it('INT-24: a resposta explica as duas notas e nao ecoa a saudacao do balao 1', () => {
-    expect(INTENTS['hero-cold'].agentReply(base)).toBe(
-      'Começa medindo. São duas notas: a do Google, que diz se a página carrega e se estrutura direito, e a de prontidão para agentes, que diz se o ChatGPT consegue ler e citar você. Rode a medição aqui em cima e me diga o que sua empresa faz — eu leio o resultado com você.'
-    );
+describe('INTENTS: nenhuma intencao vive sem gatilho', () => {
+  it('INT-38: toda intencao declarada e pedida por algum componente', () => {
+    // A hero-cold ficou publicada sem botao que a chamasse, e a report-result
+    // idem: o hero e o laudo perderam seus CTAs na troca de posicionamento e
+    // ninguem notou, porque cada arquivo, sozinho, estava correto. Aqui a fonte
+    // da verdade e a interface: sem requestIntent('id') a intencao e codigo
+    // morto — apague-a ou ligue-a a um botao.
+    const interface_ = fontesDaInterface()
+      .map((f) => lerTexto(f))
+      .join('\n')
+      // Comentario que cite requestIntent('id') nao e gatilho.
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/^\s*\/\/.*$/gm, '');
+    for (const id of Object.keys(INTENTS)) {
+      expect(interface_, `intencao "${id}" sem gatilho na interface`).toContain(
+        `requestIntent('${id}'`
+      );
+    }
   });
 });
 

@@ -77,10 +77,12 @@ conversa faça sentido. Se este caso for tratado como `sendMessage`, o LLM
 produz uma resposta que o lead nunca viu, e a fala seguinte sai se referindo a
 algo invisível.
 
-`intentId` é um de: `hero-cold`, `report-result`, `sem-site`, `path-pick`,
+`intentId` é um de: `report-result`, `sem-site`, `path-pick`,
 `credibility`. Ele diz de qual dobra o lead veio e serve para o prompt do
 agente ajustar o tom. (Mudança de set/2026: `diagnostic-result`,
-`diagnostic-no-website`, `front-pick` e `fronts-agenda` deixaram de existir.)
+`diagnostic-no-website`, `front-pick`, `fronts-agenda` e `hero-cold` deixaram de
+existir; a última perdeu o botão que a disparava quando o hero virou o
+formulário de medição.)
 
 Em `path-pick`, `context.path` é o caminho que o lead acabou de clicar. Em
 `report-result`, as falas do agente comentam as duas notas, cada uma na voz do
