@@ -2,32 +2,30 @@ import { TrendingUp, Cpu } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 /**
- * Vozes do mercado (capitulo 1).
+ * Vozes do mercado — DADO REMANESCENTE, sai na Task 11.
  *
- * REGRA: sao declaracoes publicas sobre IA em geral. Nenhuma delas e endosso da
- * RIA, e o rodape da secao diz isso em voz alta. Nao edite as citacoes para
- * soarem mais favoraveis do que o original.
+ * A dobra que exibia estas tres vozes (a parede de videos 3D) saiu por decisao
+ * de posicionamento: ela emprestava autoridade a uma tese, "IA importa", que
+ * deixou de ser a tese da pagina. Ver
+ * docs/superpowers/specs/2026-09-28-foco-em-sites-duas-notas-design.md.
+ * Nenhum componente le este arquivo, e o player, as miniaturas e os
+ * marcadores de checkbox que os campos abaixo descreviam nao existem mais.
  *
- * O DISCLAIMER JA SUMIU DA TELA DUAS VEZES. Primeiro no commit 4b24851,
- * classificado como `chore` — nada quebrou porque nada o testava, e este
- * cabecalho seguiu afirmando por meses que "o rodape diz isso em voz alta"
- * enquanto nao dizia. tests/authorities.test.ts nasceu dai. Sumiu de novo na
- * reescrita dos cartoes de ago/2026, junto com a constante. Sao tres pessoas
- * publicas reais, com nome, retrato e fala citada, numa pagina que vende
- * consultoria: a negativa de endosso nao e enfeite, e o que separa citar de
- * insinuar patrocinio.
+ * O que ainda o le: scripts/build-agent-context.ts, que extrai nome, cargo e
+ * fala (e o disclaimer) para o agent-context.json publicado aos agentes. Por
+ * isso ele fica ate la; a Task 11 remove esses campos do contexto e este
+ * arquivo junto. tests/posicionamento.test.ts registra a ausencia datada.
  *
- * A ordem deste array e o indice do vetor de marcacoes em SocialProofSection,
- * que e estado LOCAL daquele componente e nao alimenta o Indice de
- * Vulnerabilidade. Mexer na ordem remarca a caixa errada; incluir ou remover
- * um item nao exige mudar nada fora dali, porque o vetor e derivado de
- * AUTHORITIES.map().
+ * REGRA ENQUANTO ELE EXISTIR: sao declaracoes publicas sobre IA em geral.
+ * Nenhuma delas e endosso da RIA, e o disclaimer abaixo precisa acompanhar as
+ * falas onde quer que elas apareçam — hoje, no contexto dos agentes. Nao edite
+ * as citacoes para soarem mais favoraveis do que o original.
  */
 export interface Authority {
   name: string;
   title: string;
   quote: string;
-  /** Texto da marcacao que reduz o Indice de Vulnerabilidade. */
+  /** Texto da marcacao de ciencia que acompanhava o cartao. Nao alimenta nota nenhuma. */
   checkboxLabel: string;
   videoUrl: string;
   thumbnail: string;
@@ -39,12 +37,12 @@ export interface Authority {
 }
 
 /**
- * A negativa de endosso, no rodape da secao.
+ * A negativa de endosso, publicada junto com as falas no contexto dos agentes.
  *
  * Precisa ser frase de verdade, nao rotulo simbolico: "as opinioes sao dos
- * autores" nao diz a quem elas NAO pertencem. O teste exige que ela negue
- * endosso de forma explicita e que a secao de fato a renderize — porque no
- * defeito original o texto existia no codigo e nao chegava a tela.
+ * autores" nao diz a quem elas NAO pertencem. Ela nega endosso de forma
+ * explicita. (O trecho "o video completo abre no YouTube" descreve a dobra que
+ * saiu e sai junto com este arquivo na Task 11.)
  */
 export const AUTHORITIES_DISCLAIMER =
   'São participações públicas sobre inteligência artificial em geral. Nenhuma delas é cliente, parceira ou endossante da RIA, e nenhuma tem relação com este site. Os trechos estão recortados para ir ao ponto; o vídeo completo abre no YouTube.';

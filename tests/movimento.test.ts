@@ -291,28 +291,6 @@ describe('DOC-01 — nenhum comentário afirma o contrário do código', () => {
       /MarketEvidenceSection/
     );
   });
-
-  it('MOV-16: o checkbox não se descreve como algo que mexe no índice', () => {
-    /**
-     * `AwarenessCheck` se apresentava como "a caixa que reduz o Índice de
-     * Vulnerabilidade" e dizia que marcar ali mudava o diagnóstico adiante. Era
-     * verdade até o eixo de conscientização ser removido inteiro — justamente
-     * porque o índice mede o que a empresa FAZ, nunca o que ela concorda.
-     */
-    const check = ler('src/components/AwarenessCheck.tsx');
-    expect(check).not.toMatch(/a caixa que reduz o [ÍI]ndice/);
-    expect(check).not.toMatch(/marcar aqui muda o diagnostico/i);
-    expect(check, 'precisa dizer explicitamente que NÃO pontua').toMatch(/N[ÃA]O mexe no [ÍI]ndice/);
-
-    // E a promessa tem que continuar verdadeira no código: nenhum caminho daqui
-    // até o estado que guarda as notas (o contexto de vulnerabilidade foi
-    // substituído pelo das duas notas medidas).
-    for (const arquivo of ['AwarenessCheck.tsx', 'SocialProofSection.tsx']) {
-      const fonte = ler('src/components/' + arquivo);
-      expect(fonte).not.toContain('useVulnerability');
-      expect(fonte).not.toContain('useSiteScore');
-    }
-  });
 });
 
 /**
@@ -338,10 +316,9 @@ describe('DOC-01 — nenhum comentário afirma o contrário do código', () => {
  * JavaScript o cartao esta la, legivel, 16px fora do lugar.
  */
 describe('D8 — nada de conteudo depende de JavaScript para ser visivel', () => {
-  const semOpacidadeNaEntrada = [
-    'src/components/CredibilitySection.tsx',
-    'src/components/AuthorityCard.tsx',
-  ];
+  // AuthorityCard saiu com a parede de vídeos (ver a spec foco-em-sites-duas-notas).
+  // A regra vale para todo cartão de entrada que sobrou: hoje, este.
+  const semOpacidadeNaEntrada = ['src/components/CredibilitySection.tsx'];
 
   it('MOV-17: nenhuma entrada de cartao anima a opacidade a partir do zero', () => {
     for (const arquivo of semOpacidadeNaEntrada) {

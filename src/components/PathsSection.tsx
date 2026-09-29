@@ -39,7 +39,7 @@ export default function PathsSection() {
                 // estado do laudo assentar para saber qual cartao foi clicado.
                 requestIntent('path-pick', p.id);
               }}
-              className={`glass-panel text-left rounded-[1.5rem] p-6 md:p-8 transition-transform hover:-translate-y-1 ${
+              className={`focus-ring-inset glass-panel text-left rounded-[1.5rem] p-6 md:p-8 transition-transform hover:-translate-y-1 ${
                 destacado ? 'ring-2 ring-accent' : ''
               }`}
             >

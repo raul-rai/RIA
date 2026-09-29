@@ -110,27 +110,6 @@ describe('PERF-02 — a divisão em pacotes', () => {
       expect(cfg, `falta o grupo ${grupo}`).toContain(grupo);
     }
   });
-
-  it('PAC-05: a parede de vídeos só monta o iframe do YouTube depois do clique', () => {
-    /**
-     * O VideoModal saiu desta dobra (a parede de vídeos 3d tomou o lugar do
-     * diálogo lazy), então a garantia de "nada do YouTube antes do clique"
-     * não depende mais de `lazy`/`Suspense`: depende de VideoWall3D nunca
-     * montar o `<iframe>` enquanto `playing` for `null`, que é o estado
-     * inicial tanto no servidor quanto no cliente.
-     */
-    const secao = ler('src/components/SocialProofSection.tsx');
-    expect(secao, 'VideoModal nao deveria mais aparecer nesta dobra').not.toMatch(/VideoModal/);
-    expect(secao).toContain("import VideoWall3D from './VideoWall3D'");
-
-    const parede = ler('src/components/VideoWall3D.tsx');
-    expect(parede).toMatch(/useState<string \| null>\(null\)/);
-    const condicional = parede.indexOf('isPlaying ?');
-    const iframe = parede.indexOf('<iframe');
-    expect(condicional, 'nao achei a condicional que guarda o iframe').toBeGreaterThan(-1);
-    expect(iframe, 'nao achei o iframe do player').toBeGreaterThan(-1);
-    expect(condicional, 'o iframe e montado antes da guarda de isPlaying').toBeLessThan(iframe);
-  });
 });
 
 describe.skipIf(!construido)('PERF-02 — medido sobre o que foi publicado', () => {
@@ -156,12 +135,12 @@ describe.skipIf(!construido)('PERF-02 — medido sobre o que foi publicado', () 
 
   it('PAC-07: o player de vídeo está FORA do caminho crítico', () => {
     /**
-     * O VideoModal lazy saiu desta dobra: o play agora e um `<iframe>` nativo
-     * montado so no clique, dentro da parede (VideoWall3D). O caminho critico e
-     * o HTML pre-renderizado, e nele nao pode existir player nenhum — nem iframe
-     * do YouTube, nem a URL de embed. Se a guarda de `isPlaying` quebrar e o
-     * iframe for montado no servidor, isto pega no nivel do build, complementando
-     * a checagem de fonte do PAC-05.
+     * A página não tem mais vídeo nenhum (a parede de vídeos saiu — ver
+     * docs/superpowers/specs/2026-09-28-foco-em-sites-duas-notas-design.md).
+     * O caminho crítico é o HTML pré-renderizado, e nele não pode existir
+     * player algum: nem iframe do YouTube, nem a URL de embed. A checagem de
+     * fonte que garantia isso por dentro do componente (PAC-05) saiu com ele;
+     * esta, no nível do build, é a que continua valendo se um player voltar.
      */
     expect(home, 'o player do YouTube foi pré-renderizado no HTML inicial').not.toMatch(
       /youtube(-nocookie)?\.com\/embed/
