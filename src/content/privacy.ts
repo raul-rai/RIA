@@ -24,6 +24,12 @@ import { EMAIL, WHATSAPP_URL } from '../constants/links';
  * e o parágrafo que o descrevia saiu junto: descrever terceiro que não é mais
  * carregado é tão errado quanto omitir um que é.
  *
+ * E O QUE ESTAVA FALSO (set/2026): a linha do PageSpeed dizia "nenhum dado seu vai
+ * junto". O fetch do PageSpeed sai do NAVEGADOR do visitante, então o IP, o
+ * User-Agent e o Referer dele chegam ao Google em toda medição. A linha do Is
+ * Agentic, logo abaixo, afirmava corretamente que ali o IP não chega — e o
+ * contraste fazia o leitor concluir o contrário do que acontece.
+ *
  * REGRA: se um desses fluxos mudar no código, esta página muda junto. Política
  * que descreve um tratamento que não acontece (ou omite um que acontece) é pior
  * que política nenhuma — vira prova documental contra o controlador.
@@ -49,7 +55,7 @@ export const CONTROLLER = {
   whatsapp: WHATSAPP_URL,
 };
 
-export const LAST_UPDATED = '28 de setembro de 2026';
+export const LAST_UPDATED = '29 de setembro de 2026';
 
 export interface PrivacySection {
   title: string;
@@ -73,7 +79,7 @@ export const PRIVACY_SECTIONS: PrivacySection[] = [
     bullets: [
       'Ao agendar a sessão: nome da empresa, e-mail, telefone, faixa de faturamento mensal e faixa de orçamento destinado a IA. Os três primeiros identificam você; os dois últimos servem para eu preparar a conversa e saber se faço sentido para o seu caso.',
       'Ao conversar com o agente: o conteúdo das mensagens que você escreve. Se você digitar dados pessoais no chat, eles serão tratados como parte da conversa — por isso, não escreva ali documentos, senhas ou dados de terceiros.',
-      'Ao rodar o diagnóstico: apenas o endereço do site analisado. Um domínio não é dado pessoal na maior parte dos casos, mas ele é enviado a terceiros (veja a seção seguinte).',
+      'Ao rodar o diagnóstico: o endereço do site analisado. Um domínio não é dado pessoal na maior parte dos casos, mas ele é enviado a terceiros (veja a seção seguinte) — e, na medição do Google, o seu navegador também entrega ao Google o seu endereço IP.',
     ],
   },
   {
@@ -84,11 +90,11 @@ export const PRIVACY_SECTIONS: PrivacySection[] = [
     bullets: [
       'n8n (automação): recebe os dados de agendamento e as mensagens do chat. É onde a conversa fica registrada para eu ler antes da nossa call.',
       'Modelo de linguagem: as mensagens do chat são processadas por um modelo de IA para gerar as respostas do agente.',
-      'Google PageSpeed Insights: recebe apenas o endereço do site que você pediu para analisar. Nenhum dado seu vai junto.',
+      'Google PageSpeed Insights: a medição do Google parte do seu navegador, não do nosso servidor. O Google recebe o endereço do site que você pediu para analisar e, como acontece em qualquer requisição feita pelo navegador, também o seu endereço IP, o tipo de navegador e de dispositivo (User-Agent) e o endereço deste site como origem do pedido. Nada do que você escreve no formulário de agendamento ou no chat vai junto. O que o Google faz com o que recebe segue a política de privacidade dele.',
       'Cal.com (agenda): recebe seu nome e e-mail para criar o evento, porque é ele que envia a confirmação e o convite.',
       'Google Analytics: recebe dados de navegação anônimos, e só se você consentir. Veja a seção sobre medição.',
       'WhatsApp: só quando você clica para conversar. A mensagem já vem preenchida e fica visível na tela antes de você decidir enviá-la — nada é enviado sem o seu toque.',
-      'Is Agentic (Vercel Labs): quando você pede a medição do seu site, o endereço que você digitou é enviado ao serviço público is-agentic.com, que faz a varredura de prontidão para agentes e devolve a nota. É enviado o endereço do site — nenhum dado seu. O laudo fica arquivado por eles, numa página pública daquele endereço. A consulta parte do servidor deste site, então o seu IP não chega a eles.',
+      'Is Agentic (Vercel Labs): quando você pede a medição do seu site, o endereço que você digitou é enviado ao serviço público is-agentic.com, que faz a varredura de prontidão para agentes e devolve a nota. É enviado o endereço do site — nenhum dado seu. O laudo fica arquivado por eles, numa página pública daquele endereço. A consulta parte do servidor deste site — ao contrário da medição do Google, acima —, então o seu IP não chega a eles.',
       'Vercel (hospedagem): serve as páginas e registra, como qualquer servidor web, os acessos — endereço IP, horário e página pedida. É o mínimo técnico para o site existir e responder.',
     ],
   },

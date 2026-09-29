@@ -225,3 +225,34 @@ describe.skipIf(!existsSync(root('dist/index.html')))('Terceiros — o que foi P
     expect(css).toMatch(/url\(\/assets\/inter-[^)]+\.woff2\)/);
   });
 });
+
+describe('Terceiros — a política não afirma o que o código desmente', () => {
+  const itens = PRIVACY_SECTIONS.flatMap((s) => [...s.paragraphs, ...(s.bullets ?? [])]);
+  const pageSpeed = itens.find((i) => i.startsWith('Google PageSpeed Insights')) ?? '';
+  const isAgentic = itens.find((i) => i.startsWith('Is Agentic')) ?? '';
+
+  it('TERC-15: o PageSpeed não é descrito como "nenhum dado seu vai junto"', () => {
+    // O fetch do PageSpeed sai do NAVEGADOR do visitante (src/hooks/useSiteScan.tsx):
+    // IP, User-Agent e Referer dele chegam ao Google em toda medição.
+    expect(pageSpeed, 'a política perdeu a linha do PageSpeed').not.toBe('');
+    expect(pageSpeed.toLowerCase()).not.toMatch(/nenhum dado seu/);
+    expect(pageSpeed).toMatch(/parte do seu navegador/);
+    expect(pageSpeed).toMatch(/endereço IP/);
+    expect(pageSpeed).toMatch(/User-Agent/);
+  });
+
+  it('TERC-16: o contraste entre os dois instrumentos é o verdadeiro', () => {
+    // No Is Agentic a consulta parte do NOSSO servidor: o IP não chega a eles.
+    expect(isAgentic).toMatch(/servidor deste site/);
+    expect(isAgentic).toMatch(/seu IP não chega a eles/);
+    // E a política diz que no Google é diferente — não deixa o leitor concluir o oposto.
+    expect(isAgentic).toMatch(/ao contrário da medição do Google/);
+  });
+
+  it('TERC-17: o código de fato busca o PageSpeed no navegador (a premissa do TERC-15)', () => {
+    const hook = semComentarios(readFileSync(root('src/hooks/useSiteScan.tsx'), 'utf-8'));
+    expect(hook).toMatch(/fetch\(pageSpeedUrl\(/);
+    // Se isto mudar para uma função de borda, a política volta a poder dizer
+    // que o IP não chega ao Google — e este teste avisa que ela precisa mudar.
+  });
+});
