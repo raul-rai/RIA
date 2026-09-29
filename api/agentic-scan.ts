@@ -28,6 +28,28 @@ export const config = { runtime: 'edge' };
 const BASE = 'https://is-agentic.com';
 const UA = 'ria-site/1.0 (+https://raulvieira.vercel.app)';
 
+/**
+ * O prazo de cada fetch upstream.
+ *
+ * Sem ele, um Is Agentic pendurado segura a funcao e o stream indefinidamente:
+ * a tela do visitante espera o laudo que nao vem. Cada fetch (a leitura do
+ * laudo e o scan) ganha 40 s proprios — o cliente desiste aos 45 s, entao o
+ * motivo nomeado chega antes de ele desistir. O tempo cobre tambem a leitura do
+ * corpo, nao so os cabecalhos.
+ *
+ * O sinal devolvido morre por DUAS causas: o prazo, ou o cancelamento do
+ * cliente (visitante que fechou a aba). Combinados a mao, sem AbortSignal.any,
+ * que nem todo runtime de borda oferece.
+ */
+function comPrazo(cliente: AbortSignal): AbortSignal {
+  const combinado = new AbortController();
+  const derruba = () => combinado.abort();
+  if (cliente.aborted) derruba();
+  cliente.addEventListener('abort', derruba, { once: true });
+  AbortSignal.timeout(40_000).addEventListener('abort', derruba, { once: true });
+  return combinado.signal;
+}
+
 function sse(event: unknown): string {
   return `data: ${JSON.stringify(event)}\n\n`;
 }
@@ -44,7 +66,7 @@ async function readReport(
   endpoint.searchParams.set('url', target);
   const response = await fetch(endpoint, {
     headers: { Accept: 'application/json', 'User-Agent': UA },
-    signal,
+    signal: comPrazo(signal),
   });
   const body = await response.json().catch(() => null);
   const code = body && typeof body === 'object' ? (body as Record<string, unknown>).code : undefined;
@@ -103,7 +125,7 @@ export default async function handler(request: Request): Promise<Response> {
         scan.searchParams.set('target', alvo);
         const upstream = await fetch(scan, {
           headers: { Accept: 'text/event-stream', 'Cache-Control': 'no-store', 'User-Agent': UA },
-          signal: abortController.signal,
+          signal: comPrazo(abortController.signal),
         });
 
         if (!upstream.ok || !upstream.body) {

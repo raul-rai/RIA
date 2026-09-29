@@ -1,5 +1,5 @@
 import {
-  describe, it, expect, afterEach,
+  describe, it, expect, afterEach, vi,
 } from 'vitest';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
@@ -292,5 +292,97 @@ describe('SCAN: o cliente valida o que a ponte manda', () => {
     const codigo = fonte.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
     expect(codigo).not.toMatch(/\bNumber\(/);
     expect(codigo).not.toMatch(/as AgenticFailure/);
+  });
+});
+
+describe('SCAN: prazo dos fetch upstream da função de borda', () => {
+  const fetchOriginal = globalThis.fetch;
+
+  afterEach(() => {
+    globalThis.fetch = fetchOriginal;
+    vi.restoreAllMocks();
+  });
+
+  async function lerEventos(response: Response): Promise<Record<string, unknown>[]> {
+    const eventos: Record<string, unknown>[] = [];
+    const reader = response.body!.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const { frames, rest } = parseSseFrames(buffer);
+      buffer = rest;
+      for (const frame of frames) {
+        const evento = sseData(frame) as Record<string, unknown> | null;
+        if (evento) eventos.push(evento);
+      }
+    }
+    return eventos;
+  }
+
+  it('SCAN-19: os dois fetch upstream levam prazo de 40 s', () => {
+    const fn = readFileSync(root('api/agentic-scan.ts'), 'utf-8');
+    const codigo = fn.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+    expect(codigo).toContain('AbortSignal.timeout(40_000)');
+    // O fetch do laudo e o do scan passam pelo prazo — nenhum usa o sinal cru.
+    expect(codigo).toMatch(/signal: comPrazo\(signal\)/);
+    expect(codigo).toMatch(/signal: comPrazo\(abortController\.signal\)/);
+    expect(codigo).not.toMatch(/signal: abortController\.signal/);
+  });
+
+  it('SCAN-20: Is Agentic pendurado na leitura do laudo vira falha "unreachable" quando o prazo estoura', async () => {
+    // Controla o prazo sem esperar 40 s: o timeout devolve um sinal que o teste dispara.
+    const prazo = new AbortController();
+    const espiao = vi.spyOn(AbortSignal, 'timeout').mockReturnValue(prazo.signal);
+
+    globalThis.fetch = ((_input: RequestInfo | URL, init?: RequestInit) =>
+      new Promise<Response>((_resolve, reject) => {
+        init?.signal?.addEventListener('abort', () => reject(new DOMException('aborted', 'AbortError')));
+      })) as typeof fetch;
+
+    const response = await handler(
+      new Request(`https://ria.local/api/agentic-scan?url=${encodeURIComponent('exemplo.com.br')}`)
+    );
+    const lendo = lerEventos(response);
+    await new Promise((r) => setTimeout(r, 5));
+    expect(espiao).toHaveBeenCalledWith(40_000);
+
+    prazo.abort(); // estourou o prazo
+
+    expect(await lendo).toEqual([{ type: 'failure', reason: 'unreachable' }]);
+  });
+
+  it('SCAN-21: o scan pendurado no meio do stream também cai no prazo', async () => {
+    const prazo = new AbortController();
+    vi.spyOn(AbortSignal, 'timeout').mockReturnValue(prazo.signal);
+    let chamadaReport = 0;
+
+    globalThis.fetch = ((input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+      if (url.includes('/api/v1/report')) {
+        chamadaReport += 1;
+        return Promise.resolve(new Response(JSON.stringify({}), { status: 404 }));
+      }
+      // O scan responde 200 e nunca mais manda nada: o corpo só termina se o sinal abortar.
+      const corpo = new ReadableStream<Uint8Array>({
+        start(controller) {
+          init?.signal?.addEventListener('abort', () => controller.error(new DOMException('aborted', 'AbortError')));
+        },
+      });
+      return Promise.resolve(new Response(corpo, { status: 200 }));
+    }) as typeof fetch;
+
+    const response = await handler(
+      new Request(`https://ria.local/api/agentic-scan?url=${encodeURIComponent('exemplo.com.br')}`)
+    );
+    const lendo = lerEventos(response);
+    await new Promise((r) => setTimeout(r, 5));
+
+    prazo.abort();
+
+    expect(await lendo).toEqual([{ type: 'failure', reason: 'unreachable' }]);
+    expect(chamadaReport).toBe(1);
   });
 });

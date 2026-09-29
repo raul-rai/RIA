@@ -5,6 +5,7 @@ import { normalizeTarget, type AgenticFailure } from '../lib/agentic-report';
 import { parseLighthouse, pageSpeedUrl } from '../lib/lighthouse-report';
 import { scanAgentic } from '../lib/agentic-scan-client';
 import { track } from '../lib/analytics';
+import { withDeadline } from '../lib/scan-deadline';
 
 /**
  * As duas medições.
@@ -20,6 +21,14 @@ import { track } from '../lib/analytics';
 /** Teto de espera do PageSpeed. Medido: ~21 s na primeira chamada (sem cache
  *  no PSI). O texto da tela promete o mesmo número — se um mudar, o outro muda. */
 const PAGESPEED_TIMEOUT_MS = 30000;
+
+/** Teto de espera do Is Agentic. A ponte (api/agentic-scan.ts) desiste de cada
+ *  fetch upstream aos 40 s; o cliente espera 5 s a mais para que o motivo
+ *  nomeado que ela manda chegue antes de o cliente abandonar por conta própria.
+ *  Um scan novo leva ~19 s. Sem teto, um Is Agentic pendurado deixava a fase em
+ *  'running' para sempre — botão desabilitado, barra parada e o laudo do Google,
+ *  já publicado, sem o botão "Entender este laudo". */
+const AGENTIC_TIMEOUT_MS = 45000;
 
 export type ScanPhase = 'idle' | 'running' | 'done';
 export type GoogleFailure = 'quota' | 'unreachable' | 'invalid-url';
@@ -77,13 +86,11 @@ function useSiteScanState(): SiteScanState {
       setTarget(target);
       track('scan_started');
 
+
       const google = (async () => {
-        // Controle próprio: estourar o teto do PageSpeed não pode derrubar o
+        // Prazo próprio: estourar o teto do PageSpeed não pode derrubar o
         // scan agêntico, que compartilha o `controller` de cancelamento.
-        const psi = new AbortController();
-        const onCancel = () => psi.abort();
-        controller.signal.addEventListener('abort', onCancel);
-        const timer = setTimeout(() => psi.abort(), PAGESPEED_TIMEOUT_MS);
+        const psi = withDeadline(controller.signal, PAGESPEED_TIMEOUT_MS);
         try {
           const response = await fetch(pageSpeedUrl(target, config.pageSpeedApiKey), {
             signal: psi.signal,
@@ -95,42 +102,54 @@ function useSiteScanState(): SiteScanState {
           }
           const report = response.ok ? parseLighthouse(await response.json()) : null;
           if (cancelled()) return;
-          if (report) setGoogle(report);
-          else setGoogleFailure('unreachable');
+          if (report) {
+            setGoogle(report);
+          } else {
+            setGoogleFailure('unreachable');
+          }
         } catch {
           if (!cancelled()) setGoogleFailure('unreachable');
         } finally {
-          clearTimeout(timer);
-          controller.signal.removeEventListener('abort', onCancel);
+          psi.dispose();
         }
       })();
 
       // O cliente pode terminar sem publicar laudo nem falha (o stream fecha
-      // cedo): sem esta guarda o visitante veria "concluído" sem nota e sem motivo.
+      // cedo, ou o teto abaixo aborta): sem esta guarda o visitante veria
+      // "concluído" sem nota e sem motivo.
       let agenticAnswered = false;
-      const agentic = scanAgentic(
-        target,
-        (event) => {
-          if (cancelled()) return;
-          if (event.type === 'progress') {
-            setProgress(event.total ? Math.round((event.done / event.total) * 100) : 0);
-          } else if (event.type === 'report') {
-            agenticAnswered = true;
-            setProgress(100);
-            setAgentic(event.report);
-          } else {
-            agenticAnswered = true;
-            setAgenticFailure(event.reason);
-          }
-        },
-        controller.signal
-      )
-        .catch(() => {
+      const agentic = (async () => {
+        // Prazo próprio, como no PageSpeed: o teto do agêntico aborta só a
+        // varredura agêntica. Abortar o `controller` compartilhado derrubaria
+        // também o PageSpeed, que talvez ainda esteja medindo.
+        const ag = withDeadline(controller.signal, AGENTIC_TIMEOUT_MS);
+        try {
+          await scanAgentic(
+            target,
+            (event) => {
+              if (cancelled()) return;
+              if (event.type === 'progress') {
+                setProgress(event.total ? Math.round((event.done / event.total) * 100) : 0);
+              } else if (event.type === 'report') {
+                agenticAnswered = true;
+                setProgress(100);
+                setAgentic(event.report);
+              } else {
+                agenticAnswered = true;
+                setAgenticFailure(event.reason);
+              }
+            },
+            ag.signal
+          );
+        } catch {
           // Falha inesperada do cliente: tem nome próprio, não vira nota.
-        })
-        .finally(() => {
-          if (!agenticAnswered && !cancelled()) setAgenticFailure('unreachable');
-        });
+        } finally {
+          ag.dispose();
+          if (!agenticAnswered && !cancelled()) {
+            setAgenticFailure('unreachable');
+          }
+        }
+      })();
 
       void Promise.allSettled([google, agentic]).then(() => {
         if (cancelled()) return;
