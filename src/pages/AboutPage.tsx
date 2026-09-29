@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Compass, MessageCircle } from 'lucide-react';
 import { CONSULTANT } from '../content/consultant';
-import { FRONTS } from '../content/fronts';
+import { PATHS } from '../content/paths';
 import { WHATSAPP_URL_CTA } from '../constants/links';
 import { metaFor } from '../content/meta';
 
@@ -15,7 +15,7 @@ import { metaFor } from '../content/meta';
  * estática e sem animação, como a /privacidade — quem chega aqui quer ler.
  *
  * Todo o conteúdo vem dos MESMOS módulos que a home renderiza
- * (content/consultant.ts, content/fronts.ts). Nada é reescrito à mão aqui: se o
+ * (content/consultant.ts, content/paths.ts). Nada é reescrito à mão aqui: se o
  * posicionamento mudar no site, esta página muda junto, sem divergir.
  */
 export default function AboutPage() {
@@ -47,16 +47,16 @@ export default function AboutPage() {
 
         <p className="text-base md:text-lg text-slate-700 leading-relaxed mb-4">
           A RIA — Revolução da Inteligência Artificial é uma consultoria de IA para empresas
-          brasileiras. O trabalho não começa escolhendo ferramenta: começa medindo onde está o
-          gargalo. É engenharia de produção aplicada a inteligência artificial — medir o processo,
-          achar o ponto que trava e atacar o de maior custo por hora antes de automatizar qualquer
-          coisa.
+          brasileiras. O trabalho começa medindo o site do cliente em duas notas independentes: a
+          do Google Lighthouse, que avalia desempenho, acessibilidade, práticas recomendadas e SEO,
+          e a de prontidão para agentes de IA, que avalia se o ChatGPT, o Gemini, o Perplexity e o
+          Claude conseguem descobrir, acessar e usar o site. As duas notas nunca são somadas.
         </p>
         <p className="text-sm md:text-[15px] text-slate-600 leading-relaxed mb-10">
-          O produto de entrada é o Diagnóstico de Gargalo: trinta dias medindo horas e volume das
-          rotinas, no sistema do cliente, para sair com os três gargalos mais caros em ordem de
-          custo por hora — e o que atacar primeiro. Atende pequenas e médias empresas em todo o
-          Brasil.
+          Depois do laudo, há dois caminhos: um site novo, construído desde o começo para ser
+          rápido, encontrável e legível por agentes de IA, ou a otimização do que já existe,
+          corrigindo exatamente o que a medição apontou. Atende pequenas e médias empresas em todo
+          o Brasil.
         </p>
 
         <div className="flex flex-col gap-9">
@@ -90,17 +90,17 @@ export default function AboutPage() {
               O que a RIA faz
             </h2>
             <p className="text-sm md:text-[15px] text-slate-700 leading-relaxed mb-4">
-              O atendimento se organiza em três frentes. São as mesmas que a página inicial
-              apresenta — descritas aqui para quem (ou o que) precisa ler sem executar JavaScript:
+              O trabalho segue dois caminhos. São os mesmos que a página inicial apresenta —
+              descritos aqui para quem (ou o que) precisa ler sem executar JavaScript:
             </p>
             <div className="flex flex-col gap-5">
-              {FRONTS.map((front) => (
-                <div key={front.id}>
+              {PATHS.map((path) => (
+                <div key={path.id}>
                   <h3 className="text-base md:text-lg font-serif text-slate-900 mb-1">
-                    {front.label}
+                    {path.label}
                   </h3>
                   <p className="text-sm md:text-[15px] text-slate-600 leading-relaxed">
-                    {front.promise}
+                    {path.promise}
                   </p>
                 </div>
               ))}

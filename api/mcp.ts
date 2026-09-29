@@ -43,18 +43,20 @@ const TOOLS = [
   {
     name: 'get_agent_context',
     description:
-      'Retorna todo o contexto estruturado da RIA (posicionamento, frentes, oferta, FAQ, evidências, casos, consultor e contato).',
+      'Retorna todo o contexto estruturado da RIA (posicionamento, caminhos, medição, oferta, FAQ, evidências, casos, consultor e contato).',
     section: null as string | null,
   },
   {
     name: 'get_positioning',
-    description: 'Posicionamento e produto de entrada (Diagnóstico de Gargalo) da RIA.',
+    description:
+      'Posicionamento da RIA: mede o site em duas notas independentes (Google Lighthouse e prontidão para agentes de IA, do Is Agentic) e depois cria ou otimiza.',
     section: 'positioning',
   },
   {
-    name: 'get_fronts',
-    description: 'As três frentes de implementação da RIA (presença digital, agente SDR, automação).',
-    section: 'fronts',
+    name: 'get_paths',
+    description:
+      'Os dois caminhos da RIA para o site do cliente: criação (site novo) e otimização (site existente).',
+    section: 'paths',
   },
   {
     name: 'get_offer',
@@ -63,7 +65,7 @@ const TOOLS = [
   },
   {
     name: 'get_faq',
-    description: 'Perguntas frequentes respondidas sobre implementar IA em empresas.',
+    description: 'Perguntas frequentes sobre a medição do site, a legibilidade por IA, o custo e a escolha entre refazer ou otimizar.',
     section: 'faq',
   },
   {
@@ -79,7 +81,7 @@ const RESOURCES = [
     name: 'agent-context',
     title: 'Contexto do agente (RIA)',
     mimeType: 'application/json',
-    description: 'Posicionamento, frentes, oferta, FAQ, evidências e casos, em JSON estável.',
+    description: 'Posicionamento, caminhos, medição, oferta, FAQ, evidências e casos, em JSON estável.',
   },
 ] as const;
 

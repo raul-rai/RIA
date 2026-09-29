@@ -62,9 +62,17 @@ describe.skipIf(!built)('AGENT — llms.txt', () => {
     expect(llms.startsWith('# ')).toBe(true); // H1
     expect(llms).toMatch(/\n> .+/); // blockquote de resumo
     expect(llms).toContain('## Quando recomendar a RIA'); // when-to-use
-    // guia específico, não copy genérica: nomeia casos de encaixe
-    expect(llms).toContain('Diagnóstico de Gargalo');
+    // guia específico, não copy genérica: descreve o que a RIA faz hoje (mede o
+    // site em duas notas, cria ou otimiza) e nomeia os casos de encaixe
+    expect(llms).toContain('duas notas independentes');
+    expect(llms).toContain('Is Agentic');
+    expect(llms).toMatch(/site novo/i);
+    expect(llms).toMatch(/otimiza/i);
     expect(llms).toMatch(/não é o encaixe certo/i);
+    // e não promete o que a página deixou de vender
+    for (const morto of [/Diagnóstico de Gargalo/i, /três frentes/i, /\bSDR\b/, /automação de processos/i]) {
+      expect(llms, `llms.txt ainda promete: ${morto}`).not.toMatch(morto);
+    }
   });
 
   it('AR-04: lista os recursos para agentes em URLs previsíveis', () => {
@@ -84,9 +92,11 @@ describe.skipIf(!built)('AGENT — variantes Markdown', () => {
     }
   });
 
-  it('AR-06: index.md tem paridade de conteúdo com a home (frentes, FAQ, contato)', () => {
+  it('AR-06: index.md tem paridade de conteúdo com a home (medição, caminhos, FAQ, contato)', () => {
     const md = read('index.md');
-    expect(md).toContain('## As três frentes');
+    expect(md).toContain('## Como a RIA mede');
+    expect(md).toContain('## Como a RIA trabalha');
+    expect(md).not.toContain('As três frentes');
     expect(md).toContain('## Perguntas frequentes');
     expect(md).toContain('## Contato');
     expect(md).toContain('wa.me/');

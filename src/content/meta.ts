@@ -39,9 +39,9 @@ export interface RouteMeta {
 
 export const ROUTE_META: Record<string, RouteMeta> = {
   '/': {
-    title: 'RIA — Antes de escolher a ferramenta de IA, alguém precisa achar o gargalo',
+    title: 'RIA — Seu site aparece quando perguntam ao ChatGPT o que você vende?',
     description:
-      '95% dos projetos de IA em empresas não devolvem nada — quase sempre por automatizar a rotina errada. Diagnóstico de gargalo por engenheiro de produção.',
+      'Meça seu site em duas notas independentes: Google Lighthouse e prontidão para agentes de IA. Grátis, sem cadastro. Depois, site novo ou otimização.',
   },
   '/privacidade': {
     title: 'RIA — Política de Privacidade',
@@ -51,12 +51,12 @@ export const ROUTE_META: Record<string, RouteMeta> = {
   '/sobre': {
     title: 'RIA — Sobre a consultoria e quem conduz',
     description:
-      'A RIA é uma consultoria de IA para empresas brasileiras: engenharia de produção aplicada a inteligência artificial. Quem conduz, o que faz e como começa.',
+      'A RIA mede o site da sua empresa em duas notas (Google e agentes de IA) e cria ou otimiza o que o laudo apontar. Quem conduz e como começa.',
   },
   '/contato': {
     title: 'RIA — Contato e como falar com a consultoria',
     description:
-      'Fale com a RIA por WhatsApp: conversa de 15 minutos, gratuita, sobre a sua operação. Atende empresas em todo o Brasil, de forma remota.',
+      'Fale com a RIA por WhatsApp: conversa de 15 minutos, gratuita, sobre o seu site e o que a medição mostrou. Atende empresas em todo o Brasil, de forma remota.',
   },
 };
 

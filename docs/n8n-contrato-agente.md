@@ -40,7 +40,7 @@ O mesmo objeto `context` acompanha os três payloads (`sendMessage`, `intent` e
 | `hasNoWebsite` | `boolean` | O visitante declarou que ainda não tem site. Quando `true`, as duas notas vêm `null`. |
 | `googleScore` | `number \| null` | Nota 0–100 do Google Lighthouse. |
 | `agenticScore` | `number \| null` | Nota 0–100 de prontidão para agentes de IA (Is Agentic). |
-| `path` | `"novo" \| "otimizar" \| null` | O caminho que o visitante escolheu no cartão — ou, se ele não escolheu, o que a medição sugere. `null` = ainda não há medição nem escolha. |
+| `path` | `"novo" \| "otimizar" \| null` | O caminho que o visitante escolheu no cartão — ou, se ele não escolheu, o que a nota do Google sugere (`resolvePath` em `src/lib/paths.ts`). `null` = o visitante não escolheu **e** a nota do Google é `null`: a sugestão sai só dela. Por isso `path: null` **pode chegar junto de um `agenticScore` medido** (o PageSpeed falhou e o Is Agentic respondeu): `null` aqui não quer dizer "nada foi medido", quer dizer "não há caminho a sugerir". Quem declarou não ter site (`hasNoWebsite: true`) recebe `"novo"` mesmo sem nota nenhuma. |
 
 **`null` é sempre "não medido", nunca zero.** Uma medição pode falhar sozinha
 (cota do PageSpeed, site que bloqueia o scanner), então é normal chegar
@@ -113,6 +113,21 @@ outros dois payloads:
   }
 }
 ```
+
+## O que mudou no `agent-context.json` — set/2026
+
+O contexto que o workflow baixa a cada conversa (`GET /agent-context.json`) mudou junto com o posicionamento. Um prompt que ainda leia os campos antigos recebe `undefined` (ou quebra, se acessar uma propriedade do que não existe):
+
+| Saiu | Entrou |
+| --- | --- |
+| `fronts` (as três frentes) | `paths` — `novo` e `otimizar`, com os mesmos campos (`label`, `promise`, `tag`, `probe`); `id` agora é string |
+| `authorities` e `authoritiesDisclaimer` (a parede de vídeos) | — |
+| `vulnerability` (o índice de 8 a 100 e o marcador 101) | `measurement` — os dois instrumentos (Google Lighthouse e Is Agentic) e a nota de que as duas notas nunca são combinadas |
+| `offer.diagnosticPrice` | `offer.price` (continua `null`: o valor sai na proposta) |
+| `positioning.entryProduct` = "Diagnóstico de Gargalo" | `positioning.entryProduct` = a medição do site em duas notas |
+| `intents`: `hero-cold`, `diagnostic-result`, `diagnostic-no-website`, `front-pick`, `fronts-agenda` | `intents`: `report-result`, `sem-site`, `path-pick`, `credibility` |
+
+As ferramentas MCP (`/api/mcp`) acompanharam: `get_fronts` virou `get_paths`.
 
 ## Falhas
 

@@ -76,8 +76,14 @@ describe('CONV-01 — a duração da sessão é uma só', () => {
     // O FAQ alimenta o FAQPage JSON-LD. Divergir aqui faz o dado estruturado
     // prometer uma coisa e a tela outra — a regressão que GEO-06 já trancou
     // para o conteúdo, aplicada agora ao número.
-    const comeco = OFFER_TERMS.find((t) => t.label === 'Como começa');
-    expect(comeco?.value).toContain(`${SESSION_MINUTES} minutos`);
+    //
+    // A duração mora no termo de investimento, não em "Como começa": o primeiro
+    // passo agora é a medição do site, que não tem duração prometida (set/2026).
+    // Buscar pelo conteúdo em vez do rótulo evita que o teste passe quando a
+    // duração some da oferta.
+    const termo = OFFER_TERMS.find((t) => `${t.value} ${t.detail}`.includes('conversa de'));
+    expect(termo, 'a oferta deixou de mencionar a conversa inicial').toBeDefined();
+    expect(`${termo!.value} ${termo!.detail}`).toContain(`${SESSION_MINUTES} minutos`);
 
     const preco = FAQ.find((f) => f.question.includes('Quanto custa'));
     expect(preco?.answer).toContain(`${SESSION_MINUTES} minutos`);

@@ -82,15 +82,15 @@ export { ROUTE_META, metaFor } from './content/meta';
  * divergir ali faria o schema afirmar um cargo que a tela não mostra. Não
  * precisa ser manual: `CONSULTANT` atravessa por aqui como todo o resto.
  *
- * `FRONTS` entra porque cada frente agora vira um `Service` próprio no schema.
- * São as MESMAS três que os cartões renderizam — uma frente cortada do catálogo
- * some do schema no mesmo build, em vez de continuar sendo oferecida a um motor
- * de busca depois de deixar de ser oferecida ao visitante.
+ * `PATHS` entra porque cada caminho agora vira um `Service` próprio no schema.
+ * São os MESMOS dois que os cartões renderizam — um caminho cortado do catálogo
+ * some do schema no mesmo build, em vez de continuar sendo oferecido a um motor
+ * de busca depois de deixar de ser oferecido ao visitante.
  *
  * `SOCIAL_PROFILES` e `PHONE_E164` fecham o bloco de contato. Ver a nota em
  * constants/links.ts sobre por que o primeiro está vazio de propósito.
  */
-export { FRONTS } from './content/fronts';
+export { PATHS } from './content/paths';
 export { CONSULTANT } from './content/consultant';
 export { SOCIAL_PROFILES, PHONE_E164, WHATSAPP_URL } from './constants/links';
 
@@ -103,7 +103,8 @@ export { SOCIAL_PROFILES, PHONE_E164, WHATSAPP_URL } from './constants/links';
  */
 export { EVIDENCE } from './content/evidence';
 export {
-  DIAGNOSTIC_PRICE,
+  PRICE,
+  MEASUREMENT,
   IMPLEMENTATION_RANGE,
   SESSION_MINUTES,
 } from './content/offer';
