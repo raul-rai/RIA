@@ -102,20 +102,29 @@ describe('A11Y-04 — "reduzir movimento" alcança a página inteira, não só o
 
   it('MOV-05: animate-spin fica de fora, e isso é deliberado', () => {
     /**
-     * A exceção de conteúdo essencial do próprio 2.2.2. O spinner só existe
-     * enquanto a varredura roda e é o único sinal na tela de que ela continua
-     * viva. Parar aquele seria trocar um incômodo por uma tela que parece
-     * travada.
+     * A exceção de conteúdo essencial do próprio 2.2.2. Um spinner que só
+     * existe enquanto a varredura roda é o único sinal na tela de que ela
+     * continua viva; parar aquele seria trocar um incômodo por uma tela que
+     * parece travada.
      *
-     * O teste existe para que a exceção seja uma DECISÃO registrada, e não um
-     * esquecimento que o MOV-04 não pegou.
+     * O spinner do diagnóstico antigo saiu com ele (o laudo novo mostra uma
+     * barra de progresso finita, alimentada pelos eventos reais do scan). Hoje
+     * nenhum arquivo usa `animate-spin`, e o teste vale para o dia em que um
+     * voltar: ele NÃO leva `motion-reduce:`, e a razão está escrita no
+     * index.css. O teste existe para que a exceção seja uma DECISÃO registrada,
+     * e não um esquecimento que o MOV-04 não pegou.
      */
-    const diagnostico = ler('src/components/PotentialDiagnostic.tsx');
-    expect(diagnostico).toContain('animate-spin');
-    expect(diagnostico).not.toMatch(/animate-spin[^"]*motion-reduce:/);
+    const usam = arquivosTsx().filter((arquivo) => ler(arquivo).includes('animate-spin'));
+    for (const arquivo of usam) {
+      expect(ler(arquivo), `${arquivo}: o spinner voltou com motion-reduce:`).not.toMatch(
+        /animate-spin[^"]*motion-reduce:/
+      );
+    }
 
     // E a razão precisa estar escrita em algum lugar que alguém leia.
-    expect(ler('src/index.css')).toMatch(/animate-spin[\s\S]{0,400}?2\.2\.2/);
+    if (usam.length > 0) {
+      expect(ler('src/index.css')).toMatch(/animate-spin[\s\S]{0,400}?2\.2\.2/);
+    }
   });
 
   it('MOV-06: as animações infinitas do index.css são desligadas DE FATO', () => {
@@ -199,28 +208,28 @@ describe('A11Y-04 — "reduzir movimento" alcança a página inteira, não só o
     }
   });
 
-  it('MOV-07: as barras do HUD param, e param na altura de repouso', () => {
+  it('MOV-07: o HUD das notas não anima nada para sempre', () => {
     /**
-     * A única `repeat: Infinity` da base. O MotionConfig até cobriria — `height`
-     * está no conjunto de chaves posicionais do motion — mas isso é detalhe
-     * INTERNO da biblioteca. A guarda explícita é o que sobrevive a um upgrade.
+     * O HUD antigo tinha a única `repeat: Infinity` da base: dez barras
+     * balançando para sempre sobre um perfil do índice de vulnerabilidade, com
+     * uma guarda explícita de movimento reduzido. O índice saiu, e as barras
+     * novas mostram o valor de cada nota e ficam paradas — então não há mais o
+     * que guardar, e a garantia passou a ser a ausência.
      *
-     * E a altura precisa vir do style quando não há animação: sem ela a barra
-     * nasce com zero e o gráfico some.
+     * Se um movimento infinito voltar ao HUD, ele volta com a guarda: este
+     * teste falha primeiro e obriga a decidir.
      */
     const hud = ler('src/components/EliteHUD.tsx');
-    expect(hud).toContain('useReducedMotion');
-    expect(hud).toMatch(/reduzMovimento\s*\?\s*undefined\s*:\s*\{\s*height:/);
-    expect(hud).toMatch(/reduzMovimento\s*\?\s*\{\s*height:\s*`\$\{base\}%`\s*\}/);
-
-    // A `repeat: Infinity` não pode voltar a rodar solta.
-    const semGuarda = /animate=\{\{\s*height:[^}]*\}\}[\s\S]{0,200}repeat:\s*Infinity/;
-    expect(hud, 'a barra voltou a pulsar sem guarda').not.toMatch(semGuarda);
+    expect(hud, 'o HUD voltou a ter animação infinita').not.toMatch(/repeat:\s*Infinity|animate-(pulse|ping|bounce|spin)/);
+    // A barra de cada nota tem a largura da própria nota, direto do style — sem
+    // animação nenhuma que a leve de 0 até lá.
+    expect(hud).toMatch(/style=\{\{\s*width:\s*`\$\{l\.score\}%`\s*\}\}/);
   });
 });
 
 describe('CONF-02 — o bloco de Web Vitals diz de onde o número vem', () => {
-  const diagnostico = ler('src/components/PotentialDiagnostic.tsx');
+  // O bloco morava no diagnóstico antigo; hoje é a coluna do Google no laudo.
+  const diagnostico = ler('src/components/GoogleReportCard.tsx');
   const semComentarios = diagnostico
     .replace(/\/\*[\s\S]*?\*\//g, ' ')
     .replace(/\{\/\*[\s\S]*?\*\/\}/g, ' ')
@@ -296,9 +305,13 @@ describe('DOC-01 — nenhum comentário afirma o contrário do código', () => {
     expect(check, 'precisa dizer explicitamente que NÃO pontua').toMatch(/N[ÃA]O mexe no [ÍI]ndice/);
 
     // E a promessa tem que continuar verdadeira no código: nenhum caminho daqui
-    // até o contexto de vulnerabilidade.
-    expect(check).not.toContain('useVulnerability');
-    expect(ler('src/components/SocialProofSection.tsx')).not.toContain('useVulnerability');
+    // até o estado que guarda as notas (o contexto de vulnerabilidade foi
+    // substituído pelo das duas notas medidas).
+    for (const arquivo of ['AwarenessCheck.tsx', 'SocialProofSection.tsx']) {
+      const fonte = ler('src/components/' + arquivo);
+      expect(fonte).not.toContain('useVulnerability');
+      expect(fonte).not.toContain('useSiteScore');
+    }
   });
 });
 

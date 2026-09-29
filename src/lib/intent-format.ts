@@ -21,14 +21,14 @@ export function uncoveredFronts(fronts: Front[], checked: boolean[]): Front[] {
 /**
  * Leitura da nota do site em uma linha, sem ponto final.
  *
- * Os cortes (50 e 80) sao os mesmos que PotentialDiagnostic.tsx usa para
- * colorir a nota no resultado. Se um mudar, o outro muda junto — o lead nao
- * pode ver vermelho na tela e ler "sustenta" no chat.
+ * Os cortes (50 e 80) sao os mesmos que o cartao do laudo (GoogleReportCard)
+ * usa para colorir a nota. Se um mudar, o outro muda junto — o lead nao pode
+ * ver vermelho na tela e ler "sustenta" no chat.
  */
 export function scoreBand(score: number): string {
   if (score < 50) return 'Essa nota quer dizer que o site trava antes de convencer alguém';
   if (score < 80) return 'Essa nota quer dizer que o site funciona, mas não compete';
-  return 'Essa nota é boa — o site sustenta, e o gargalo está em outra frente';
+  return 'Essa nota é boa — o site sustenta, e o ajuste é fino';
 }
 
 /**

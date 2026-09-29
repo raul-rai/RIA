@@ -187,7 +187,7 @@ describe('LAUDO: duas notas, dois instrumentos', () => {
     // O texto de ausência vem depois da grade: é o ramo "senão" do mesmo ternário.
     expect(vazio).toBeGreaterThan(grade);
     expect(corpo).toMatch(
-      /report\.webVitals\.length > 0 \? \(\s*<ul[\s\S]*?\) : \(\s*<p[^>]*>\s*<strong[^>]*>Core Web Vitals: não medido/,
+      /report\.webVitals\.length > 0 \? \(\s*<(?:ul|div)[\s\S]*?\) : \(\s*<p[^>]*>\s*<strong[^>]*>Core Web Vitals: não medido/,
     );
   });
 

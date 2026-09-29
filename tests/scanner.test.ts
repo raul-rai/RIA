@@ -2,15 +2,73 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
 
-// SCN-01..03 (o hero renderiza o formulario, cinco capitulos, CTA_CHAPTER) leem
-// src/pages/LandingPage.tsx e entram junto com a virada da pagina.
-
 const root = (p: string) => resolve(process.cwd(), p);
 const semComentarios = (t: string) =>
   t.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
 
 const hook = readFileSync(root('src/hooks/useSiteScan.tsx'), 'utf-8');
 const form = readFileSync(root('src/components/ScannerForm.tsx'), 'utf-8');
+const landing = readFileSync(root('src/pages/LandingPage.tsx'), 'utf-8');
+
+describe('SCN: o scanner é a primeira dobra', () => {
+  it('SCN-01: o hero renderiza o formulário do scanner', () => {
+    const heroBloco = landing.slice(landing.indexOf('function SceneHero'), landing.indexOf('// ─── Capitulo 4'));
+    expect(heroBloco).toContain('<ScannerForm');
+    // Os dois botões antigos (consultoria gratuita / entenda melhor) saíram:
+    // o formulário é o único chamado à ação da dobra.
+    expect(heroBloco).not.toContain('MagneticButton');
+    expect(heroBloco).not.toMatch(/Consultoria gratuita|Entenda melhor/);
+  });
+
+  it('SCN-02: a landing tem cinco capítulos, sem "Vozes do mercado"', () => {
+    const chapters = landing.slice(landing.indexOf('const CHAPTERS'), landing.indexOf('export default function LandingPage'));
+    expect(chapters).not.toMatch(/Vozes do mercado/);
+    expect(chapters.match(/label:/g) ?? []).toHaveLength(5);
+  });
+
+  it('SCN-03: o CTA da oferta aponta para o último capítulo', () => {
+    expect(landing).toMatch(/const CTA_CHAPTER = 4/);
+    // O último índice de CHAPTERS é o do agente: se um capítulo entrar ou sair
+    // sem o número acompanhar, o CTA aponta para o lugar errado.
+    const chapters = landing.slice(landing.indexOf('const CHAPTERS'), landing.indexOf('export default function LandingPage'));
+    expect((chapters.match(/label:/g) ?? []).length - 1).toBe(4);
+    expect(chapters.lastIndexOf('label:')).toBe(chapters.indexOf("label: 'O agente e a agenda'"));
+  });
+
+  it('SCN-10: os capítulos são o scanner, o laudo, os caminhos, a prova e o agente, nessa ordem', () => {
+    const conteudo = landing.slice(landing.indexOf('const chapterContent'), landing.indexOf('// A ordem dos provedores'));
+    const ordem = ['<SceneHero', '<ReportSection', '<PathsSection', '<CredibilitySection', '<SceneCTA'];
+    const posicoes = ordem.map((c) => conteudo.indexOf(c));
+    for (const [i, pos] of posicoes.entries()) {
+      expect(pos, `${ordem[i]} não está na lista de capítulos`).toBeGreaterThan(-1);
+    }
+    expect([...posicoes].sort((a, b) => a - b)).toEqual(posicoes);
+  });
+
+  it('SCN-11: os provedores aninham na ordem que as leituras exigem', () => {
+    // O ScanProvider lê o contexto das notas e o AgentIntentProvider lê os dois.
+    // Invertidos, useSiteScore() lança na montagem — e só no navegador, porque
+    // o build não monta a árvore com estado.
+    const jsx = landing.slice(landing.indexOf('return (', landing.indexOf('const chapterContent')));
+    const notas = jsx.indexOf('<SiteScoreProvider>');
+    const scan = jsx.indexOf('<ScanProvider>');
+    const agente = jsx.indexOf('<AgentIntentProvider');
+    expect(notas).toBeGreaterThan(-1);
+    expect(scan).toBeGreaterThan(notas);
+    expect(agente).toBeGreaterThan(scan);
+    // E fecham na ordem inversa.
+    expect(jsx.indexOf('</AgentIntentProvider>')).toBeLessThan(jsx.indexOf('</ScanProvider>'));
+    expect(jsx.indexOf('</ScanProvider>')).toBeLessThan(jsx.indexOf('</SiteScoreProvider>'));
+  });
+
+  it('SCN-12: a manchete pergunta se o site aparece, e as quatro variantes de campanha existem', () => {
+    const tabela = landing.slice(landing.indexOf('const HEADLINES'), landing.indexOf('/**', landing.indexOf('const HEADLINES')));
+    for (const chave of ['default', 'industria', 'servicos', 'varejo']) {
+      expect(tabela).toContain(`${chave}:`);
+    }
+    expect(tabela).toContain('o seu site aparece?');
+  });
+});
 
 describe('SCN: o scanner mede o site em duas notas independentes', () => {
   it('SCN-04: as duas medições disparam em paralelo, não em cascata', () => {

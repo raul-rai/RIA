@@ -30,7 +30,14 @@ import { CASES } from '../src/content/cases';
 import { CONSULTANT } from '../src/content/consultant';
 import { AUTHORITIES, AUTHORITIES_DISCLAIMER } from '../src/content/authorities';
 import { WHATSAPP_URL } from '../src/constants/links';
-import { FLOOR, NO_WEBSITE_INDEX } from '../src/context/VulnerabilityContext';
+
+// FLOOR e NO_WEBSITE_INDEX moravam em context/VulnerabilityContext.tsx, apagado
+// na Task 8 (o indice sintetico saiu da pagina). O bloco `vulnerability` mais
+// abaixo descreve um indice que nao existe mais e sai na Task 11, junto com o
+// resto deste arquivo; os literais ficam aqui SO para o JSON publicado seguir
+// identico ate la (CTX-01 compara os dois byte a byte).
+const FLOOR = 8;
+const NO_WEBSITE_INDEX = 101;
 
 /**
  * O que cada clique de CTA significou.

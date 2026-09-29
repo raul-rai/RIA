@@ -62,14 +62,17 @@ describe.skipIf(!built)('Primeira pintura — a dobra de abertura sai visível d
     ).toBe(0);
   });
 
-  it('PAINT-02: a manchete e os dois CTAs estão no HTML da primeira dobra', () => {
+  it('PAINT-02: a manchete e o formulário do scanner estão no HTML da primeira dobra', () => {
     const hero = heroHtml(home);
     // A manchete sai palavra a palavra em <span>, então a comparação é por
     // texto limpo, não pela frase literal na marcação.
     const texto = hero.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
-    expect(texto).toContain('Sua empresa está preparada para enfrentar');
-    expect(texto).toContain('Consultoria gratuita');
-    expect(texto).toContain('Entenda melhor');
+    expect(texto).toContain('Quando alguém pergunta ao ChatGPT o que você vende,');
+    expect(texto).toContain('o seu site aparece?');
+    // O formulário é o único chamado à ação da dobra: o botão que mede e o que
+    // declara que não há site.
+    expect(texto).toContain('Medir meu site');
+    expect(texto).toContain('Ainda não tenho site');
   });
 
   it('PAINT-03: existe um <h1>, e ele é o da manchete', () => {

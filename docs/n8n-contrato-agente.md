@@ -11,24 +11,43 @@ com o mesmo `sessionId`, que identifica a conversa do começo ao fim.
   "action": "sendMessage",
   "chatInput": "Somos uma metalúrgica com 40 funcionários.",
   "context": {
-    "vulnerabilityIndex": 88,
     "hasNoWebsite": false,
-    "websiteScore": 63,
-    "frontsCovered": 1
+    "googleScore": 63,
+    "agenticScore": 41,
+    "path": "otimizar"
   }
 }
 ```
+
+> **Mudança de contrato — set/2026.** Saíram `vulnerabilityIndex`,
+> `websiteScore`, `frontsCovered` e `frontsMissing`. Entraram `googleScore`,
+> `agenticScore` e `path` (`"novo"` | `"otimizar"` | `null`). As duas notas são
+> independentes e **não devem ser somadas nem promediadas** em nenhum ponto do
+> workflow: são instrumentos diferentes (Google Lighthouse e Is Agentic).
+> Qualquer template de prompt que ainda referencie `context.vulnerabilityIndex`,
+> `context.websiteScore` ou `context.frontsCovered` passa a receber
+> `undefined` — o workflow no n8n precisa ser atualizado no mesmo cutover.
 
 O workflow responde normalmente. A resposta é lida de `output`, `response`,
 `message` ou `text` — na raiz do objeto ou no primeiro item de um array.
 Resposta vazia conta como falha e o lead recebe o desvio para o WhatsApp.
 
-Aqui `context.vulnerabilityIndex` é **sempre número**, nunca `null` — é o
-índice cru, calculado a partir do que foi respondido até agora. Para quem
-ainda não interagiu com nenhum diagnóstico ele vale `100`, o pior caso por
-definição. Isso significa que `100` neste campo pode significar tanto "o
-visitante está totalmente exposto" quanto "o visitante ainda não avaliou
-nada" — o valor sozinho não distingue os dois casos.
+O mesmo objeto `context` acompanha os três payloads (`sendMessage`, `intent` e
+`qualification`), com estes campos:
+
+| Campo | Tipo | Significado |
+| --- | --- | --- |
+| `hasNoWebsite` | `boolean` | O visitante declarou que ainda não tem site. Quando `true`, as duas notas vêm `null`. |
+| `googleScore` | `number \| null` | Nota 0–100 do Google Lighthouse. |
+| `agenticScore` | `number \| null` | Nota 0–100 de prontidão para agentes de IA (Is Agentic). |
+| `path` | `"novo" \| "otimizar" \| null` | O caminho que o visitante escolheu no cartão — ou, se ele não escolheu, o que a medição sugere. `null` = ainda não há medição nem escolha. |
+
+**`null` é sempre "não medido", nunca zero.** Uma medição pode falhar sozinha
+(cota do PageSpeed, site que bloqueia o scanner), então é normal chegar
+`googleScore: null` com `agenticScore: 55`, ou o contrário. Trate cada nota
+isoladamente e nunca converta `null` em `0`: zero seria lido como site
+reprovado, e não houve reprovação nenhuma. Não existe nota geral — nenhum campo
+combina as duas.
 
 ## 2. `action: "intent"` — o lead clicou num CTA
 
@@ -36,15 +55,14 @@ nada" — o valor sozinho não distingue os dois casos.
 {
   "sessionId": "…",
   "action": "intent",
-  "intentId": "fronts-agenda",
-  "chatInput": "Marquei 1 de 5. Faltam Agente SDR, Automação, Sistema sob medida e Dados e decisão. Quero montar minha pauta.",
-  "agentReply": "Pauta anotada. Começo pela Agente SDR 24/7 — …",
+  "intentId": "path-pick",
+  "chatInput": "Quero falar sobre o caminho Otimização.",
+  "agentReply": "O site que já existe passa a carregar rápido, … Pra dimensionar isso: o que sua empresa faz, e qual desses pontos do laudo mais te preocupa?",
   "context": {
-    "vulnerabilityIndex": 88,
     "hasNoWebsite": false,
-    "websiteScore": 63,
-    "frontsCovered": 1,
-    "frontsMissing": [2, 3, 4, 5]
+    "googleScore": 63,
+    "agenticScore": 41,
+    "path": "otimizar"
   }
 }
 ```
@@ -59,25 +77,40 @@ conversa faça sentido. Se este caso for tratado como `sendMessage`, o LLM
 produz uma resposta que o lead nunca viu, e a fala seguinte sai se referindo a
 algo invisível.
 
-`intentId` é um de: `hero-cold`, `diagnostic-result`, `diagnostic-no-website`,
-`front-pick`, `fronts-agenda`, `credibility`. Ele diz de qual dobra o lead
-veio e serve para o prompt do agente ajustar o tom.
+`intentId` é um de: `hero-cold`, `report-result`, `sem-site`, `path-pick`,
+`credibility`. Ele diz de qual dobra o lead veio e serve para o prompt do
+agente ajustar o tom. (Mudança de set/2026: `diagnostic-result`,
+`diagnostic-no-website`, `front-pick` e `fronts-agenda` deixaram de existir.)
 
-Aqui `context.vulnerabilityIndex` **pode ser `null`** — diferente do que
-acontece em `sendMessage`. `null` significa "o visitante ainda não interagiu
-com nenhum diagnóstico" — nunca "zero vulnerabilidade". Só vira número depois
-que o visitante toca em algo (marca uma frente, roda o diagnóstico do site,
-declara não ter site).
-
-**Recomendação para o workflow:** trate `null` sempre como "sem dado", nunca
-como zero. Como `100` aparece tanto em `sendMessage` sem avaliação quanto em
-avaliação real de exposição total, a única leitura confiável de "ainda não
-avaliado" é o `null` que chega em `intent` — não um valor numérico específico
-em nenhum dos dois payloads.
+Em `path-pick`, `context.path` é o caminho que o lead acabou de clicar. Em
+`report-result`, as falas do agente comentam as duas notas, cada uma na voz do
+seu instrumento.
 
 ## 3. `action: "qualification"` — os cinco campos
 
-Inalterado. Ver `src/lib/qualification.ts`.
+Os cinco campos de `qualification` estão inalterados (ver
+`src/lib/qualification.ts`). O `context` que os acompanha mudou junto com os
+outros dois payloads:
+
+```json
+{
+  "sessionId": "…",
+  "action": "qualification",
+  "qualification": {
+    "company": "Nexa Interiores",
+    "email": "contato@nexa.com.br",
+    "phone": "16997879837",
+    "revenue": "100k-500k",
+    "aiBudget": "1k-5k"
+  },
+  "context": {
+    "hasNoWebsite": false,
+    "googleScore": 63,
+    "agenticScore": 41,
+    "path": "otimizar"
+  }
+}
+```
 
 ## Falhas
 

@@ -12,15 +12,10 @@ export type RiaEvent =
   /** Um CTA levou o lead ao agente carregando intencao. Ver content/intents.ts. */
   | 'agent_intent'
   | 'awareness_check'
-  | 'operational_check'
-  | 'front_toggle'
-  | 'diagnostic_started'
-  | 'diagnostic_completed'
-  | 'diagnostic_failed'
-  /** Visitante declarou que ainda nao tem site — indice 101%, rota curta ao agente. */
+  /** Visitante declarou que ainda nao tem site — caminho 'novo', rota curta ao agente. */
   | 'diagnostic_no_website'
-  /** Visitante pediu uma segunda medicao: o laudo sai de cena e o formulario volta. */
-  | 'diagnostic_restart'
+  /** Visitante escolheu um dos dois caminhos (criar ou otimizar). */
+  | 'path_pick'
   /** O scanner do hero disparou as duas medicoes (Lighthouse e Is Agentic). */
   | 'scan_started'
   /** As duas medicoes resolveram, com nota ou com falha nomeada. */

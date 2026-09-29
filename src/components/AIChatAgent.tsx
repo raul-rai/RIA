@@ -2,13 +2,13 @@ import { useState, useRef, useEffect, useMemo } from 'react';
 import { m, AnimatePresence } from 'motion/react';
 import { Send, User, Bot, Sparkles, TrendingUp, ArrowRight, MessageCircle, CalendarCheck } from 'lucide-react';
 import { config } from '../config';
-import { useVulnerability } from '../context/VulnerabilityContext';
+import { useSiteScore } from '../context/SiteScoreContext';
 import { whatsappWithMessage } from '../constants/links';
 import { track } from '../lib/analytics';
 import QualificationFlow from './QualificationFlow';
 import BookingEmbed from './BookingEmbed';
 import { buildQualificationPayload, labelFor, type Qualification } from '../lib/qualification';
-import { FRONTS } from '../content/fronts';
+import { pathById } from '../content/paths';
 import { SESSION_MINUTES } from '../content/offer';
 import {
   INTENTS,
@@ -20,7 +20,6 @@ import {
 } from '../content/intents';
 import { useAgentIntent } from '../context/AgentIntentContext';
 import { shouldInject } from '../lib/agent-intent';
-import { missingFronts } from '../lib/fronts';
 
 interface RoiData {
   roi: number;
@@ -43,12 +42,12 @@ interface AIChatAgentProps {
 }
 
 const SUGGESTIONS = [
-  'Onde a IA me daria mais retorno hoje?',
+  'O que eu corrijo primeiro no meu site?',
   'Quanto custa começar?',
-  'Quero falar sobre o meu diagnóstico',
+  'Quero falar sobre o meu laudo',
 ];
 
-/** Quem chega aqui declarando que nao tem site nao quer falar de ROI ainda:
+/** Quem chega aqui declarando que nao tem site nao quer falar de laudo:
  *  quer saber quanto custa existir. As sugestoes acompanham. */
 const NO_WEBSITE_SUGGESTIONS = [
   'Quanto custa um site pronto para IA?',
@@ -74,11 +73,20 @@ function parseRoiData(raw: unknown): RoiData | undefined {
 }
 
 export default function AIChatAgent({ webhookUrl = config.chatWebhook }: AIChatAgentProps) {
-  const { vulnerabilityIndex, assessed, hasNoWebsite, frontsChecked, websiteScore } = useVulnerability();
-  /** O indice so significa algo depois que o visitante tocou em algo. Sem
-   *  isso, quem pula direto para o agente reporta "100% vulneravel" quando
-   *  na verdade e "nunca avaliado" — os dois nao podem chegar identicos. */
-  const assessedVulnerabilityIndex = assessed ? vulnerabilityIndex : null;
+  const { google, agentic, hasNoWebsite, path, target } = useSiteScore();
+  const googleScore = google ? google.score : null;
+  const agenticScore = agentic ? agentic.score : null;
+
+  /**
+   * O que o n8n recebe sobre a medicao, no mesmo formato nos tres payloads
+   * (sendMessage, intent e qualification) — ver docs/n8n-contrato-agente.md.
+   * As duas notas seguem separadas e `null` significa "nao medido": quem pula
+   * direto para o agente nao reporta nota nenhuma, e zero nunca entra aqui.
+   */
+  const contexto = useMemo(
+    () => ({ hasNoWebsite, googleScore, agenticScore, path }),
+    [hasNoWebsite, googleScore, agenticScore, path]
+  );
 
   const { pending, consume } = useAgentIntent();
 
@@ -124,30 +132,33 @@ export default function AIChatAgent({ webhookUrl = config.chatWebhook }: AIChatA
       : Math.random().toString(36).substring(7)
   );
 
+  /**
+   * A medicao em linhas de texto, para o que o Raul le antes da chamada (o
+   * WhatsApp de desvio, o recado da agenda). Uma linha por nota, cada uma com o
+   * seu instrumento; a que nao foi medida diz "nao medido", nunca "0/100".
+   */
+  const resumoDaMedicao = useMemo(() => {
+    const caminho = path ? `Caminho de interesse: ${pathById(path).label}` : 'Caminho de interesse: ainda não escolhido';
+    if (hasNoWebsite) return ['Site: ainda não tenho', caminho];
+    return [
+      target ? `Site medido: ${target}` : 'Site: não medido',
+      googleScore !== null ? `Nota do Google: ${googleScore}/100` : 'Nota do Google: não medida',
+      agenticScore !== null
+        ? `Prontidão para agentes: ${agenticScore}/100`
+        : 'Prontidão para agentes: não medida',
+      caminho,
+    ];
+  }, [hasNoWebsite, target, googleScore, agenticScore, path]);
+
   /** Mensagem de WhatsApp que carrega tudo que o visitante ja respondeu. */
   const handoffUrl = useMemo(() => {
-    const marcados = frontsChecked.filter(Boolean).length;
     const linhas = [
       'Olá Raul, tentei falar com o agente no site e quero continuar por aqui.',
       '',
-      assessedVulnerabilityIndex === null
-        ? 'Índice de Vulnerabilidade: não avaliado'
-        : `Índice de Vulnerabilidade: ${assessedVulnerabilityIndex}%`,
-      hasNoWebsite
-        ? 'Site: ainda não tenho'
-        : websiteScore !== null
-          ? `Site auditado: ${websiteScore}/100`
-          : 'Site: não auditado',
-      `Frentes cobertas: ${marcados} de ${FRONTS.length}`,
+      ...resumoDaMedicao,
     ];
     return whatsappWithMessage(linhas.join('\n'));
-  }, [assessedVulnerabilityIndex, hasNoWebsite, websiteScore, frontsChecked]);
-
-  /** As frentes que sobraram: a pauta que o Raul le antes da chamada. */
-  const pauta = useMemo(
-    () => FRONTS.filter((_, i) => !frontsChecked[i]).map((f) => f.tag).join(', '),
-    [frontsChecked]
-  );
+  }, [resumoDaMedicao]);
 
   const bookingFallbackMessage = useMemo(() => {
     if (!qualification) return '';
@@ -160,9 +171,9 @@ export default function AIChatAgent({ webhookUrl = config.chatWebhook }: AIChatA
       `Faturamento: ${labelFor('revenue', qualification.revenue)}`,
       `Budget de IA: ${labelFor('aiBudget', qualification.aiBudget)}`,
       '',
-      pauta ? `Frentes descobertas: ${pauta}` : 'Frentes descobertas: nenhuma',
+      ...resumoDaMedicao,
     ].join('\n');
-  }, [qualification, pauta]);
+  }, [qualification, resumoDaMedicao]);
 
   /**
    * Registro da intencao no n8n. Nao e pergunta: a resposta ja esta na tela.
@@ -182,13 +193,7 @@ export default function AIChatAgent({ webhookUrl = config.chatWebhook }: AIChatA
           intentId,
           chatInput,
           agentReply,
-          context: {
-            vulnerabilityIndex: assessedVulnerabilityIndex,
-            hasNoWebsite,
-            websiteScore,
-            frontsCovered: frontsChecked.filter(Boolean).length,
-            frontsMissing: missingFronts(frontsChecked, FRONTS.map((f) => f.id)),
-          },
+          context: contexto,
         }),
       });
     } catch {
@@ -211,10 +216,13 @@ export default function AIChatAgent({ webhookUrl = config.chatWebhook }: AIChatA
     const definition = INTENTS[pending.id];
     const ctx: IntentContext = {
       ref: readCampaignRef(typeof window === 'undefined' ? '' : window.location.search),
-      websiteScore,
+      googleScore,
+      agenticScore,
       hasNoWebsite,
-      frontsChecked,
-      front: pending.frontId ? FRONTS.find((f) => f.id === pending.frontId) : undefined,
+      // O pedido leva o caminho clicado; sem ele (path-pick nunca chega sem),
+      // vale o que o laudo sugere. A intencao cai no primeiro caminho se nao
+      // houver nenhum dos dois.
+      path: pending.pathId ? pathById(pending.pathId) : path ? pathById(path) : undefined,
     };
 
     const userMessage = definition.userMessage(ctx);
@@ -230,7 +238,7 @@ export default function AIChatAgent({ webhookUrl = config.chatWebhook }: AIChatA
     // postIntent e recriado a cada render e le o estado atual quando chamado.
     // Fora das deps de proposito: incluir a funcao faria o efeito rodar em
     // todo render, e a trava do handledNonce ja garante uma injecao por pedido.
-  }, [pending, consume, stage, isTyping, messages, websiteScore, hasNoWebsite, frontsChecked]);
+  }, [pending, consume, stage, isTyping, messages, googleScore, agenticScore, hasNoWebsite, path]);
 
   const send = async (text: string) => {
     const currentInput = text.trim();
@@ -239,7 +247,7 @@ export default function AIChatAgent({ webhookUrl = config.chatWebhook }: AIChatA
     setMessages((prev) => [...prev, { role: 'user', content: currentInput }]);
     setInput('');
     setIsTyping(true);
-    track('agent_message_sent', { vulnerability_index: vulnerabilityIndex });
+    track('agent_message_sent', { google_score: googleScore ?? undefined, agentic_score: agenticScore ?? undefined });
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 60000);
@@ -258,12 +266,7 @@ export default function AIChatAgent({ webhookUrl = config.chatWebhook }: AIChatA
           sessionId,
           action: 'sendMessage',
           chatInput: currentInput,
-          context: {
-            vulnerabilityIndex,
-            hasNoWebsite,
-            websiteScore,
-            frontsCovered: frontsChecked.filter(Boolean).length,
-          },
+          context: contexto,
         }),
         signal: controller.signal,
       });
@@ -339,10 +342,10 @@ export default function AIChatAgent({ webhookUrl = config.chatWebhook }: AIChatA
           buildQualificationPayload({
             sessionId,
             qualification: data,
-            vulnerabilityIndex: assessedVulnerabilityIndex,
             hasNoWebsite,
-            websiteScore,
-            frontsChecked,
+            googleScore,
+            agenticScore,
+            path,
           })
         ),
       });
@@ -366,7 +369,7 @@ export default function AIChatAgent({ webhookUrl = config.chatWebhook }: AIChatA
             <h3 className="text-sm font-bold uppercase tracking-wider text-slate-900 leading-none mb-1">
               Agente de IA RIA
             </h3>
-            <p className="text-[10px] text-slate-500 font-medium">Diagnóstico de Inteligência Empresarial</p>
+            <p className="text-[10px] text-slate-500 font-medium">Consultor de sites para a era da IA</p>
           </div>
         </div>
         <div className="glass-inset glass-accent flex items-center gap-2 px-3 py-1 rounded-full">
@@ -469,7 +472,7 @@ export default function AIChatAgent({ webhookUrl = config.chatWebhook }: AIChatA
               type="button"
               onClick={() => {
                 setStage('qualifying');
-                track('qualification_started', { vulnerability_index: vulnerabilityIndex });
+                track('qualification_started', { google_score: googleScore ?? undefined, agentic_score: agenticScore ?? undefined });
               }}
               className="w-full px-4 py-3 bg-slate-900 text-white rounded-xl font-black text-[11px] uppercase tracking-widest hover:bg-accent active:scale-[0.99] transition-all inline-flex items-center justify-center gap-2"
             >
@@ -486,7 +489,7 @@ export default function AIChatAgent({ webhookUrl = config.chatWebhook }: AIChatA
           <BookingEmbed
             name={qualification.company}
             email={qualification.email}
-            notes={pauta ? `Frentes descobertas: ${pauta}` : undefined}
+            notes={resumoDaMedicao.join('\n')}
             fallbackMessage={bookingFallbackMessage}
           />
         )}

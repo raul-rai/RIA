@@ -38,8 +38,8 @@ export default function ScannerForm({ onMeasured }: { onMeasured: () => void }) 
     cancel();
     setNoWebsite(true);
     track('diagnostic_no_website');
-    // O id atual; a virada da página o renomeia para 'sem-site'.
-    requestIntent('diagnostic-no-website');
+    // A intenção do agente para quem declara não ter site.
+    requestIntent('sem-site');
   };
 
   return (

@@ -85,10 +85,15 @@ describe('AUTHORITIES — as vozes, com as travas que faltavam', () => {
    * reduzira a propria vulnerabilidade concordando com o vendedor — que e a
    * mecanica que um comprador experiente reconhece e desconta.
    */
-  it('AUT-06: a marcacao das vozes nao toca o Indice de Vulnerabilidade', () => {
-    expect(section).not.toContain('useVulnerability');
-    for (const arquivo of ['AuthorityCard.tsx', 'AuthorityAccordion.tsx', 'AwarenessCheck.tsx']) {
-      expect(sourceOf(arquivo)).not.toContain('useVulnerability');
+  it('AUT-06: a marcacao das vozes nao toca o estado das notas medidas', () => {
+    // O indice foi substituido pelo SiteScoreContext (as duas notas medidas). A
+    // regra e a mesma: nada do que o visitante concorda ali entra no que a
+    // pagina reporta como medido.
+    for (const simbolo of ['useVulnerability', 'useSiteScore']) {
+      expect(section).not.toContain(simbolo);
+      for (const arquivo of ['AuthorityCard.tsx', 'AuthorityAccordion.tsx', 'AwarenessCheck.tsx']) {
+        expect(sourceOf(arquivo)).not.toContain(simbolo);
+      }
     }
   });
 
