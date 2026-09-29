@@ -1,0 +1,45 @@
+import { describe, it, expect } from 'vitest';
+import { readFileSync } from 'fs';
+import { resolve } from 'path';
+
+// SCN-01..03 (o hero renderiza o formulario, cinco capitulos, CTA_CHAPTER) leem
+// src/pages/LandingPage.tsx e entram junto com a virada da pagina.
+
+const root = (p: string) => resolve(process.cwd(), p);
+const semComentarios = (t: string) =>
+  t.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+
+const hook = readFileSync(root('src/hooks/useSiteScan.tsx'), 'utf-8');
+const form = readFileSync(root('src/components/ScannerForm.tsx'), 'utf-8');
+
+describe('SCN: o scanner mede o site em duas notas independentes', () => {
+  it('SCN-04: as duas medições disparam em paralelo, não em cascata', () => {
+    const corpo = semComentarios(hook);
+    // Promise.all/allSettled, e nunca um await de uma antes de começar a outra.
+    expect(corpo).toMatch(/Promise\.(all|allSettled)\(/);
+  });
+
+  it('SCN-05: falha de medição nunca vira nota zero', () => {
+    const corpo = semComentarios(hook);
+    expect(corpo).not.toMatch(/setGoogle\(\s*0\s*\)/);
+    expect(corpo).not.toMatch(/score:\s*0\b/);
+  });
+
+  it('SCN-06: o campo recusa endereço inválido antes de qualquer requisição', () => {
+    expect(semComentarios(form) + semComentarios(hook)).toContain('normalizeTarget');
+  });
+
+  it('SCN-07: o botão de "não tenho site" continua existindo', () => {
+    expect(form).toContain('setNoWebsite');
+    expect(form).toMatch(/não tenho site/i);
+  });
+
+  it('SCN-08: o formulário lê a medição pelo provedor, nunca pelo hook de estado', () => {
+    // useSiteScanState guarda estado local: chamado por dois componentes, vira
+    // duas instâncias e o laudo nunca vê o que o formulário disparou.
+    const corpo = semComentarios(form);
+    expect(corpo).toContain('useScan()');
+    expect(corpo).not.toContain('useSiteScanState');
+    expect(semComentarios(hook)).toMatch(/export function ScanProvider/);
+  });
+});

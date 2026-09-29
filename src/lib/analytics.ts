@@ -21,6 +21,10 @@ export type RiaEvent =
   | 'diagnostic_no_website'
   /** Visitante pediu uma segunda medicao: o laudo sai de cena e o formulario volta. */
   | 'diagnostic_restart'
+  /** O scanner do hero disparou as duas medicoes (Lighthouse e Is Agentic). */
+  | 'scan_started'
+  /** As duas medicoes resolveram, com nota ou com falha nomeada. */
+  | 'scan_finished'
   | 'agent_message_sent'
   | 'agent_replied'
   | 'agent_failed'
