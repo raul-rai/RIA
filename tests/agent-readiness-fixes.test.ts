@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync, existsSync } from 'fs';
 import { resolve } from 'path';
+import { CONSULTANT } from '../src/content/consultant';
+import { SOCIAL_PROFILES } from '../src/constants/links';
 
 /**
  * Prontidão para agentes — o que o build publica para os robôs.
@@ -30,6 +32,14 @@ function visibleText(html: string): string {
 }
 
 describe.skipIf(!built)('AGENT — hierarquia de títulos sem salto', () => {
+  it('FIX-11: a sequência de títulos da home sobe de um em um (content-no-js)', () => {
+    const niveis = headingLevels(read('index.html'));
+    expect(niveis.length, 'a home tem títulos').toBeGreaterThan(5);
+    for (let i = 1; i < niveis.length; i += 1) {
+      expect(niveis[i] - niveis[i - 1], `pulo de h${niveis[i - 1]} para h${niveis[i]} (posição ${i})`).toBeLessThanOrEqual(1);
+    }
+  });
+
   for (const page of ['index.html', 'sobre.html', 'contato.html', 'privacidade.html']) {
     it(`AR-01: ${page} nunca pula de nível (ex.: <h2> direto para <h4>)`, () => {
       const levels = headingLevels(read(page));
@@ -52,6 +62,37 @@ describe.skipIf(!built)('AGENT — 404 recuperável', () => {
     for (const href of ['/', '/sobre', '/contato', '/privacidade', '/sitemap.xml', '/llms.txt', '/agent-context.json']) {
       expect(notFound, `404 sem link para ${href}`).toContain(`href="${href}"`);
     }
+  });
+});
+
+describe.skipIf(!built)('AGENT — 404 em Markdown (agent-friendly-404)', () => {
+  const html = built ? read('404.html') : '';
+  const md = built ? existsSync(resolve(dist, '404.md')) && read('404.md') : '';
+
+  it('FIX-10: o 404 tem variante markdown que aponta sitemap, llms.txt e o índice', () => {
+    expect(existsSync(resolve(dist, '404.md')), 'dist/404.md não foi gerado').toBe(true);
+    expect(md.startsWith('# '), '404.md não começa com H1').toBe(true);
+    expect(md).toContain('/sitemap.xml');
+    expect(md).toContain('/llms.txt');
+    expect(md).toContain('/agent-context.json');
+  });
+
+  it('FIX-10b: o <head> do 404 declara a variante markdown', () => {
+    expect(html).toContain('<link rel="alternate" type="text/markdown" href="/404.md" />');
+  });
+
+  it('FIX-10c: HTML e Markdown saem da mesma lista — os destinos coincidem', () => {
+    const doHtml = [...html.matchAll(/<li><a href="([^"]+)"/g)].map((m) => m[1]);
+    const doMd = [...md.matchAll(/^- \[[^\]]+\]\(https?:\/\/[^/)]+([^)]*)\)/gm)].map((m) => m[1] || '/');
+    expect(doHtml.length).toBeGreaterThanOrEqual(7);
+    expect(doMd).toEqual(doHtml);
+  });
+
+  it('FIX-10d: vercel.json serve /404.md como text/markdown', () => {
+    const vercel = JSON.parse(readFileSync(resolve(process.cwd(), 'vercel.json'), 'utf-8'));
+    const rule = vercel.headers.find((h: { source: string }) => h.source === '/404.md');
+    const ct = rule?.headers.find((h: { key: string }) => h.key === 'Content-Type');
+    expect(ct?.value).toContain('text/markdown');
   });
 });
 
@@ -110,7 +151,25 @@ describe.skipIf(!built)('AGENT — páginas-âncora de confiança', () => {
       expect(headingLevels(html).filter((l) => l === 1).length).toBe(1);
       expect(visibleText(html).length).toBeGreaterThan(500);
     });
+
+    // O AR-07 conta o <body> inteiro, com cabeçalho e rodapé. O que o apontamento
+    // trust-anchors pede é conteúdo da página — então conta só o <main>.
+    it(`FIX-13: ${page} tem ≥500 caracteres só no <main>`, () => {
+      const main = read(page).match(/<main[\s\S]*?<\/main>/)?.[0] ?? '';
+      expect(main, `${page} sem <main>`).not.toBe('');
+      expect(visibleText('<body>' + main).length).toBeGreaterThan(500);
+    });
   }
+
+  it('FIX-14: /contato não fala do produto antigo (diagnóstico de gargalo, contatos que se perdem)', () => {
+    const texto = visibleText(read('contato.html'));
+    for (const morto of [/contatos se perdem/i, /consome horas da equipe/i, /diagn[óo]stico é feito/i, /sistema do cliente/i]) {
+      expect(texto, `/contato ainda diz: ${morto}`).not.toMatch(morto);
+    }
+    // e o HTML e o Markdown contam a mesma coisa sobre onde e como se atende
+    expect(read('contato.md')).toContain('A medição do site roda na página inicial');
+    expect(texto).toContain('A medição do site roda na página inicial');
+  });
 });
 
 describe.skipIf(!built)('AGENT — JSON-LD e manifesto MCP', () => {
@@ -122,6 +181,24 @@ describe.skipIf(!built)('AGENT — JSON-LD e manifesto MCP', () => {
     const org = blocks.find((b) => b.founder);
     expect(org.founder.url).toMatch(/^https:\/\//);
     expect(org.founder.jobTitle).toBeTruthy();
+  });
+
+  it('FIX-12: o Person aponta /sobre, traz o cargo do consultor e não inventa perfis', () => {
+    const home = read('index.html');
+    const blocks = [...home.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map(
+      (m) => JSON.parse(m[1])
+    );
+    const pessoa = blocks.find((b) => b.founder)?.founder;
+    expect(pessoa['@type']).toBe('Person');
+    expect(pessoa.name).toBe(CONSULTANT.name);
+    expect(pessoa.jobTitle).toBe(CONSULTANT.role);
+    expect(pessoa.url).toMatch(/^https:\/\/[^/]+\/sobre$/);
+    // sameAs só existe se houver perfil declarado em constants/links.ts
+    if (SOCIAL_PROFILES.length === 0) {
+      expect(pessoa.sameAs, 'sameAs sem perfil verificado').toBeUndefined();
+    } else {
+      expect(pessoa.sameAs ?? blocks.find((b) => b.founder).sameAs).toEqual(SOCIAL_PROFILES);
+    }
   });
 
   it('AR-09: .well-known/mcp é JSON válido e aponta /api/mcp por Streamable HTTP', () => {
