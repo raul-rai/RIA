@@ -6,7 +6,8 @@ import AgenticReportCard from './AgenticReportCard';
 /**
  * O capitulo do laudo.
  *
- * Duas colunas, dois instrumentos, nenhuma nota somada. Cada uma resolve
+ * Duas colunas, dois instrumentos, nenhuma nota somada, e a tela diz isso em
+ * voz alta: nao existe nota geral. Cada uma resolve
  * sozinha: o Lighthouse costuma chegar antes do Is Agentic, e quem chegou
  * primeiro publica primeiro em vez de esperar o outro.
  *
@@ -45,10 +46,15 @@ export default function ReportSection() {
       {target && (
         <p className="text-center text-sm text-slate-700 mb-4">
           {phase === 'running' ? 'Medindo' : 'Laudo de'}{' '}
-          <strong className="text-slate-900">{target}</strong> — dois instrumentos
-          independentes, duas notas separadas.
+          <strong className="text-slate-900">{target}</strong>
         </p>
       )}
+      {/* Fora do `target &&` de proposito: toda vez que as duas colunas aparecem,
+          a negacao aparece junto. Dois "/100" lado a lado convidam a somar de cabeca. */}
+      <p className="text-center text-sm text-slate-700 mb-4">
+        Não existe nota geral: cada instrumento mede uma coisa diferente, e os dois
+        números não se somam nem se comparam.
+      </p>
       <div className="grid gap-4 md:gap-6 lg:grid-cols-2" aria-live="polite">
         <GoogleReportCard report={google} failure={googleFailure} />
         <AgenticReportCard report={agentic} failure={agenticFailure} progress={progress} />
