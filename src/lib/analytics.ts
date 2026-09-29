@@ -17,7 +17,7 @@ export type RiaEvent =
   | 'path_pick'
   /** O scanner do hero disparou as duas medicoes (Lighthouse e Is Agentic). */
   | 'scan_started'
-  /** As duas medicoes resolveram, com nota ou com falha nomeada. */
+  /** As duas medicoes resolveram, com nota ou com falha nomeada — e o evento carrega qual (ScanFinishedParams). */
   | 'scan_finished'
   | 'agent_message_sent'
   | 'agent_replied'
@@ -28,6 +28,22 @@ export type RiaEvent =
   | 'qualification_completed';
 
 type Params = Record<string, string | number | boolean | undefined>;
+
+/**
+ * O desfecho de um instrumento de medição: `ok` quando houve nota, ou o motivo
+ * nomeado da falha — os mesmos nomes que a tela imprime como "não medido".
+ * `rate-limited` é o teto do Is Agentic (10 varreduras por minuto por IP, e o IP
+ * que eles veem é o da nossa função de borda: o orçamento é do site inteiro);
+ * `quota` é o equivalente do PageSpeed.
+ */
+export type ScanOutcome = 'ok' | 'rate-limited' | 'unreachable' | 'invalid-url' | 'quota';
+
+/** `scan_finished` sempre diz como cada instrumento terminou. Sem isto, uma
+ *  campanha que estoura o teto do terceiro seria indistinguível de desinteresse. */
+export interface ScanFinishedParams {
+  google_outcome: ScanOutcome;
+  agentic_outcome: ScanOutcome;
+}
 
 declare global {
   interface Window {
@@ -68,7 +84,9 @@ function bootstrap() {
 }
 
 /** Registra um evento. Nunca lanca — analytics jamais derruba a pagina. */
-export function track(event: RiaEvent, params: Params = {}): void {
+export function track(event: 'scan_finished', params: ScanFinishedParams): void;
+export function track(event: Exclude<RiaEvent, 'scan_finished'>, params?: Params): void;
+export function track(event: RiaEvent, params: Params | ScanFinishedParams = {}): void {
   if (!analyticsEnabled) return;
   // LGPD: sem consentimento explícito, nada é carregado nem enviado. Esta
   // linha separa 'medição consentida' de 'tratamento sem base legal', e vem

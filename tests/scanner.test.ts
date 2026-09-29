@@ -129,3 +129,37 @@ describe('SCN: o scanner mede o site em duas notas independentes', () => {
     expect(indexCancel).toBeLessThan(indexSetNoWebsite);
   });
 });
+
+describe('SCN: scan_finished diz como cada instrumento terminou', () => {
+  const corpo = semComentarios(hook);
+  const analytics = semComentarios(readFileSync(root('src/lib/analytics.ts'), 'utf-8'));
+
+  it('SCN-13: o evento carrega o desfecho do Google e o do Is Agentic', () => {
+    expect(corpo).toMatch(
+      /track\('scan_finished', \{ google_outcome: googleOutcome, agentic_outcome: agenticOutcome \}\)/
+    );
+    // Sem parâmetro, uma campanha que estoura o teto do terceiro (10/min por IP,
+    // orçamento do site inteiro) seria indistinguível de desinteresse.
+    expect(corpo).not.toMatch(/track\('scan_finished'\s*\)/);
+  });
+
+  it('SCN-14: cada motivo de falha do Google e do Is Agentic é registrado com o seu nome', () => {
+    expect(corpo).toContain("googleOutcome = 'ok'");
+    expect(corpo).toContain("googleOutcome = 'quota'");
+    expect(corpo).toContain("googleOutcome = 'unreachable'");
+    expect(corpo).toContain("agenticOutcome = 'ok'");
+    // O motivo nomeado que a ponte mandou (rate-limited, unreachable, invalid-url).
+    expect(corpo).toContain('agenticOutcome = event.reason');
+    expect(corpo).toContain("agenticOutcome = 'unreachable'");
+  });
+
+  it('SCN-15: o tipo do evento obriga os dois desfechos, com os cinco nomes', () => {
+    expect(analytics).toMatch(/export function track\(event: 'scan_finished', params: ScanFinishedParams\): void;/);
+    expect(analytics).toMatch(/Exclude<RiaEvent, 'scan_finished'>/);
+    const tipo = analytics.slice(analytics.indexOf('export type ScanOutcome'), analytics.indexOf('export interface ScanFinishedParams'));
+    for (const nome of ['ok', 'rate-limited', 'unreachable', 'invalid-url', 'quota']) {
+      expect(tipo, `ScanOutcome sem '${nome}'`).toContain(`'${nome}'`);
+    }
+    expect(analytics).toMatch(/google_outcome: ScanOutcome;\s*agentic_outcome: ScanOutcome;/);
+  });
+});

@@ -4,7 +4,7 @@ import { useSiteScore } from '../context/SiteScoreContext';
 import { normalizeTarget, type AgenticFailure } from '../lib/agentic-report';
 import { parseLighthouse, pageSpeedUrl } from '../lib/lighthouse-report';
 import { scanAgentic } from '../lib/agentic-scan-client';
-import { track } from '../lib/analytics';
+import { track, type ScanOutcome } from '../lib/analytics';
 import { withDeadline } from '../lib/scan-deadline';
 
 /**
@@ -86,6 +86,10 @@ function useSiteScanState(): SiteScanState {
       setTarget(target);
       track('scan_started');
 
+      // O desfecho de cada instrumento, para o scan_finished. Ausência de
+      // medição tem nome (o mesmo que a tela imprime); 'ok' só quando houve nota.
+      let googleOutcome: ScanOutcome = 'unreachable';
+      let agenticOutcome: ScanOutcome = 'unreachable';
 
       const google = (async () => {
         // Prazo próprio: estourar o teto do PageSpeed não pode derrubar o
@@ -97,17 +101,21 @@ function useSiteScanState(): SiteScanState {
           });
           if (cancelled()) return;
           if (response.status === 429) {
+            googleOutcome = 'quota';
             setGoogleFailure('quota');
             return;
           }
           const report = response.ok ? parseLighthouse(await response.json()) : null;
           if (cancelled()) return;
           if (report) {
+            googleOutcome = 'ok';
             setGoogle(report);
           } else {
+            googleOutcome = 'unreachable';
             setGoogleFailure('unreachable');
           }
         } catch {
+          googleOutcome = 'unreachable';
           if (!cancelled()) setGoogleFailure('unreachable');
         } finally {
           psi.dispose();
@@ -132,10 +140,12 @@ function useSiteScanState(): SiteScanState {
                 setProgress(event.total ? Math.round((event.done / event.total) * 100) : 0);
               } else if (event.type === 'report') {
                 agenticAnswered = true;
+                agenticOutcome = 'ok';
                 setProgress(100);
                 setAgentic(event.report);
               } else {
                 agenticAnswered = true;
+                agenticOutcome = event.reason;
                 setAgenticFailure(event.reason);
               }
             },
@@ -146,6 +156,7 @@ function useSiteScanState(): SiteScanState {
         } finally {
           ag.dispose();
           if (!agenticAnswered && !cancelled()) {
+            agenticOutcome = 'unreachable';
             setAgenticFailure('unreachable');
           }
         }
@@ -154,7 +165,7 @@ function useSiteScanState(): SiteScanState {
       void Promise.allSettled([google, agentic]).then(() => {
         if (cancelled()) return;
         setPhase('done');
-        track('scan_finished');
+        track('scan_finished', { google_outcome: googleOutcome, agentic_outcome: agenticOutcome });
       });
     },
     [setGoogle, setAgentic, setTarget, setNoWebsite]
