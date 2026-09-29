@@ -455,6 +455,8 @@ function markdownContact() {
     '',
     `> ${metaFor('/contato').description}`,
     '',
+    `O jeito mais rápido de começar é uma conversa de ${SESSION_MINUTES} minutos, gratuita, por vídeo ou WhatsApp. É sobre o seu site e a sua operação — o que o laudo mostrou, o que falta para ser encontrado e citado por agentes de IA — e não uma apresentação comercial. Serve para saber se faz sentido seguir. Sem contrato de fidelidade: prazo e indicador de sucesso entram por escrito na proposta.`,
+    '',
     `Quem responde é ${CONSULTANT.name}, ${CONSULTANT.role.toLowerCase()} responsável pela RIA. O primeiro contato chega direto — sem central de atendimento nem robô intermediando.`,
     '',
     '## Canais',
@@ -678,12 +680,47 @@ Não é o encaixe certo para: operações fora do Brasil, ou quem procura apenas
 writeFileSync(resolve(distDir, 'llms.txt'), llms, 'utf-8');
 console.log('[prerender] llms.txt     -> ./dist/llms.txt');
 
-// ─── 404.html ────────────────────────────────────────────────────────────────
+// ─── 404.html + 404.md ───────────────────────────────────────────────────────
 // Um 404 REAL (a Vercel serve este arquivo com status 404 para qualquer caminho
 // sem correspondência, porque o vercel.json não reescreve mais tudo para o app
 // shell). O corpo é curto e legível — para o humano e para o agente que caiu
 // aqui — e aponta os mapas de recuperação: home, páginas de confiança, sitemap,
 // llms.txt e o contexto JSON. `noindex` porque um 404 não deve entrar em índice.
+//
+// O mesmo conteúdo sai também em Markdown (dist/404.md), declarado no <head> por
+// <link rel="alternate">: o apontamento agent-friendly-404 do Is Agentic pede um
+// corpo em Markdown que ajude o agente a se recuperar. HTML e Markdown saem das
+// MESMAS constantes abaixo — nunca uma segunda lista à mão, que divergiria no
+// primeiro link novo.
+const NOT_FOUND_TITLE = 'Esta página não existe (ou saiu do ar)';
+const NOT_FOUND_INTRO =
+  'O endereço que você abriu não corresponde a nenhuma página da RIA. Nada foi perdido — abaixo estão os caminhos para continuar.';
+const NOT_FOUND_LINKS = [
+  { href: '/', label: 'Página inicial', note: 'o que a RIA faz e como começa' },
+  { href: '/sobre', label: 'Sobre a RIA', note: 'quem conduz o trabalho' },
+  { href: '/contato', label: 'Contato', note: 'falar pelo WhatsApp' },
+  { href: '/privacidade', label: 'Política de Privacidade', note: null },
+  { href: '/sitemap.xml', label: 'Sitemap', note: 'todas as páginas indexáveis' },
+  { href: '/llms.txt', label: 'llms.txt', note: 'guia de uso para agentes de IA' },
+  { href: '/agent-context.json', label: 'agent-context.json', note: 'contexto estruturado (JSON)' },
+];
+
+const notFoundMarkdown =
+  [
+    `# 404 — ${NOT_FOUND_TITLE}`,
+    '',
+    `> ${NOT_FOUND_INTRO}`,
+    '',
+    '## Para onde ir',
+    '',
+    ...NOT_FOUND_LINKS.map(
+      (l) => `- ${mdLink(l.label, `${SITE_URL}${l.href === '/' ? '' : l.href}`)}${l.note ? ` — ${l.note}` : ''}`
+    ),
+    '',
+  ].join('\n');
+writeFileSync(resolve(distDir, '404.md'), notFoundMarkdown, 'utf-8');
+console.log('[prerender] 404.md       -> ./dist/404.md');
+
 const notFound = `<!doctype html>
 <html lang="pt-BR">
   <head>
@@ -692,6 +729,7 @@ const notFound = `<!doctype html>
     <meta name="robots" content="noindex, follow" />
     <title>404 — Página não encontrada | ${ORG_NAME}</title>
     <link rel="canonical" href="${SITE_URL}/" />
+    <link rel="alternate" type="text/markdown" href="/404.md" />
     <link rel="icon" href="/favicon.ico" sizes="48x48" />
     <style>
       :root { color-scheme: light; }
@@ -712,16 +750,10 @@ const notFound = `<!doctype html>
   <body>
     <main>
       <p class="tag">Erro 404</p>
-      <h1>Esta página não existe (ou saiu do ar)</h1>
-      <p>O endereço que você abriu não corresponde a nenhuma página da RIA. Nada foi perdido — abaixo estão os caminhos para continuar.</p>
+      <h1>${NOT_FOUND_TITLE}</h1>
+      <p>${NOT_FOUND_INTRO}</p>
       <ul>
-        <li><a href="/">Página inicial</a> — o que a RIA faz e como começa</li>
-        <li><a href="/sobre">Sobre a RIA</a> — quem conduz o trabalho</li>
-        <li><a href="/contato">Contato</a> — falar pelo WhatsApp</li>
-        <li><a href="/privacidade">Política de Privacidade</a></li>
-        <li><a href="/sitemap.xml">Sitemap</a> — todas as páginas indexáveis</li>
-        <li><a href="/llms.txt">llms.txt</a> — guia de uso para agentes de IA</li>
-        <li><a href="/agent-context.json">agent-context.json</a> — contexto estruturado (JSON)</li>
+${NOT_FOUND_LINKS.map((l) => `        <li><a href="${l.href}">${l.label}</a>${l.note ? ` — ${l.note}` : ''}</li>`).join('\n')}
       </ul>
     </main>
   </body>

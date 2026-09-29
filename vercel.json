@@ -18,6 +18,7 @@
     { "source": "/sobre.md", "headers": [{ "key": "Content-Type", "value": "text/markdown; charset=utf-8" }, { "key": "Vary", "value": "Accept, Accept-Encoding" }] },
     { "source": "/contato.md", "headers": [{ "key": "Content-Type", "value": "text/markdown; charset=utf-8" }, { "key": "Vary", "value": "Accept, Accept-Encoding" }] },
     { "source": "/privacidade.md", "headers": [{ "key": "Content-Type", "value": "text/markdown; charset=utf-8" }, { "key": "Vary", "value": "Accept, Accept-Encoding" }] },
+    { "source": "/404.md", "headers": [{ "key": "Content-Type", "value": "text/markdown; charset=utf-8" }] },
     { "source": "/.well-known/mcp", "headers": [{ "key": "Content-Type", "value": "application/json; charset=utf-8" }] }
   ]
 }
