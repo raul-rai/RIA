@@ -1,6 +1,6 @@
-import { m, useReducedMotion } from 'motion/react';
+import { m } from 'motion/react';
 import { useState, useEffect } from 'react';
-import { useVulnerability } from '../context/VulnerabilityContext';
+import { useSiteScore } from '../context/SiteScoreContext';
 
 const AI_HISTORY = [
   { year: '1950', text: 'ALAN_TURING' },
@@ -12,15 +12,27 @@ const AI_HISTORY = [
   { year: '2026', text: 'SUA_EMPRESA_OTIMIZADA?' },
 ];
 
-function toneOf(index: number, hasNoWebsite: boolean) {
-  if (hasNoWebsite || index > 60) return { text: 'text-red-600', bar: '#ef4444' };
-  if (index > 35) return { text: 'text-amber-600', bar: '#f59e0b' };
-  return { text: 'text-emerald-600', bar: '#10b981' };
+/**
+ * Uma escala de cor so, a mesma dos cartoes do laudo (cortes 50 e 80): o
+ * visitante nao pode ver vermelho no laudo e ambar no canto da tela.
+ */
+function toneOf(score: number | null) {
+  if (score === null) return { text: 'text-slate-500', bar: 'bg-slate-300' };
+  if (score < 50) return { text: 'text-red-700', bar: 'bg-red-500' };
+  if (score < 80) return { text: 'text-amber-700', bar: 'bg-amber-500' };
+  return { text: 'text-accent-dark', bar: 'bg-accent' };
+}
+
+interface Linha {
+  rotulo: string;
+  /** null = nao medido. Nunca 0: zero a tela leria como reprovacao. */
+  score: number | null;
+  /** O que aparece no lugar da nota quando ela nao existe. */
+  ausente: string;
 }
 
 export default function EliteHUD({ activeScene = 0 }: { activeScene?: number }) {
-  const { vulnerabilityIndex, assessed, hasNoWebsite } = useVulnerability();
-  const reduzMovimento = useReducedMotion();
+  const { google, agentic, hasNoWebsite, measured } = useSiteScore();
   const [logs, setLogs] = useState<{ year: string; text: string }[]>([]);
 
   useEffect(() => {
@@ -39,109 +51,100 @@ export default function EliteHUD({ activeScene = 0 }: { activeScene?: number }) 
     return () => clearTimeout(timeoutId);
   }, []);
 
-  // O indice ja resolve o caso "sem site" sozinho (101). Reescreve-lo para 100
-  // aqui era o que escondia do visitante o unico numero que devia assusta-lo.
-  const val = vulnerabilityIndex;
-  const tone = toneOf(val, hasNoWebsite);
-  const label = String(val);
+  // As duas notas medidas, cada uma com o seu instrumento e nenhuma conta entre
+  // elas. Sem site nao ha nota nenhuma: a linha unica diz isso em vez de
+  // mostrar duas ausencias.
+  const linhas: Linha[] = hasNoWebsite
+    ? [{ rotulo: 'Site', score: null, ausente: 'não existe' }]
+    : [
+        { rotulo: 'Google', score: google ? google.score : null, ausente: 'não medido' },
+        { rotulo: 'Agentes', score: agentic ? agentic.score : null, ausente: 'não medido' },
+      ];
 
   return (
     <div className="fixed inset-0 pointer-events-none z-[60] font-mono uppercase text-[9px] tracking-[0.2em] overflow-hidden">
-      {/* Indice — pilula compacta no mobile, cartao no desktop. Largura contida
-          para nao invadir a coluna de conteudo dos capitulos. */}
+      {/* As notas so aparecem depois de uma medicao ou declaracao. O HUD antigo
+          exibia um indice inicial de 100% antes de qualquer medicao — um numero
+          inventado no primeiro frame. Sem medicao, este bloco nao existe; a
+          linha do tempo abaixo e do hero e continua. */}
       {/* top/right com env(): no iPhone a pilula ficava sob a Dynamic Island em
           paisagem, e no Android sob o recorte da camera. max() mantem o respiro
           de 1rem em aparelho sem recorte. */}
-      <div
-        className={`glass-card absolute top-[max(1rem,env(safe-area-inset-top))] right-[max(1rem,env(safe-area-inset-right))] md:top-6 md:right-6 rounded-2xl ${
-          hasNoWebsite ? 'glass-red glass-selected' : ''
-        }`}
-      >
-        {/* Mobile: so o numero. Tambem no celular deitado — ali a largura passa
-            de 767px, mas sobram 390px de altura e o cartao grande comia um
-            terco da tela. O criterio ali e a altura, nao a largura. */}
-        <div className="flex md:hidden [@media(max-height:600px)]:flex items-center gap-2 px-3 py-2">
-          <span className="text-[8px] font-bold tracking-[0.14em] text-slate-500 leading-none">
-            {assessed || hasNoWebsite ? 'VULNERAB.' : 'RISCO'}
-          </span>
-          <span
-            className={`text-base font-serif italic font-black leading-none ${
-              assessed || hasNoWebsite ? tone.text : 'text-slate-400'
-            }`}
-          >
-            {assessed || hasNoWebsite ? `${label}%` : '—'}
-          </span>
-        </div>
-
-        {/* Desktop: numero + barras */}
-        <div className="hidden md:flex [@media(max-height:600px)]:hidden flex-col items-end gap-2 px-5 py-4 w-[178px]">
-          <span
-            className={`text-[9.5px] font-bold tracking-[0.2em] ${hasNoWebsite ? 'text-red-600' : 'text-slate-600'}`}
-          >
-            Vulnerability Index
-          </span>
-
-          {/*
-            A ÚNICA animação infinita da página, e por isso a única que precisa
-            de guarda explícita.
-
-            O `<MotionConfig reducedMotion="user">` do App já cobriria: `height`
-            está no conjunto de chaves posicionais do motion, então a transição
-            viraria `{type: false}` sob a preferência do usuário. Mas depender
-            disso seria depender de um detalhe INTERNO da biblioteca — o dia em
-            que `height` sair daquele conjunto, estas barras voltam a pulsar
-            para sempre e ninguém fica sabendo.
-
-            Aqui a decisão fica na superfície: com movimento reduzido as barras
-            são estáticas, na altura de repouso. Elas continuam desenhando o
-            perfil do índice pela COR, que é onde mora a informação — o
-            balanço sempre foi enfeite. É o critério 2.2.2 (Pausar, Parar,
-            Ocultar): conteúdo em movimento automático que dura mais de cinco
-            segundos precisa ter como parar, e "para sempre" é bem mais que
-            cinco segundos.
-          */}
-          <div className="flex items-end gap-1.5 h-6 w-full justify-end">
-            {[55, 65, 80, 65, 50, 60, 78, 50, 75, 65].map((base, i) => {
-              const threshold = Math.floor((val / 100) * 10);
-              const isCritical = i >= Math.max(2, 10 - threshold);
-              return (
-                <m.div
-                  key={i}
-                  animate={
-                    reduzMovimento
-                      ? undefined
-                      : { height: [`${base}%`, `${Math.min(100, base + 12)}%`, `${base}%`] }
-                  }
-                  transition={
-                    reduzMovimento
-                      ? undefined
-                      : { duration: 2.5, repeat: Infinity, repeatType: 'reverse', delay: i * 0.1, ease: 'easeInOut' }
-                  }
-                  // A altura precisa vir do style quando não há animação: sem
-                  // ela a barra nasce com 0 de altura e o gráfico some.
-                  style={{
-                    backgroundColor: isCritical ? tone.bar : '#cbd5e1',
-                    ...(reduzMovimento ? { height: `${base}%` } : null),
-                  }}
-                  className="w-1.5 rounded-full transition-colors duration-500"
-                />
-              );
-            })}
+      {measured && (
+        <div
+          role="group"
+          aria-label="Notas medidas do seu site"
+          className={`glass-card absolute top-[max(1rem,env(safe-area-inset-top))] right-[max(1rem,env(safe-area-inset-right))] md:top-6 md:right-6 rounded-2xl ${
+            hasNoWebsite ? 'glass-red glass-selected' : ''
+          }`}
+        >
+          {/* Mobile: so os numeros. Tambem no celular deitado — ali a largura
+              passa de 767px, mas sobram 390px de altura e o cartao grande comia
+              um terco da tela. O criterio ali e a altura, nao a largura. */}
+          <div className="flex md:hidden [@media(max-height:600px)]:flex items-center gap-3 px-3 py-2">
+            {linhas.map((l) => (
+              <span key={l.rotulo} className="flex items-center gap-1.5">
+                <span className="text-[8px] font-bold tracking-[0.14em] text-slate-600 leading-none">
+                  {l.rotulo}
+                </span>
+                <span
+                  className={`text-base font-serif italic font-black leading-none ${
+                    hasNoWebsite ? 'text-red-700' : toneOf(l.score).text
+                  }`}
+                >
+                  {l.score !== null ? l.score : l.ausente}
+                </span>
+              </span>
+            ))}
           </div>
 
-          <span className={`text-3xl font-serif italic font-black leading-none tracking-tight ${tone.text}`}>
-            {label}%
-          </span>
+          {/* Desktop: uma linha por nota, com a barra da propria nota. */}
+          <div className="hidden md:flex [@media(max-height:600px)]:hidden flex-col items-end gap-3 px-5 py-4 w-[178px]">
+            <span
+              className={`text-[9.5px] font-bold tracking-[0.2em] ${hasNoWebsite ? 'text-red-700' : 'text-slate-600'}`}
+            >
+              Notas medidas
+            </span>
 
-          <span className="text-[9px] font-mono text-slate-500 font-bold tracking-wider normal-case">
-            {hasNoWebsite
-              ? 'Invisibilidade digital'
-              : assessed
-                ? 'Atualiza conforme você responde'
-                : 'Responda para reduzir o risco'}
-          </span>
+            {/* Barras estaticas, e de proposito: as antigas balancavam para
+                sempre (a unica animacao infinita da pagina) desenhando um
+                perfil que nao existe mais. Estas mostram o valor de cada nota
+                e nao se mexem — nada aqui precisa de guarda de movimento
+                reduzido (tests/movimento.test.ts, MOV-07). */}
+            {linhas.map((l) => (
+              <div key={l.rotulo} className="flex w-full flex-col items-end gap-1">
+                <span className="text-[9px] font-bold tracking-[0.16em] text-slate-600">{l.rotulo}</span>
+                <span
+                  className={`text-2xl font-serif italic font-black leading-none tracking-tight ${
+                    hasNoWebsite ? 'text-red-700' : toneOf(l.score).text
+                  }`}
+                >
+                  {l.score !== null ? (
+                    <>
+                      {l.score}
+                      <span className="text-xs text-slate-500">/100</span>
+                    </>
+                  ) : (
+                    <span className="text-sm normal-case">{l.ausente}</span>
+                  )}
+                </span>
+                {l.score !== null && (
+                  <div className="h-1 w-full rounded-full bg-slate-900/10" aria-hidden="true">
+                    <div
+                      className={`h-full rounded-full ${toneOf(l.score).bar}`}
+                      style={{ width: `${l.score}%` }}
+                    />
+                  </div>
+                )}
+              </div>
+            ))}
+
+            <span className="text-[9px] font-mono text-slate-600 font-bold tracking-wider normal-case">
+              {hasNoWebsite ? 'Invisibilidade digital' : 'Duas notas, dois instrumentos'}
+            </span>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Timeline — so no hero, so no desktop */}
       <div

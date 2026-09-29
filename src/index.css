@@ -180,10 +180,10 @@
 
   /* Onde o anel nao cabe do lado de fora.
 
-     O botao de play cobre a imagem inteira (`absolute inset-0`) dentro de um
-     cartao com overflow:hidden. Um anel deslocado para fora seria recortado
-     pela quina do cartao e o usuario nao veria nada — entao ele cresce para
-     dentro. */
+     Um botao que e o proprio cartao — quinas de 1.5rem, vidro com ::before de
+     reflexo, vizinho de outro cartao na grade — tem o anel deslocado para fora
+     recortado ou coberto pelo irmao, e o usuario nao ve nada. Entao ele cresce
+     para dentro. Hoje quem usa e o cartao de PathsSection. */
   .focus-ring-inset:focus-visible {
     outline-offset: -3px;
   }
@@ -423,23 +423,6 @@
     --inset-edge: rgba(0, 112, 122, 0.28);
   }
 
-  /* Vidro escuro — o modal de video, unica superficie sobre fundo preto. */
-  .glass-dark {
-    --glass-tint: 15 23 42;
-    --glass-alpha: 0.55;
-    --glass-blur: 24px;
-    --glass-sat: 140%;
-    --glass-edge: rgba(255, 255, 255, 0.14);
-    --glass-edge-hover: rgba(255, 255, 255, 0.26);
-    --glass-specular: rgba(255, 255, 255, 0.18);
-    --glass-sheen: rgba(0, 229, 255, 0.14);
-    /* O halo de accent do modal era um shadow-[…] do Tailwind na marcacao.
-       Aqui ele entra pela mesma variavel de elevacao do resto do sistema, e
-       para de disputar a propriedade box-shadow com o vidro. */
-    --glass-lift: 0 0 80px rgba(0, 229, 255, 0.20),
-      0 40px 80px -30px rgba(0, 0, 0, 0.7);
-  }
-
   /* ── Superficies internas (sem backdrop-filter, por orcamento) ───────────
      Vivem dentro de um cartao que ja filtrou o fundo. Filtrar de novo custa
      uma releitura inteira do compositor e ainda embarra o resultado, porque o
@@ -622,10 +605,6 @@
     .premium-glass {
       --glass-alpha: 0.97;
     }
-
-    .glass-dark {
-      --glass-alpha: 0.92;
-    }
   }
 
   /* Quem pediu menos transparencia no sistema operacional pediu isso a serio:
@@ -640,10 +619,6 @@
       --glass-alpha: 0.98;
       --glass-blur: 0px;
       --glass-sat: 100%;
-    }
-
-    .glass-dark {
-      --glass-alpha: 0.95;
     }
 
     .glass-raised {
@@ -678,10 +653,6 @@
 
     .glass-panel {
       --glass-blur: 14px;
-    }
-
-    .glass-dark {
-      --glass-blur: 12px;
     }
   }
   
@@ -921,10 +892,11 @@
    * classe com `infinite` no corpo é uma armadilha armada esperando o dia em
    * que alguém a aplicar, e a guarda custa duas linhas.
    *
-   * Fica de fora, de propósito, o `animate-spin` do botão de varredura. Ele só
-   * existe enquanto a análise roda e é o único sinal na tela de que ela ainda
-   * está viva; parar aquele seria trocar um incômodo por uma tela que parece
-   * travada. É a exceção de conteúdo essencial do próprio critério 2.2.2.
+   * Fica de fora, de propósito, o `animate-spin` de um indicador de análise em
+   * andamento (hoje nenhum arquivo o usa; ver MOV-05). Ele só existiria enquanto
+   * a análise roda e seria o único sinal na tela de que ela ainda está viva;
+   * parar aquele seria trocar um incômodo por uma tela que parece travada. É a
+   * exceção de conteúdo essencial do próprio critério 2.2.2.
    *
    * ESTE BLOCO PRECISA FICAR DEPOIS DAS TRÊS DEFINIÇÕES, e é por isso que ele
    * está no fim do arquivo em vez de junto do bloco do hero, onde nasceu.
@@ -938,6 +910,49 @@
     .scanline,
     .glitch-text {
       animation: none;
+    }
+  }
+
+  /*
+   * Tilt 3D de ponteiro — profundidade na dobra de cases e bio.
+   *
+   * O elemento que inclina (.tilt-3d) recebe o ref do usePointerTilt e le as vars
+   * que o hook escreve. A perspectiva mora no PAI (.tilt-scene): perspectiva no
+   * proprio elemento transformado nao se aplica a ele mesmo. `preserve-3d` deixa
+   * os filhos com .tilt-depth flutuarem num plano a frente, criando parallax.
+   *
+   * Nada aqui e `infinite` — transicao de transform dirigida por evento.
+   * Sob reduced-motion o hook nem arma (as vars ficam em 0), mas o bloco de guarda
+   * abaixo zera qualquer transform e transicao de qualquer jeito, para o caso
+   * continuar correto se um dia o tilt for aplicado sem passar pelo hook.
+   */
+  .tilt-scene {
+    perspective: 900px;
+  }
+
+  .tilt-3d {
+    transform: rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg))
+      translateY(var(--tilt-lift, 0px));
+    transform-style: preserve-3d;
+    transition: transform 140ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 200ms ease;
+    will-change: transform;
+  }
+
+  /* So os cartoes sobem no hover; o painel de bio nao. */
+  .tilt-card:hover {
+    --tilt-lift: -8px;
+  }
+
+  /* A camada da frente no parallax — a foto do Raul. */
+  .tilt-depth {
+    transform: translateZ(var(--tilt-depth, 40px));
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .tilt-3d,
+    .tilt-depth {
+      transform: none;
+      transition: none;
     }
   }
 }

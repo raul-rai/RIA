@@ -102,20 +102,29 @@ describe('A11Y-04 — "reduzir movimento" alcança a página inteira, não só o
 
   it('MOV-05: animate-spin fica de fora, e isso é deliberado', () => {
     /**
-     * A exceção de conteúdo essencial do próprio 2.2.2. O spinner só existe
-     * enquanto a varredura roda e é o único sinal na tela de que ela continua
-     * viva. Parar aquele seria trocar um incômodo por uma tela que parece
-     * travada.
+     * A exceção de conteúdo essencial do próprio 2.2.2. Um spinner que só
+     * existe enquanto a varredura roda é o único sinal na tela de que ela
+     * continua viva; parar aquele seria trocar um incômodo por uma tela que
+     * parece travada.
      *
-     * O teste existe para que a exceção seja uma DECISÃO registrada, e não um
-     * esquecimento que o MOV-04 não pegou.
+     * O spinner do diagnóstico antigo saiu com ele (o laudo novo mostra uma
+     * barra de progresso finita, alimentada pelos eventos reais do scan). Hoje
+     * nenhum arquivo usa `animate-spin`, e o teste vale para o dia em que um
+     * voltar: ele NÃO leva `motion-reduce:`, e a razão está escrita no
+     * index.css. O teste existe para que a exceção seja uma DECISÃO registrada,
+     * e não um esquecimento que o MOV-04 não pegou.
      */
-    const diagnostico = ler('src/components/PotentialDiagnostic.tsx');
-    expect(diagnostico).toContain('animate-spin');
-    expect(diagnostico).not.toMatch(/animate-spin[^"]*motion-reduce:/);
+    const usam = arquivosTsx().filter((arquivo) => ler(arquivo).includes('animate-spin'));
+    for (const arquivo of usam) {
+      expect(ler(arquivo), `${arquivo}: o spinner voltou com motion-reduce:`).not.toMatch(
+        /animate-spin[^"]*motion-reduce:/
+      );
+    }
 
     // E a razão precisa estar escrita em algum lugar que alguém leia.
-    expect(ler('src/index.css')).toMatch(/animate-spin[\s\S]{0,400}?2\.2\.2/);
+    if (usam.length > 0) {
+      expect(ler('src/index.css')).toMatch(/animate-spin[\s\S]{0,400}?2\.2\.2/);
+    }
   });
 
   it('MOV-06: as animações infinitas do index.css são desligadas DE FATO', () => {
@@ -199,70 +208,28 @@ describe('A11Y-04 — "reduzir movimento" alcança a página inteira, não só o
     }
   });
 
-  it('MOV-07: as barras do HUD param, e param na altura de repouso', () => {
+  it('MOV-07: o HUD das notas não anima nada para sempre', () => {
     /**
-     * A única `repeat: Infinity` da base. O MotionConfig até cobriria — `height`
-     * está no conjunto de chaves posicionais do motion — mas isso é detalhe
-     * INTERNO da biblioteca. A guarda explícita é o que sobrevive a um upgrade.
+     * O HUD antigo tinha a única `repeat: Infinity` da base: dez barras
+     * balançando para sempre sobre um perfil do índice de vulnerabilidade, com
+     * uma guarda explícita de movimento reduzido. O índice saiu, e as barras
+     * novas mostram o valor de cada nota e ficam paradas — então não há mais o
+     * que guardar, e a garantia passou a ser a ausência.
      *
-     * E a altura precisa vir do style quando não há animação: sem ela a barra
-     * nasce com zero e o gráfico some.
+     * Se um movimento infinito voltar ao HUD, ele volta com a guarda: este
+     * teste falha primeiro e obriga a decidir.
      */
     const hud = ler('src/components/EliteHUD.tsx');
-    expect(hud).toContain('useReducedMotion');
-    expect(hud).toMatch(/reduzMovimento\s*\?\s*undefined\s*:\s*\{\s*height:/);
-    expect(hud).toMatch(/reduzMovimento\s*\?\s*\{\s*height:\s*`\$\{base\}%`\s*\}/);
-
-    // A `repeat: Infinity` não pode voltar a rodar solta.
-    const semGuarda = /animate=\{\{\s*height:[^}]*\}\}[\s\S]{0,200}repeat:\s*Infinity/;
-    expect(hud, 'a barra voltou a pulsar sem guarda').not.toMatch(semGuarda);
-  });
-});
-
-describe('A11Y-05 — o alvo do link de fonte chega aos 24px do critério 2.5.8', () => {
-  const secao = ler('src/components/MarketEvidenceSection.tsx');
-  const linkFonte = secao.match(/className="([^"]*underline-offset-2[^"]*)"/)?.[1] ?? '';
-
-  it('MOV-08: o link existe e é o do rodapé de fonte', () => {
-    expect(linkFonte, 'o link de fonte mudou de forma e o teste perdeu o alvo').toContain('text-[');
-  });
-
-  it('MOV-09: altura do alvo calculada a partir das classes, não confiada', () => {
-    /**
-     * A conta, e não a promessa: 11px de fonte com `leading-snug` (1.375) dão
-     * 15,1px de caixa de texto. Sozinho, o link media isso — abaixo dos 24px
-     * exigidos, e a isenção de "alvo em linha" não vale para um link autônomo
-     * no rodapé de um cartão.
-     *
-     * `py-1.5` acrescenta 6px de cada lado. 15,1 + 12 = 27,1px.
-     */
-    const fonte = Number(linkFonte.match(/text-\[(\d+)px\]/)?.[1]);
-    expect(fonte, 'tamanho de fonte não declarado em px — refazer a conta').toBeGreaterThan(0);
-
-    const leading = linkFonte.includes('leading-snug') ? 1.375 : 1.5;
-
-    const py = Number(linkFonte.match(/(?:^|\s)py-([\d.]+)(?:\s|$)/)?.[1] ?? 0);
-    const alturaAlvo = fonte * leading + py * 4 * 2;
-
-    expect(
-      alturaAlvo,
-      `alvo de ${alturaAlvo.toFixed(1)}px — o critério 2.5.8 (AA) pede 24`
-    ).toBeGreaterThanOrEqual(24);
-  });
-
-  it('MOV-10: o desenho não muda — a margem negativa devolve o espaço ao layout', () => {
-    /**
-     * Sem isso o padding empurraria o cartão inteiro. Cresce a área que responde
-     * ao toque, não a caixa. O que transborda para baixo cai sobre o texto do
-     * método, que não é clicável: nenhum alvo vizinho é atropelado.
-     */
-    const py = linkFonte.match(/(?:^|\s)py-([\d.]+)(?:\s|$)/)?.[1];
-    expect(linkFonte, 'padding sem margem negativa desloca o cartão').toContain(`-my-${py}`);
+    expect(hud, 'o HUD voltou a ter animação infinita').not.toMatch(/repeat:\s*Infinity|animate-(pulse|ping|bounce|spin)/);
+    // A barra de cada nota tem a largura da própria nota, direto do style — sem
+    // animação nenhuma que a leve de 0 até lá.
+    expect(hud).toMatch(/style=\{\{\s*width:\s*`\$\{l\.score\}%`\s*\}\}/);
   });
 });
 
 describe('CONF-02 — o bloco de Web Vitals diz de onde o número vem', () => {
-  const diagnostico = ler('src/components/PotentialDiagnostic.tsx');
+  // O bloco morava no diagnóstico antigo; hoje é a coluna do Google no laudo.
+  const diagnostico = ler('src/components/GoogleReportCard.tsx');
   const semComentarios = diagnostico
     .replace(/\/\*[\s\S]*?\*\//g, ' ')
     .replace(/\{\/\*[\s\S]*?\*\/\}/g, ' ')
@@ -307,46 +274,22 @@ describe('CONF-02 — o bloco de Web Vitals diz de onde o número vem', () => {
 });
 
 describe('DOC-01 — nenhum comentário afirma o contrário do código', () => {
-  const landing = ler('src/pages/LandingPage.tsx');
-  const convivem =
-    landing.includes('<MarketEvidenceSection />') && landing.includes('<SocialProofSection />');
-
-  it('MOV-14: as duas seções realmente convivem no capítulo 1', () => {
-    expect(convivem).toBe(true);
-  });
-
-  it('MOV-15: ninguém diz "substitui" enquanto as duas estão na página', () => {
+  it('MOV-15: content/evidence.ts não se descreve como parte de uma dobra que saiu', () => {
     /**
-     * Dois arquivos afirmavam ter substituído o SocialProofSection. A
-     * substituição foi PLANEJADA e não aconteceu: o bloco teve os problemas
-     * dele corrigidos no lugar e ficou. Um comentário que descreve o plano em
-     * vez do código é pior que comentário nenhum — ele é lido com a confiança
-     * de documentação.
+     * O arquivo dizia substituir o SocialProofSection, e depois dizia conviver
+     * com ele no capítulo 1. Nenhuma das duas coisas é verdade desde que a
+     * dobra "O que os dados dizem" foi removida: EVIDENCE hoje alimenta só o
+     * contexto do agente (scripts/build-agent-context.ts). Um comentário que
+     * descreve um desenho que não existe mais é lido com a confiança de
+     * documentação — por isso a guarda fica.
      */
-    if (!convivem) return;
-    for (const arquivo of ['src/content/evidence.ts', 'src/components/MarketEvidenceSection.tsx']) {
-      expect(ler(arquivo), `${arquivo} ainda se diz substituto`).not.toMatch(
-        /Substitui (SocialProofSection|o antigo bloco)/
-      );
-    }
-  });
-
-  it('MOV-16: o checkbox não se descreve como algo que mexe no índice', () => {
-    /**
-     * `AwarenessCheck` se apresentava como "a caixa que reduz o Índice de
-     * Vulnerabilidade" e dizia que marcar ali mudava o diagnóstico adiante. Era
-     * verdade até o eixo de conscientização ser removido inteiro — justamente
-     * porque o índice mede o que a empresa FAZ, nunca o que ela concorda.
-     */
-    const check = ler('src/components/AwarenessCheck.tsx');
-    expect(check).not.toMatch(/a caixa que reduz o [ÍI]ndice/);
-    expect(check).not.toMatch(/marcar aqui muda o diagnostico/i);
-    expect(check, 'precisa dizer explicitamente que NÃO pontua').toMatch(/N[ÃA]O mexe no [ÍI]ndice/);
-
-    // E a promessa tem que continuar verdadeira no código: nenhum caminho daqui
-    // até o contexto de vulnerabilidade.
-    expect(check).not.toContain('useVulnerability');
-    expect(ler('src/components/SocialProofSection.tsx')).not.toContain('useVulnerability');
+    const evidencia = ler('src/content/evidence.ts');
+    expect(evidencia, 'evidence.ts ainda se diz substituto').not.toMatch(
+      /Substitui (SocialProofSection|o antigo bloco)/
+    );
+    expect(evidencia, 'evidence.ts ainda se diz uma dobra da página').not.toMatch(
+      /MarketEvidenceSection/
+    );
   });
 });
 
@@ -373,11 +316,9 @@ describe('DOC-01 — nenhum comentário afirma o contrário do código', () => {
  * JavaScript o cartao esta la, legivel, 16px fora do lugar.
  */
 describe('D8 — nada de conteudo depende de JavaScript para ser visivel', () => {
-  const semOpacidadeNaEntrada = [
-    'src/components/MarketEvidenceSection.tsx',
-    'src/components/CredibilitySection.tsx',
-    'src/components/AuthorityCard.tsx',
-  ];
+  // AuthorityCard saiu com a parede de vídeos (ver a spec foco-em-sites-duas-notas).
+  // A regra vale para todo cartão de entrada que sobrou: hoje, este.
+  const semOpacidadeNaEntrada = ['src/components/CredibilitySection.tsx'];
 
   it('MOV-17: nenhuma entrada de cartao anima a opacidade a partir do zero', () => {
     for (const arquivo of semOpacidadeNaEntrada) {
@@ -453,14 +394,14 @@ describe.skipIf(!existsSync(resolve(raiz, 'dist/index.html')))(
 
     it('MOV-21: os dez cartoes de conteudo estao no HTML e nenhum deles esta invisivel', () => {
       // Se um cartao some do HTML, o teste acima passaria por omissao.
-      for (const marca of ['McKinsey', 'MIT Project NANDA', 'Cetic.br', 'Harvard Business Review']) {
+      for (const marca of ['Raul Vieira', 'Parcerias frutíferas']) {
         expect(home, `${marca} sumiu do HTML publicado`).toContain(marca);
       }
       // E o unico invisivel restante nao pode ser um deles.
       const contexto = home.match(/.{0,200}style="opacity:0[^"]*"/g) ?? [];
       for (const trecho of contexto) {
         expect(trecho, 'um cartao de conteudo voltou a ser publicado invisivel').not.toMatch(
-          /McKinsey|NANDA|Cetic|Harvard|glass-card/
+          /Raul Vieira|glass-card/
         );
       }
     });

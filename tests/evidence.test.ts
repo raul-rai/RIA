@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { EVIDENCE } from '../src/content/evidence';
+import { FAQ } from '../src/content/offer';
 
 /**
  * Substitui tests/authorities.test.ts.
@@ -52,5 +53,30 @@ describe('EVIDENCE — integridade da prova', () => {
     const texto = EVIDENCE.map((e) => `${e.claim} ${e.takeaway}`).join(' ').toLowerCase();
     expect(texto).toMatch(/usam ia|usa ia|adot/);
     expect(texto).toMatch(/retorno|ebit|p&l/);
+  });
+
+  it('EVID-06: todo percentual citado no FAQ existe em EVIDENCE', () => {
+    // O FAQ vai para o FAQPage JSON-LD e para o agente: é o conteúdo mais
+    // citável do site. Um número escrito à mão ali, sem estudo por trás, é a
+    // fabricação que este arquivo existe para impedir — e ninguém a veria, porque
+    // o FAQ é texto corrido, não um cartão com fonte impressa.
+    const PERCENTUAL = /(\d+(?:[.,]\d+)?)\s*%/g;
+    const rastreaveis = new Set(
+      EVIDENCE.flatMap((e) =>
+        [...`${e.value} ${e.claim} ${e.takeaway}`.matchAll(PERCENTUAL)].map((m) => m[1])
+      )
+    );
+    let citados = 0;
+    for (const item of FAQ) {
+      for (const m of item.answer.matchAll(PERCENTUAL)) {
+        citados += 1;
+        expect(
+          rastreaveis.has(m[1]),
+          `${m[1]}% no FAQ ("${item.question}") não está em content/evidence.ts`
+        ).toBe(true);
+      }
+    }
+    // Trava o próprio teste: se o FAQ deixar de citar número, ele passaria vazio.
+    expect(citados, 'o FAQ não cita percentual nenhum — o teste não mede nada').toBeGreaterThan(0);
   });
 });

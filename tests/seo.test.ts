@@ -2,7 +2,8 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync, existsSync } from 'fs';
 import { resolve } from 'path';
 import { ROUTE_META, metaFor } from '../src/content/meta';
-import { FRONTS } from '../src/content/fronts';
+import { PATHS } from '../src/content/paths';
+import { FAQ, OFFER_TERMS, PRICE } from '../src/content/offer';
 import { CONSULTANT } from '../src/content/consultant';
 import { SOCIAL_PROFILES } from '../src/constants/links';
 
@@ -29,8 +30,57 @@ function visibleText(html: string): string {
   return body
     .replace(/<script[\s\S]*?<\/script>/g, ' ')
     .replace(/<[^>]+>/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#x27;|&#39;/g, "'")
     .replace(/\s+/g, ' ')
     .trim();
+}
+
+/**
+ * O bloco "Condições e perguntas frequentes" no HTML publicado, do <section>
+ * ao </section>. Vazio se o bloco não existe — e é exatamente isso que os
+ * testes abaixo precisam enxergar como falha, não como pulo.
+ */
+function blocoDeCondicoes(html: string): string {
+  const start = html.indexOf('<section id="condicoes-e-perguntas"');
+  if (start < 0) return '';
+  const end = html.indexOf('</section>', start);
+  return end < 0 ? '' : html.slice(start, end + '</section>'.length);
+}
+
+/**
+ * Valores em dinheiro escritos num texto: `R$ 500`, `R$ 5.000/mês`, `US$ 30`,
+ * `500 reais`. Um número solto (`88%`, `15 minutos`) não é dinheiro — os
+ * percentuais têm o EVID-06, a duração tem o CONV-01.
+ */
+const DINHEIRO = /(?:R\$|US\$|€)\s*\d[\d.,]*|\d[\d.,]*\s*(?:mil\s+)?reais\b/gi;
+
+function valoresEmDinheiro(texto: string): string[] {
+  return [...texto.matchAll(DINHEIRO)].map((m) =>
+    m[0].replace(/\s+/g, ' ').replace(/[.,]+$/, '').trim()
+  );
+}
+
+/**
+ * Todo texto de dentro dos blocos JSON-LD, sem os nomes de chave. É o que um
+ * motor de busca lê como afirmação, e é onde um valor escondido numa resposta
+ * do FAQ mora — o teste antigo só olhava os nomes.
+ */
+function textoDoSchema(html: string): string {
+  const blocos = [...html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map(
+    (b) => JSON.parse(b[1])
+  );
+  const textos: string[] = [];
+  const colher = (no: unknown) => {
+    if (typeof no === 'string') textos.push(no);
+    else if (Array.isArray(no)) no.forEach(colher);
+    else if (no && typeof no === 'object') Object.values(no).forEach(colher);
+  };
+  colher(blocos);
+  return textos.join('\n');
 }
 
 describe.skipIf(!built)('GEO — a página é legível sem JavaScript', () => {
@@ -41,28 +91,62 @@ describe.skipIf(!built)('GEO — a página é legível sem JavaScript', () => {
 
   it('GEO-02: a proposta de valor está no HTML, não só no bundle', () => {
     const texto = visibleText(home);
-    // Antes este teste procurava "achar o gargalo", texto de um CTA do hero que
-    // desde então mudou. Ancorar num rótulo de botão é frágil: a copy do topo é
-    // a parte da página que mais gira. O nome do produto de entrada é o que a
-    // página precisa mesmo entregar ao crawler — e ele vem de content/offer.ts,
-    // não de uma string solta.
-    expect(texto).toContain('Diagnóstico de Gargalo');
+    // A proposta de valor mudou (set/2026): a página deixou de vender o
+    // Diagnóstico de Gargalo e passou a medir o site do visitante em duas notas
+    // independentes — a do Google e a de prontidão para agentes de IA. É isso
+    // que o crawler precisa ler sem executar JavaScript. Não ancoramos no
+    // título do hero, que é a copy que mais gira: as duas notas e os dois
+    // instrumentos são a substância da oferta.
+    expect(texto).toContain('duas notas');
+    expect(texto).toContain('Google');
+    expect(texto).toContain('agentes de IA');
   });
 
-  it('GEO-03: as três frentes estão no HTML', () => {
+  it('GEO-03: os dois caminhos estão no HTML', () => {
+    // Rótulo E promessa, do MESMO array que os cartões renderizam: o crawler
+    // sem JavaScript precisa ler o que o visitante lê — site novo ou
+    // otimização, e o que cada um entrega.
     const texto = visibleText(home);
-    for (const frente of ['Presença digital', 'Agente SDR', 'Automação de processos']) {
-      expect(texto).toContain(frente);
+    expect(PATHS.length).toBe(2);
+    for (const caminho of PATHS) {
+      expect(texto, `o caminho "${caminho.label}" sumiu do HTML`).toContain(caminho.label);
+      expect(texto, `a promessa de "${caminho.label}" sumiu do HTML`).toContain(caminho.promise);
     }
   });
 
   it('GEO-04: as fontes das evidências estão citadas e linkadas', () => {
-    // Dado com fonte é a tática GEO que faz um motor generativo citar a página.
+    /**
+     * Dado + fonte + ano é a tática GEO que faz um motor generativo citar a
+     * página. Este teste já mediu isso sobre a dobra "O que os dados dizem";
+     * a dobra saiu e levou as citações junto, e por uma versão o teste só
+     * garantia que número solto não aparecesse sem fonte. As citações voltaram
+     * — agora na faixa de fontes do rodapé (components/SiteFooter), que lê o
+     * MESMO content/evidence.ts — então a exigência volta ao que sempre foi: a
+     * fonte tem de estar NO HTML e LINKADA, não só nomeada.
+     */
+    const texto = visibleText(home);
     for (const fonte of ['McKinsey', 'MIT', 'Cetic.br', 'Harvard Business Review']) {
-      expect(home).toContain(fonte);
+      expect(texto, `a fonte "${fonte}" sumiu do HTML publicado`).toContain(fonte);
     }
-    expect(home).toContain('hbr.org');
-    expect(home).toContain('mckinsey.com');
+    // O que separa citação de menção é o link para o estudo. Os domínios são
+    // os que os próprios `url` de content/evidence.ts apontam — a pesquisa do
+    // Cetic.br é publicada em cgi.br, não em cetic.br.
+    for (const dominio of ['mckinsey.com', 'cgi.br', 'hbr.org']) {
+      expect(home, `o link para ${dominio} sumiu`).toContain(dominio);
+    }
+
+    // E o par número↔fonte não pode se soltar: número de terceiro sem a fonte
+    // ao lado vira alegação.
+    const citacoes: Array<[RegExp, RegExp]> = [
+      [/\b88\s*%/, /McKinsey/],
+      [/\b95\s*%/, /MIT|NANDA/],
+      [/\b17\s*%/, /Cetic\.br/],
+    ];
+    for (const [numero, fonte] of citacoes) {
+      if (numero.test(texto)) {
+        expect(texto, `${numero} está na página sem nomear a fonte (${fonte})`).toMatch(fonte);
+      }
+    }
   });
 
   it('GEO-05: o JSON-LD é válido e o FAQPage tem perguntas', () => {
@@ -79,17 +163,154 @@ describe.skipIf(!built)('GEO — a página é legível sem JavaScript', () => {
     }
   });
 
-  it('GEO-06: toda resposta do FAQPage também existe na página visível', () => {
+  it('GEO-06: a oferta que o schema declara está visível, e o schema não inventa preço', () => {
     // A regressão que este teste tranca: até ago/2026 o FAQPage do index.html
     // continha a oferta inteira (preço, garantia) que NÃO aparecia em lugar
     // nenhum da tela — o crawler sabia mais que o comprador.
-    const blocks = [...home.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)];
-    const faq = blocks.map((b) => JSON.parse(b[1])).find((p) => p['@type'] === 'FAQPage');
+    //
+    // Antes este teste checava um nome de produto ("Diagnóstico de Gargalo") e
+    // passava por acidente de copy. Agora a oferta declarada É a lista de
+    // Service do schema, e cada uma tem de estar na tela.
+    const blocks = [...home.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map(
+      (b) => JSON.parse(b[1])
+    );
     const texto = visibleText(home);
 
-    // A oferta declarada no schema tem de estar visível na página.
-    expect(texto).toContain('Diagnóstico de Gargalo');
-    expect(faq.mainEntity.some((q: any) => q.answer ?? q.acceptedAnswer)).toBe(true);
+    const services = blocks.filter((b) => b['@type'] === 'Service');
+    expect(services.length, 'o schema não declara nenhuma oferta').toBeGreaterThan(0);
+    for (const s of services) {
+      expect(texto, `a oferta "${s.name}" está no schema mas não na tela`).toContain(s.name);
+      expect(texto, `a promessa de "${s.name}" está no schema mas não na tela`).toContain(
+        s.description
+      );
+    }
+
+    // Preço em dado estruturado fica no cache do Google por semanas. Enquanto o
+    // valor for uma decisão em aberto (PRICE === null), nenhum bloco declara
+    // preço nem oferta comercial — nem como CHAVE do schema...
+    if (PRICE === null) {
+      expect(
+        JSON.stringify(blocks),
+        'o schema declara preço enquanto PRICE é null'
+      ).not.toMatch(/"(offers|price|priceCurrency|lowPrice|highPrice|priceSpecification)"/);
+    }
+
+    // ...nem escrito DENTRO DO TEXTO de uma resposta. Este era o buraco: a faixa
+    // "entre R$ 500 e R$ 5.000/mês" morava na resposta de "Quanto custa", que o
+    // teste de chaves não enxerga, e chegava ao schema sem estar em lugar
+    // nenhum da tela.
+    //
+    // Cada valor em dinheiro do schema tem de existir no HTML visível — e SEM
+    // clique. Uma faixa de valores atrás de um acordeão fechado é um valor que o
+    // comprador não vê, então o texto fora dos <details> é o que conta.
+    const doSchema = valoresEmDinheiro(textoDoSchema(home));
+    const semClique = visibleText(home.replace(/<details[\s\S]*?<\/details>/g, ' '));
+    for (const valor of new Set(doSchema)) {
+      expect(texto, `"${valor}" está no schema mas não na tela`).toContain(valor);
+      expect(
+        semClique,
+        `"${valor}" só aparece dentro de um <details> fechado — o comprador não o vê sem clicar`
+      ).toContain(valor);
+    }
+
+    // O FAQPage sai do MESMO array que a fonte (content/offer.ts).
+    const faq = blocks.find((b) => b['@type'] === 'FAQPage');
+    expect(faq.mainEntity.map((q: any) => q.name)).toEqual(FAQ.map((q) => q.question));
+    expect(faq.mainEntity.every((q: any) => q.acceptedAnswer?.text)).toBe(true);
+  });
+
+  it('GEO-06a: o varredor de valores lê o schema — nada se aprova por ele não ver', () => {
+    // O GEO-06 só vale se `valoresEmDinheiro(textoDoSchema(...))` de fato
+    // enxerga o dinheiro que a fonte escreve. Sem esta âncora, um regex que
+    // parasse de casar (ou um schema que passasse a serializar de outro jeito)
+    // deixaria a varredura vazia e o teste verde, para sempre.
+    //
+    // A primeira parte é a âncora que não depende de nenhum conteúdo: o varredor
+    // lê uma amostra fixa e tem de devolver exatamente o que se espera. Sem ela,
+    // a comparação de baixo seria circular — o mesmo varredor cego dos dois
+    // lados, os dois vazios, os dois iguais.
+    expect(
+      valoresEmDinheiro('entre R$ 500 e R$ 5.000/mês, US$ 30 ou 200 reais. Sem R$ nem 15 minutos.')
+    ).toEqual(['R$ 500', 'R$ 5.000', 'US$ 30', '200 reais']);
+
+    const daFonte = new Set(FAQ.flatMap((q) => valoresEmDinheiro(q.answer)));
+    const doSchema = new Set(valoresEmDinheiro(textoDoSchema(home)));
+    expect([...doSchema].sort()).toEqual([...daFonte].sort());
+  });
+
+  it('GEO-06b: o bloco de condições e o FAQ estão na tela, inteiros e à mostra', () => {
+    // Era um it.todo: o FAQ e as condições só existiam para o robô (JSON-LD,
+    // Markdown, contexto do agente), e um todo é verde para sempre. Agora
+    // components/OfferFaqSection.tsx desenha os dois, do MESMO array, e este
+    // teste tranca o que o comprador de fato lê.
+    const bloco = blocoDeCondicoes(home);
+    expect(bloco, 'o bloco condicoes-e-perguntas não existe no HTML publicado').not.toBe('');
+
+    // Dentro de <main>, e não só em algum canto do documento.
+    const main = home.slice(home.indexOf('<main'), home.indexOf('</main>'));
+    expect(main, 'o bloco está fora do <main>').toContain('id="condicoes-e-perguntas"');
+
+    // Nada de esconder: um bloco presente no HTML mas invisível cumpre a letra
+    // e trai a regra. Só o que o comprador vê conta como "na tela".
+    expect(bloco, 'o bloco está oculto por classe').not.toMatch(
+      /class="(?:[^"]*\s)?(?:hidden|sr-only|invisible|opacity-0)(?:\s|")/
+    );
+    expect(bloco, 'o bloco está oculto por estilo').not.toMatch(/display:\s*none|visibility:\s*hidden/);
+
+    const textoBloco = visibleText('<body>' + bloco);
+
+    // Toda pergunta e toda resposta do FAQPage, palavra por palavra.
+    const faq = [...home.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)]
+      .map((b) => JSON.parse(b[1]))
+      .find((b) => b['@type'] === 'FAQPage');
+    expect(faq.mainEntity.length).toBe(FAQ.length);
+    for (const q of faq.mainEntity) {
+      expect(textoBloco, `a pergunta "${q.name}" está no schema mas não na tela`).toContain(q.name);
+      expect(
+        textoBloco,
+        `a resposta de "${q.name}" está no schema mas não na tela`
+      ).toContain(q.acceptedAnswer.text);
+    }
+
+    // As condições da oferta: rótulo, resposta e detalhe.
+    for (const t of OFFER_TERMS) {
+      expect(textoBloco, `o termo "${t.label}" não está na tela`).toContain(t.label);
+      expect(textoBloco, `a resposta de "${t.label}" não está na tela`).toContain(t.value);
+      expect(textoBloco, `o detalhe de "${t.label}" não está na tela`).toContain(t.detail);
+    }
+
+    // As condições ficam sempre abertas: nenhuma delas dentro de <details>.
+    const semDetails = visibleText('<body>' + bloco.replace(/<details[\s\S]*?<\/details>/g, ' '));
+    for (const t of OFFER_TERMS) {
+      expect(semDetails, `o termo "${t.label}" ficou atrás de um clique`).toContain(t.detail);
+    }
+  });
+
+  it('GEO-06c: o bloco lê de content/offer.ts e entra depois do agente, fora dos capítulos', () => {
+    const src = (p: string) => readFileSync(resolve(process.cwd(), p), 'utf-8');
+    const componente = src('src/components/OfferFaqSection.tsx');
+    const semComentarios = componente.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+
+    // Uma fonte só, nunca uma segunda cópia à mão.
+    expect(semComentarios).toMatch(/from '\.\.\/content\/offer'/);
+    expect(semComentarios).toContain('OFFER_TERMS.map(');
+    expect(semComentarios).toContain('FAQ.map(');
+    expect(semComentarios, 'valor em reais escrito à mão no componente').not.toMatch(/R\$/);
+
+    // Fora de CHAPTERS: não vira dobra de conversão, não ganha índice no HUD e
+    // não desloca o capítulo do agente (o último, alvo de todo CTA).
+    const landing = src('src/pages/LandingPage.tsx');
+    const chapters = landing.slice(landing.indexOf('const CHAPTERS'), landing.indexOf('export default'));
+    expect(chapters).not.toContain('Condições');
+    expect(chapters).not.toContain('OfferFaqSection');
+
+    // E vem DEPOIS do mapa de capítulos, dentro do <main>.
+    const mapa = landing.indexOf('CHAPTERS.map(');
+    const bloco = landing.indexOf('<OfferFaqSection />');
+    const fimMain = landing.indexOf('</main>');
+    expect(mapa).toBeGreaterThan(0);
+    expect(bloco, 'OfferFaqSection não está montado na landing').toBeGreaterThan(mapa);
+    expect(bloco).toBeLessThan(fimMain);
   });
 });
 
@@ -155,8 +376,8 @@ describe.skipIf(!built)('SEO — metadados por rota', () => {
   it('SEO-06: robots.txt existe, aponta o sitemap e libera os crawlers de IA', () => {
     const robots = readFileSync(resolve(dist, 'robots.txt'), 'utf-8');
     expect(robots).toContain('Sitemap:');
-    // A Frente 1 vende ser citável por estes agentes. Bloqueá-los por descuido
-    // seria vender o oposto do que o site entrega.
+    // O trabalho da RIA é deixar o site do cliente citável por estes agentes.
+    // Bloqueá-los por descuido seria vender o oposto do que o site entrega.
     for (const bot of ['GPTBot', 'ClaudeBot', 'PerplexityBot', 'OAI-SearchBot']) {
       expect(robots).toContain(bot);
     }
@@ -187,10 +408,15 @@ describe.skipIf(!built)('SEO — metadados por rota', () => {
   it('SEO-07: sitemap.xml lista exatamente as rotas prerenderizadas', () => {
     const sitemap = readFileSync(resolve(dist, 'sitemap.xml'), 'utf-8');
     const locs = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
-    expect(locs.length).toBe(2);
+    // As páginas-âncora de confiança (/sobre e /contato) entraram no mesmo
+    // build que o prerender, o sitemap e o llms.txt — as listas saem todas da
+    // constante ROUTES, então listar uma página inexistente (ou omitir uma que
+    // existe) é impossível por construção.
+    expect(locs.some((l) => l.endsWith('/sobre'))).toBe(true);
+    expect(locs.some((l) => l.endsWith('/contato'))).toBe(true);
     expect(locs.some((l) => l.endsWith('/privacidade'))).toBe(true);
-    // Sitemap que lista página inexistente (ou omite uma que existe) é o erro
-    // clássico; aqui as duas listas saem da mesma constante ROUTES.
+    // A home entra sem barra final (a raiz), não como '/'.
+    expect(locs.some((l) => /raulvieira\.vercel\.app$/.test(l))).toBe(true);
     for (const loc of locs) expect(loc).toMatch(/^https:\/\//);
   });
 });
@@ -263,13 +489,13 @@ describe('SEO — o título sobrevive à hidratação', () => {
  * Para um motor generativo isso responde "existe um negócio" e "ele responde
  * estas perguntas". Não responde qual é o site, nem o que está à venda.
  *
- * As três frentes existiam só como texto solto no HTML — o motor tinha que
- * INFERIR que "Agente SDR 24/7" era um serviço. E o bloco do negócio não
- * declarava marca nem contato: sem `logo`, sem `image`, sem `telephone`.
+ * As ofertas existiam só como texto solto no HTML — o motor tinha que INFERIR
+ * que "Site novo" era um serviço. E o bloco do negócio não declarava marca nem
+ * contato: sem `logo`, sem `image`, sem `telephone`.
  *
- * A ironia é o motivo de isto ser um achado e não um capricho: a Frente 1 do
- * catálogo vende exatamente "site que o ChatGPT e o Perplexity conseguem ler e
- * CITAR". Ser lido, o prerender resolveu. Ser citado depende de declarar.
+ * A ironia é o motivo de isto ser um achado e não um capricho: a RIA vende
+ * exatamente "site que o ChatGPT e o Perplexity conseguem ler e CITAR". Ser
+ * lido, o prerender resolveu. Ser citado depende de declarar.
  */
 describe.skipIf(!built)('GEO-01 — schema.org completo', () => {
   const ld = (html: string) =>
@@ -281,11 +507,11 @@ describe.skipIf(!built)('GEO-01 — schema.org completo', () => {
   const tipo = (t: string) => blocos.filter((b) => b['@type'] === t);
   const org = () => tipo('ProfessionalService')[0];
 
-  it('GEO-07: a home declara negócio, site, uma oferta por frente e o FAQ', () => {
+  it('GEO-07: a home declara negócio, site, uma oferta por caminho e o FAQ', () => {
     expect(tipo('ProfessionalService')).toHaveLength(1);
     expect(tipo('WebSite')).toHaveLength(1);
     expect(tipo('FAQPage')).toHaveLength(1);
-    expect(tipo('Service').length, 'nenhuma frente virou Service').toBe(FRONTS.length);
+    expect(tipo('Service').length, 'nenhum caminho virou Service').toBe(PATHS.length);
   });
 
   it('GEO-08: marca e contato declarados, e os arquivos existem de verdade', () => {
@@ -329,22 +555,22 @@ describe.skipIf(!built)('GEO-01 — schema.org completo', () => {
   it('GEO-10: o que a Service promete é o que o cartão promete', () => {
     /**
      * O ponto do achado inteiro. As Services saem do MESMO array que os
-     * cartões renderizam — uma frente cortada do catálogo some do schema no
-     * mesmo build, em vez de continuar sendo oferecida a um motor de busca
-     * depois de deixar de ser oferecida ao visitante.
+     * cartões renderizam — um caminho cortado do catálogo some do schema no
+     * mesmo build, em vez de continuar sendo oferecido a um motor de busca
+     * depois de deixar de ser oferecido ao visitante.
      */
     const services = tipo('Service');
     const texto = visibleText(home);
 
-    for (const frente of FRONTS) {
-      const s = services.find((x) => x.name === frente.label);
-      expect(s, `nenhuma Service para "${frente.label}"`).toBeDefined();
-      expect(s.description).toBe(frente.promise);
-      expect(s.serviceType).toBe(frente.tag);
+    for (const caminho of PATHS) {
+      const s = services.find((x) => x.name === caminho.label);
+      expect(s, `nenhuma Service para "${caminho.label}"`).toBeDefined();
+      expect(s.description).toBe(caminho.promise);
+      expect(s.serviceType).toBe(caminho.tag);
 
       // E a promessa do schema tem que estar na tela, não só no schema.
-      expect(texto, `a promessa de "${frente.label}" não aparece na página`).toContain(
-        frente.promise
+      expect(texto, `a promessa de "${caminho.label}" não aparece na página`).toContain(
+        caminho.promise
       );
     }
   });

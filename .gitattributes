@@ -1,0 +1,17 @@
+# Fins de linha: o repositorio guarda LF e o checkout tambem entrega LF,
+# independente de core.autocrlf. Sem isto, com autocrlf=true, o `npm run build`
+# reescreve public/agent-context.json com LF (o gerador e deterministico e nao
+# emite CRLF) e a arvore fica suja depois de toda build, com conteudo identico.
+* text=auto eol=lf
+
+# Binarios: nunca convertidos.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.avif binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.pdf binary

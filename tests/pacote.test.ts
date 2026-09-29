@@ -110,24 +110,6 @@ describe('PERF-02 — a divisão em pacotes', () => {
       expect(cfg, `falta o grupo ${grupo}`).toContain(grupo);
     }
   });
-
-  it('PAC-05: o diálogo de vídeo é carregado sob demanda, e só ele', () => {
-    /**
-     * A montagem condicional é o que torna o `lazy` seguro no prerender. Se
-     * alguém remover o `{selected && ...}` e deixar o componente sempre
-     * montado, o `renderToString` suspende e o build cai — mas cairia num erro
-     * obscuro de React, longe daqui. Este teste explica antes.
-     */
-    const secao = ler('src/components/SocialProofSection.tsx');
-    expect(secao).toMatch(/const VideoModal = lazy\(\(\) => import\('\.\/VideoModal'\)\)/);
-    expect(secao).toMatch(/\{selected && \(/);
-    expect(secao).toContain('<Suspense fallback={null}>');
-
-    // E o import estático não pode ter sobrado: ele anularia o lazy em silêncio.
-    expect(secao, 'o import estático voltou e o lazy virou enfeite').not.toMatch(
-      /^import VideoModal from/m
-    );
-  });
 });
 
 describe.skipIf(!construido)('PERF-02 — medido sobre o que foi publicado', () => {
@@ -151,13 +133,18 @@ describe.skipIf(!construido)('PERF-02 — medido sobre o que foi publicado', () 
     }
   });
 
-  it('PAC-07: o VideoModal está FORA do caminho crítico', () => {
-    const modal = js.find((f) => f.startsWith('VideoModal-'));
-    expect(modal, 'o VideoModal voltou para dentro do pacote principal').toBeDefined();
-    expect(
-      home.includes(modal!),
-      'o HTML pré-carrega o VideoModal — ele deixou de ser sob demanda'
-    ).toBe(false);
+  it('PAC-07: o player de vídeo está FORA do caminho crítico', () => {
+    /**
+     * A página não tem mais vídeo nenhum (a parede de vídeos saiu — ver
+     * docs/superpowers/specs/2026-09-28-foco-em-sites-duas-notas-design.md).
+     * O caminho crítico é o HTML pré-renderizado, e nele não pode existir
+     * player algum: nem iframe do YouTube, nem a URL de embed. A checagem de
+     * fonte que garantia isso por dentro do componente (PAC-05) saiu com ele;
+     * esta, no nível do build, é a que continua valendo se um player voltar.
+     */
+    expect(home, 'o player do YouTube foi pré-renderizado no HTML inicial').not.toMatch(
+      /youtube(-nocookie)?\.com\/embed/
+    );
   });
 
   it('PAC-08: o primeiro carregamento encolheu, e continua encolhido', () => {

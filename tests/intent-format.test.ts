@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { formatList, uncoveredFronts, scoreBand } from '../src/lib/intent-format';
-import { FRONTS } from '../src/content/fronts';
+import { formatList, scoreBand, agenticBand } from '../src/lib/intent-format';
 
 describe('formatList: lista que cabe dentro de uma frase', () => {
   it('FMT-01: lista vazia vira string vazia', () => {
@@ -18,22 +17,6 @@ describe('formatList: lista que cabe dentro de uma frase', () => {
   it('FMT-04: tres ou mais usam virgula ate o ultimo, que entra com "e"', () => {
     expect(formatList(['A', 'B', 'C'])).toBe('A, B e C');
     expect(formatList(['A', 'B', 'C', 'D'])).toBe('A, B, C e D');
-  });
-});
-
-describe('uncoveredFronts: a pauta da sessao', () => {
-  it('FMT-05: sem nada marcado, sobram as tres na ordem do catalogo', () => {
-    const result = uncoveredFronts(FRONTS, [false, false, false]);
-    expect(result.map((f) => f.id)).toEqual([1, 2, 3]);
-  });
-
-  it('FMT-06: com tudo marcado, nao sobra nenhuma', () => {
-    expect(uncoveredFronts(FRONTS, [true, true, true])).toEqual([]);
-  });
-
-  it('FMT-07: devolve exatamente as nao marcadas, preservando a ordem', () => {
-    const result = uncoveredFronts(FRONTS, [true, false, true]);
-    expect(result.map((f) => f.id)).toEqual([2]);
   });
 });
 
@@ -56,6 +39,18 @@ describe('scoreBand: a leitura da nota do site', () => {
   it('FMT-10: a copy de cada faixa e a aprovada, nao so tres textos distintos', () => {
     expect(scoreBand(30)).toBe('Essa nota quer dizer que o site trava antes de convencer alguém');
     expect(scoreBand(63)).toBe('Essa nota quer dizer que o site funciona, mas não compete');
-    expect(scoreBand(90)).toBe('Essa nota é boa — o site sustenta, e o gargalo está em outra frente');
+    expect(scoreBand(90)).toBe('Essa nota é boa — o site sustenta, e o ajuste é fino');
+  });
+});
+
+describe('agenticBand: a leitura da nota agêntica', () => {
+  it('IF-10: fala de agentes, nunca de Google', () => {
+    for (const nota of [10, 60, 95]) {
+      expect(agenticBand(nota).toLowerCase()).not.toContain('google');
+    }
+  });
+
+  it('IF-11: as três faixas são distintas', () => {
+    expect(new Set([agenticBand(10), agenticBand(60), agenticBand(95)]).size).toBe(3);
   });
 });

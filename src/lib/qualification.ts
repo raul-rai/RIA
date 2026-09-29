@@ -1,6 +1,4 @@
-import type { FrontId } from '../content/fronts';
-import { FRONTS } from '../content/fronts';
-import { missingFronts } from './fronts';
+import type { PathId } from '../content/paths';
 
 /**
  * Qualificacao previa da sessao estrategica.
@@ -72,7 +70,7 @@ export const QUALIFICATION_STEPS: QualificationStep[] = [
   },
   {
     field: 'email',
-    prompt: 'Para onde eu mando a confirmação e o mapa dos gargalos?',
+    prompt: 'Para onde eu mando a confirmação e o resumo do que conversamos?',
     placeholder: 'seu@email.com.br',
   },
   {
@@ -132,26 +130,29 @@ export function isComplete(partial: Partial<Qualification>): partial is Qualific
 export interface QualificationPayloadInput {
   sessionId: string;
   qualification: Qualification;
-  vulnerabilityIndex: number | null;
   hasNoWebsite: boolean;
-  websiteScore: number | null;
-  frontsChecked: boolean[];
+  googleScore: number | null;
+  agenticScore: number | null;
+  path: PathId | null;
 }
 
 export interface QualificationPayload {
   action: 'qualification';
   sessionId: string;
   qualification: Qualification;
+  /**
+   * MUDANÇA DE CONTRATO (set/2026). Saíram `vulnerabilityIndex`, `frontsCovered`
+   * e `frontsMissing`: o índice era sintético e as frentes deixaram de existir.
+   * Entraram as DUAS notas medidas e o caminho escolhido. O workflow do n8n lê
+   * estes campos — ver docs/n8n-contrato-agente.md.
+   */
   context: {
-    vulnerabilityIndex: number | null;
     hasNoWebsite: boolean;
-    websiteScore: number | null;
-    frontsCovered: number;
-    frontsMissing: FrontId[];
+    googleScore: number | null;
+    agenticScore: number | null;
+    path: PathId | null;
   };
 }
-
-const FRONT_IDS: FrontId[] = FRONTS.map((front) => front.id);
 
 export function buildQualificationPayload(
   input: QualificationPayloadInput
@@ -164,11 +165,10 @@ export function buildQualificationPayload(
       phone: onlyDigits(input.qualification.phone),
     },
     context: {
-      vulnerabilityIndex: input.vulnerabilityIndex,
       hasNoWebsite: input.hasNoWebsite,
-      websiteScore: input.websiteScore,
-      frontsCovered: input.frontsChecked.filter(Boolean).length,
-      frontsMissing: missingFronts(input.frontsChecked, FRONT_IDS),
+      googleScore: input.googleScore,
+      agenticScore: input.agenticScore,
+      path: input.path,
     },
   };
 }

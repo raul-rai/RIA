@@ -1,24 +1,17 @@
 import { describe, it, expect } from 'vitest';
-import { readFileSync } from 'fs';
+import { readFileSync, readdirSync } from 'fs';
 import { resolve } from 'path';
 import { INTENTS, readCampaignRef, REF_LABEL, GREETING, NO_WEBSITE_GREETING } from '../src/content/intents';
 import type { IntentContext, IntentId } from '../src/content/intents';
-import { FRONTS } from '../src/content/fronts';
+import { PATHS } from '../src/content/paths';
 
-const IDS: IntentId[] = [
-  'hero-cold',
-  'diagnostic-result',
-  'diagnostic-no-website',
-  'front-pick',
-  'fronts-agenda',
-  'credibility',
-];
+const IDS: IntentId[] = ['report-result', 'sem-site', 'path-pick', 'credibility'];
 
 const base: IntentContext = {
   ref: null,
-  websiteScore: null,
+  googleScore: null,
+  agenticScore: null,
   hasNoWebsite: false,
-  frontsChecked: [false, false, false, false, false],
 };
 
 /** Todos os estados de borda que o site consegue produzir. */
@@ -27,19 +20,27 @@ const CONTEXTS: IntentContext[] = [
   { ...base, ref: 'industria' },
   { ...base, ref: 'servicos' },
   { ...base, ref: 'varejo' },
-  { ...base, websiteScore: 0 },
-  { ...base, websiteScore: 49 },
-  { ...base, websiteScore: 63 },
-  { ...base, websiteScore: 100 },
+  // Cada nota sozinha, e as duas, nas quatro faixas. 0 e 100 sao medicoes
+  // validas — nao ausencias.
+  { ...base, googleScore: 0 },
+  { ...base, googleScore: 49 },
+  { ...base, googleScore: 63 },
+  { ...base, googleScore: 100 },
+  { ...base, agenticScore: 0 },
+  { ...base, agenticScore: 49 },
+  { ...base, agenticScore: 63 },
+  { ...base, agenticScore: 100 },
+  { ...base, googleScore: 42, agenticScore: 66 },
+  { ...base, googleScore: 95, agenticScore: 10 },
   { ...base, hasNoWebsite: true },
-  { ...base, frontsChecked: [true, false, false, false, false] },
-  { ...base, frontsChecked: [true, true, true, true, false] },
-  { ...base, frontsChecked: [true, true, true, true, true] },
-  ...FRONTS.map((front) => ({ ...base, front })),
+  ...PATHS.map((path) => ({ ...base, path })),
+  ...PATHS.map((path) => ({ ...base, googleScore: 63, agenticScore: 41, path })),
 ];
 
-describe('INTENTS: as seis intencoes cobrem todos os estados', () => {
-  it('INT-01: existem exatamente as seis intencoes do spec', () => {
+const lerTexto = (p: string) => readFileSync(resolve(process.cwd(), p), 'utf-8');
+
+describe('INTENTS: as quatro intencoes cobrem todos os estados', () => {
+  it('INT-01: existem exatamente as quatro intencoes', () => {
     expect(Object.keys(INTENTS).sort()).toEqual([...IDS].sort());
   });
 
@@ -68,157 +69,197 @@ describe('INTENTS: as seis intencoes cobrem todos os estados', () => {
       }
     }
   });
-});
 
-describe('hero-cold: o lead frio, com ou sem campanha', () => {
-  it('INT-05: sem ref, a frase nao menciona segmento', () => {
-    expect(INTENTS['hero-cold'].userMessage(base)).toBe(
-      'Quero parar de rasgar dinheiro. Por onde eu começo?'
-    );
+  it('INT-26: a fala do lead nunca tem aspas duplas', () => {
+    // A fala se apresenta como algo que a pessoa digitou. Aspas duplas viram
+    // citacao — e o lead nao cita o proprio botao.
+    for (const id of IDS) {
+      for (const ctx of CONTEXTS) {
+        expect(INTENTS[id].userMessage(ctx)).not.toContain('"');
+      }
+    }
   });
 
-  it('INT-06: com ref, o segmento abre a frase', () => {
-    expect(INTENTS['hero-cold'].userMessage({ ...base, ref: 'industria' })).toBe(
-      'Tenho uma indústria e quero parar de rasgar dinheiro. Por onde eu começo?'
-    );
+  it('INT-27: o agente nunca abre repetindo a saudacao do balao 1', () => {
+    for (const id of IDS) {
+      for (const ctx of CONTEXTS) {
+        const resposta = INTENTS[id].agentReply(ctx);
+        expect(resposta).not.toMatch(/^Olá/);
+        expect(resposta).not.toContain('Sou o Agente de Inteligência');
+        expect(resposta).not.toBe(GREETING);
+        expect(resposta).not.toBe(NO_WEBSITE_GREETING);
+      }
+    }
   });
 
-  /**
-   * A trava que faltava.
-   *
-   * INT-05 e INT-06 afirmam a string, mas nada as amarrava ao BOTAO. O rotulo
-   * do hero virou "Pare de rasgar dinheiro" e esta intencao ficou meses dizendo
-   * "quero achar o meu gargalo" — o lead abria a conversa afirmando algo que
-   * nunca leu na tela, e os dois testes continuaram verdes porque concordavam
-   * um com o outro. Aqui a fonte da verdade e o componente.
-   */
-  it('INT-25: a fala do lead ecoa o rotulo real do CTA do hero', () => {
-    const landing = readFileSync(
-      resolve(process.cwd(), 'src/pages/LandingPage.tsx'),
-      'utf-8'
-    );
-    const rotulo = landing.match(/<span>([^<]*rasgar[^<]*)<\/span>/i)?.[1];
-    expect(rotulo, 'CTA do hero nao encontrado em LandingPage.tsx').toBeTruthy();
-
-    // "Pare de rasgar dinheiro" -> o nucleo "rasgar dinheiro" precisa aparecer
-    // na fala. Comparar a frase inteira seria rigido demais: o botao e
-    // imperativo, a fala e em primeira pessoa.
-    const nucleo = rotulo!.toLowerCase().replace(/^pare de\s+/, '').trim();
-    expect(INTENTS['hero-cold'].userMessage(base).toLowerCase()).toContain(nucleo);
-  });
-
-  it('INT-24: a resposta para de ecoar a saudacao do balao 1', () => {
-    expect(INTENTS['hero-cold'].agentReply(base)).toBe(
-      'Começa por saber onde está o vazamento. Na maioria das operações ele está em três lugares: lead que não é respondido, rotina que consome hora de gente cara, e decisão tomada no achismo. Me diz o que sua empresa faz — eu volto com qual dos três está te custando mais.'
-    );
-  });
-});
-
-describe('diagnostic-result: a nota entra na fala', () => {
-  it('INT-07: com nota, o numero aparece na fala do lead', () => {
-    expect(INTENTS['diagnostic-result'].userMessage({ ...base, websiteScore: 63 })).toBe(
-      'Meu site tirou 63/100 no diagnóstico. Quero entender o que isso me custa.'
-    );
-  });
-
-  it('INT-08: sem nota, degrada para a variante sem numero', () => {
-    const texto = INTENTS['diagnostic-result'].userMessage(base);
-    expect(texto).not.toMatch(/\d/);
-    expect(texto).toContain('diagnóstico');
-  });
-
-  it('INT-09: a resposta muda de faixa junto com a nota', () => {
-    const r = (score: number) => INTENTS['diagnostic-result'].agentReply({ ...base, websiteScore: score });
-    expect(r(30)).not.toBe(r(63));
-    expect(r(63)).not.toBe(r(90));
-  });
-
-  it('INT-22: nota abaixo de 80, a cauda fala do custo que passa longe', () => {
-    expect(INTENTS['diagnostic-result'].agentReply({ ...base, websiteScore: 63 })).toBe(
-      'Essa nota quer dizer que o site funciona, mas não compete. A nota é sintoma — o custo está nas buscas e nas citações de IA que passam longe de você. Me diz o que sua empresa vende e pra quem.'
-    );
-  });
-
-  it('INT-23: nota 80 ou mais, a cauda para de contradizer a nota boa', () => {
-    expect(INTENTS['diagnostic-result'].agentReply({ ...base, websiteScore: 95 })).toBe(
-      'Essa nota é boa — o site sustenta, e o gargalo está em outra frente. Então o gargalo não está na vitrine: está no que acontece depois que o lead chega. Me diz o que sua empresa vende e pra quem.'
-    );
-  });
-});
-
-describe('front-pick: uma frente escolhida no cartao', () => {
-  it('INT-10: cada frente injeta o proprio numero, label e sondagem', () => {
-    for (const front of FRONTS) {
-      const ctx = { ...base, front };
-      expect(INTENTS['front-pick'].userMessage(ctx)).toBe(
-        `Quero falar sobre a frente ${front.id}: ${front.label}.`
-      );
-      const resposta = INTENTS['front-pick'].agentReply(ctx);
-      expect(resposta).toContain(front.promise);
-      expect(resposta).toContain(front.probe);
+  it('INT-28: nenhuma intencao promete o que a pagina deixou de vender', () => {
+    // O "diagnostico de gargalo", as tres frentes e o indice de vulnerabilidade
+    // sairam da pagina; uma fala do agente que os prometa apresenta ao lead uma
+    // oferta que ele nao leu em lugar nenhum.
+    for (const id of IDS) {
+      for (const ctx of CONTEXTS) {
+        for (const texto of [INTENTS[id].userMessage(ctx), INTENTS[id].agentReply(ctx)]) {
+          expect(texto).not.toMatch(/gargalo|frente|vulnerab|índice|indice/i);
+        }
+      }
     }
   });
 });
 
-describe('fronts-agenda: a pauta muda com o que foi marcado', () => {
-  it('INT-11: zero marcadas tem frase propria, sem contagem', () => {
-    expect(INTENTS['fronts-agenda'].userMessage(base)).toBe(
-      'Não cubro nenhuma das três frentes. Quero montar minha pauta.'
-    );
+/** Todo .ts/.tsx sob src/, exceto o arquivo das próprias intenções. */
+function fontesDaInterface(dir = 'src'): string[] {
+  const raiz = resolve(process.cwd(), dir);
+  return readdirSync(raiz, { withFileTypes: true }).flatMap((e) => {
+    const rel = `${dir}/${e.name}`;
+    if (e.isDirectory()) return fontesDaInterface(rel);
+    return /\.tsx?$/.test(e.name) && rel !== 'src/content/intents.ts' ? [rel] : [];
   });
+}
 
-  it('INT-12: parcial lista as faltantes com "e" antes da ultima', () => {
-    const texto = INTENTS['fronts-agenda'].userMessage({
-      ...base,
-      frontsChecked: [true, false, false],
-    });
-    expect(texto).toBe(
-      'Marquei 1 de 3. Faltam Agente SDR e Automação. Quero montar minha pauta.'
-    );
-  });
-
-  it('INT-20: resta uma frente, o verbo concorda no singular ("Falta")', () => {
-    const texto = INTENTS['fronts-agenda'].userMessage({
-      ...base,
-      frontsChecked: [true, true, false],
-    });
-    expect(texto).toBe('Marquei 2 de 3. Falta Automação. Quero montar minha pauta.');
-  });
-
-  it('INT-21: restam duas frentes, o verbo concorda no plural ("Faltam")', () => {
-    const texto = INTENTS['fronts-agenda'].userMessage({
-      ...base,
-      frontsChecked: [true, false, false],
-    });
-    expect(texto).toBe(
-      'Marquei 1 de 3. Faltam Agente SDR e Automação. Quero montar minha pauta.'
-    );
-  });
-
-  it('INT-13: tres marcadas viram conversa de otimizacao, nao de pauta', () => {
-    const ctx = { ...base, frontsChecked: [true, true, true] };
-    expect(INTENTS['fronts-agenda'].userMessage(ctx)).toBe(
-      'Marquei as três frentes. Quero saber o que ainda dá pra melhorar.'
-    );
-    expect(INTENTS['fronts-agenda'].agentReply(ctx)).not.toContain('Pauta anotada');
-  });
-
-  it('INT-14: a resposta abre pela primeira frente descoberta', () => {
-    const resposta = INTENTS['fronts-agenda'].agentReply({
-      ...base,
-      frontsChecked: [true, false, false],
-    });
-    expect(resposta).toContain(FRONTS[1].label);
+describe('INTENTS: nenhuma intencao vive sem gatilho', () => {
+  it('INT-38: toda intencao declarada e pedida por algum componente', () => {
+    // A hero-cold ficou publicada sem botao que a chamasse, e a report-result
+    // idem: o hero e o laudo perderam seus CTAs na troca de posicionamento e
+    // ninguem notou, porque cada arquivo, sozinho, estava correto. Aqui a fonte
+    // da verdade e a interface: sem requestIntent('id') a intencao e codigo
+    // morto — apague-a ou ligue-a a um botao.
+    const interface_ = fontesDaInterface()
+      .map((f) => lerTexto(f))
+      .join('\n')
+      // Comentario que cite requestIntent('id') nao e gatilho.
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/^\s*\/\/.*$/gm, '');
+    for (const id of Object.keys(INTENTS)) {
+      expect(interface_, `intencao "${id}" sem gatilho na interface`).toContain(
+        `requestIntent('${id}'`
+      );
+    }
   });
 });
 
-describe('diagnostic-no-website: quem nao tem onde ser encontrado', () => {
+describe('report-result: as duas notas entram na fala, cada uma na sua voz', () => {
+  const fala = (ctx: Partial<IntentContext>) => INTENTS['report-result'].userMessage({ ...base, ...ctx });
+  const resposta = (ctx: Partial<IntentContext>) => INTENTS['report-result'].agentReply({ ...base, ...ctx });
+
+  it('INT-07: com as duas notas, os dois numeros aparecem na fala do lead', () => {
+    expect(fala({ googleScore: 63, agenticScore: 41 })).toBe(
+      'Meu site tirou 63/100 no Google e 41/100 em prontidão para agentes. Quero entender o que isso me custa.'
+    );
+  });
+
+  it('INT-08: sem nota nenhuma, a fala degrada para a variante sem numero', () => {
+    const texto = fala({});
+    expect(texto).not.toMatch(/\d/);
+    expect(texto).toContain('Medi meu site');
+  });
+
+  it('INT-09: a resposta muda de faixa junto com cada nota', () => {
+    const g = (score: number) => resposta({ googleScore: score });
+    expect(g(30)).not.toBe(g(63));
+    expect(g(63)).not.toBe(g(90));
+    const a = (score: number) => resposta({ agenticScore: score });
+    expect(a(30)).not.toBe(a(63));
+    expect(a(63)).not.toBe(a(90));
+  });
+
+  it('INT-22: com as duas notas, o agente comenta as duas, cada uma no seu instrumento', () => {
+    expect(resposta({ googleScore: 63, agenticScore: 41 })).toBe(
+      '63/100 no Google. Essa nota quer dizer que o site funciona, mas não compete. 41/100 em prontidão para agentes: os agentes de IA não conseguem ler nem citar o seu site. Me diz o que sua empresa vende e para quem — eu volto com o que consertar primeiro e o que isso muda em quem chega até você.'
+    );
+  });
+
+  it('INT-23: nota alta nao e tratada como problema, e a outra nota nao contamina a leitura', () => {
+    const texto = resposta({ googleScore: 95, agenticScore: 10 });
+    expect(texto).toContain('95/100 no Google. Essa nota é boa');
+    expect(texto).toContain('10/100 em prontidão para agentes: os agentes de IA não conseguem ler');
+  });
+
+  it('INT-29: uma nota sozinha diz que a outra nao foi medida, em vez de calar', () => {
+    const soGoogle = resposta({ googleScore: 63 });
+    expect(soGoogle).toContain('63/100 no Google');
+    expect(soGoogle).toContain('A nota de prontidão para agentes não foi medida.');
+    expect(soGoogle).not.toMatch(/\/100 em prontidão/);
+
+    const soAgentes = resposta({ agenticScore: 41 });
+    expect(soAgentes).toContain('41/100 em prontidão para agentes');
+    expect(soAgentes).toContain('A nota do Google não foi medida.');
+    expect(soAgentes).not.toMatch(/\/100 no Google/);
+  });
+
+  it('INT-30: zero medido e nota, nao ausencia', () => {
+    // Um site que tirou 0 existe e foi medido. Tratar 0 como "sem nota"
+    // (falsy) apagaria justamente o pior resultado possivel.
+    expect(fala({ googleScore: 0 })).toContain('0/100 no Google');
+    expect(resposta({ googleScore: 0 })).toContain('0/100 no Google');
+    expect(resposta({ googleScore: 0 })).not.toContain('A nota do Google não foi medida');
+    expect(fala({ agenticScore: 0 })).toContain('0/100 em prontidão para agentes');
+    expect(resposta({ agenticScore: 0 })).toContain('0/100 em prontidão para agentes');
+  });
+
+  it('INT-31: sem nota nenhuma, o agente nao inventa numero', () => {
+    expect(resposta({})).not.toMatch(/\d/);
+  });
+
+  it('INT-32: nenhuma fala junta as duas notas numa terceira', () => {
+    for (const ctx of CONTEXTS) {
+      for (const texto of [fala(ctx), resposta(ctx)]) {
+        expect(texto).not.toMatch(/média|media|nota geral|nota final|no total|somando|soma d/i);
+      }
+    }
+    // E quando as duas existem, cada numero aparece exatamente como foi medido:
+    // 42 e 66 — e nenhum 54 (a media) nem 108 (a soma) no texto.
+    const texto = resposta({ googleScore: 42, agenticScore: 66 });
+    expect(texto).toContain('42/100');
+    expect(texto).toContain('66/100');
+    expect(texto).not.toMatch(/\b54\b|\b108\b/);
+  });
+});
+
+describe('path-pick: um caminho escolhido no cartao', () => {
+  it('INT-10: cada caminho injeta o proprio rotulo, promessa e sondagem', () => {
+    for (const path of PATHS) {
+      const ctx = { ...base, path };
+      expect(INTENTS['path-pick'].userMessage(ctx)).toBe(`Quero falar sobre o caminho ${path.label}.`);
+      const resposta = INTENTS['path-pick'].agentReply(ctx);
+      expect(resposta).toContain(path.promise);
+      expect(resposta).toContain(path.probe);
+    }
+  });
+
+  it('INT-33: os dois caminhos geram falas diferentes', () => {
+    const [a, b] = PATHS.map((path) => INTENTS['path-pick'].agentReply({ ...base, path }));
+    expect(a).not.toBe(b);
+  });
+
+  it('INT-34: sem caminho no contexto, cai no primeiro em vez de imprimir undefined', () => {
+    const fala = INTENTS['path-pick'].userMessage(base);
+    expect(fala).toContain(PATHS[0].label);
+    expect(fala).not.toContain('undefined');
+  });
+});
+
+describe('sem-site: quem nao tem onde ser encontrado', () => {
   it('INT-15: a resposta e o texto proprio da intencao, nao a saudacao do balao 1', () => {
-    const resposta = INTENTS['diagnostic-no-website'].agentReply(base);
+    const resposta = INTENTS['sem-site'].agentReply(base);
     expect(resposta).toBe(
-      'Isso muda a ordem das coisas: antes de automatizar qualquer processo, você precisa existir para quem procura o que você vende. Me diz o que sua empresa faz e para quem — eu volto com o que precisa estar no ar primeiro, e em quanto tempo.'
+      'Então a ordem é outra: antes de otimizar qualquer coisa, você precisa existir para quem procura o que vende. Me diz o que sua empresa faz e para quem — eu volto com o que precisa estar no ar primeiro, e em quanto tempo.'
     );
     expect(resposta).not.toBe(NO_WEBSITE_GREETING);
+  });
+
+  it('INT-35: a fala do lead diz que nao tem site, sem nota nenhuma', () => {
+    const fala = INTENTS['sem-site'].userMessage({ ...base, hasNoWebsite: true });
+    expect(fala).toContain('Ainda não tenho site');
+    expect(fala).not.toMatch(/\d/);
+  });
+});
+
+describe('credibility: quem leu os casos', () => {
+  it('INT-36: fala do site, e a resposta pergunta como as pessoas encontram a empresa hoje', () => {
+    expect(INTENTS.credibility.userMessage(base)).toBe(
+      'Vi os casos. Quero saber o que dá pra fazer no meu site.'
+    );
+    expect(INTENTS.credibility.agentReply(base)).toContain('como as pessoas te encontram hoje');
   });
 });
 
@@ -246,5 +287,15 @@ describe('As saudacoes saem do componente e passam a morar aqui', () => {
     expect(GREETING.trim().length).toBeGreaterThan(0);
     expect(NO_WEBSITE_GREETING.trim().length).toBeGreaterThan(0);
     expect(GREETING).not.toBe(NO_WEBSITE_GREETING);
+  });
+
+  it('INT-37: a saudacao de quem nao tem site nao carrega mais o "101%" do indice extinto', () => {
+    // O texto explicava que o indice era marcado "fora da escala, em 101%".
+    // O indice saiu da pagina; um percentual inventado nao pode sobreviver na
+    // primeira frase que o agente diz a quem nao tem site.
+    for (const saudacao of [GREETING, NO_WEBSITE_GREETING]) {
+      expect(saudacao).not.toMatch(/\d/);
+      expect(saudacao).not.toMatch(/%|índice|gargalo|frente/i);
+    }
   });
 });

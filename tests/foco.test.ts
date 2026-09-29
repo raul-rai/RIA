@@ -126,15 +126,17 @@ describe('A11Y-03 — um anel de foco só, e visível nos dois fundos', () => {
   });
 
   it('FOCO-06: existe a saída para quem não pode desenhar o anel para fora', () => {
-    // O botão de play cobre a imagem inteira dentro de um cartão
-    // overflow:hidden; o cabeçalho do acordeão encosta em três quinas. Nos dois
-    // o anel precisa crescer para dentro, senão a quina o recorta.
+    // O cartão de PathsSection é um botão do tamanho do cartão inteiro, com
+    // quinas de 1.5rem e vizinho de outro cartão na grade: o anel para fora é
+    // recortado ou coberto. Ali o anel precisa crescer para dentro. (Os alvos
+    // anteriores, o play da parede de vídeos e o acordeão de autoridades,
+    // saíram com a parede.)
     expect(css).toContain('.focus-ring-inset:focus-visible');
     expect(css).toMatch(/\.focus-ring-inset:focus-visible\s*\{[^}]*outline-offset:\s*-/);
 
-    const card = readFileSync(root('src/components/AuthorityCard.tsx'), 'utf-8');
-    const acordeao = readFileSync(root('src/components/AuthorityAccordion.tsx'), 'utf-8');
-    expect(card).toContain('focus-ring-inset');
-    expect(acordeao).toContain('focus-ring-inset');
+    const caminhos = readFileSync(root('src/components/PathsSection.tsx'), 'utf-8');
+    expect(caminhos, 'o cartão clicável perdeu o anel interno').toMatch(
+      /className={`[^`]*focus-ring-inset/
+    );
   });
 });
