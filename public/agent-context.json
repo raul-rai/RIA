@@ -125,7 +125,6 @@
   "cases": [
     {
       "kind": "resultado",
-      "front": 1,
       "segment": "Design de interiores",
       "headline": "Da inauguração a R$ 200 mil/mês",
       "before": "Operação recém-inaugurada, sem presença digital e sem canal de atendimento estruturado.",
@@ -136,7 +135,6 @@
     },
     {
       "kind": "resultado",
-      "front": 2,
       "segment": "Crédito",
       "headline": "Recorde de qualificação no primeiro mês",
       "before": "Qualificação de leads dependente de abordagem manual pelo time comercial.",
@@ -147,7 +145,6 @@
     },
     {
       "kind": "entrega",
-      "front": null,
       "segment": "Produto digital de decoração",
       "headline": "Do protótipo ao produto final",
       "before": "Ideia de produto sem validação técnica nem caminho de implementação.",

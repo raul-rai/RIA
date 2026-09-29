@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { FRONTS } from '../src/content/fronts';
 import { resolveFirstFront, countChecked } from '../src/lib/fronts';
-import { CASES } from '../src/content/cases';
 
 describe('FRONTS: o catalogo real da RIA', () => {
   it('FRONT-01: sao exatamente tres frentes, com ids de 1 a 3', () => {
@@ -56,22 +55,5 @@ describe('countChecked', () => {
   it('FRONT-08: conta apenas as marcadas', () => {
     expect(countChecked([true, false, true, false, false])).toBe(2);
     expect(countChecked([false, false, false, false, false])).toBe(0);
-  });
-});
-
-describe('CASES: cada caso prova uma frente', () => {
-  it('FRONT-09: todo caso aponta para uma frente existente', () => {
-    const ids = FRONTS.map((f) => f.id);
-    // `front` e opcional desde ago/2026: casos do tipo 'entrega' podem nao
-    // mapear em nenhuma frente vendida hoje, e forcar um mapa falso so para
-    // preencher a etiqueta e o mesmo pecado de fabricar numero. O contrato e:
-    // quem declara frente, declara uma que existe.
-    for (const c of CASES) {
-      if (c.front === undefined) continue;
-      expect(ids).toContain(c.front);
-    }
-    // E ao menos um caso precisa provar alguma frente, senao a secao inteira
-    // deixa de sustentar o que o titulo dela promete.
-    expect(CASES.some((c) => c.front !== undefined)).toBe(true);
   });
 });

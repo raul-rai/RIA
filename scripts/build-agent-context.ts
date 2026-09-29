@@ -104,7 +104,6 @@ export interface AgentContext {
   }[];
   cases: {
     kind: string;
-    front: number | null;
     segment: string;
     headline: string;
     before: string;
@@ -171,7 +170,6 @@ export function buildAgentContext(): AgentContext {
     // e o prompt manda dizer que o numero foi informado pelo cliente.
     cases: CASES.map((c) => ({
       kind: c.kind,
-      front: c.front ?? null,
       segment: c.segment,
       headline: c.headline,
       before: c.before,

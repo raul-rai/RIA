@@ -15,7 +15,7 @@ import { usePointerTilt } from '../hooks/usePointerTilt';
  * fez, nem adianta a credencial sem caso.
  *
  * A dobra carrega DUAS coisas: os casos e quem executa. Tudo o que nao for uma
- * dessas duas — etiqueta de frente, grade de metodo — foi retirado, porque numa
+ * dessas duas — etiqueta comercial, grade de metodo — foi retirado, porque numa
  * dobra que ja empilha tres cartoes mais um painel de consultor, cada elemento
  * a mais custa atencao no ponto exato em que a prova precisa dela.
  */
@@ -26,9 +26,15 @@ import { usePointerTilt } from '../hooks/usePointerTilt';
  * Extraido do .map porque usePointerTilt e um hook — nao pode rodar em laco. A
  * entrada por rolagem fica no m.div externo (transform do motion); o tilt no
  * article interno (transform por CSS var). Elementos diferentes, sem conflito.
+ *
+ * O primeiro cartao e o caso de site — o que a pagina vende — e ganha o
+ * destaque: largura cheia na grade, titulo maior e Antes / O que entrou / Prazo
+ * lado a lado, tudo a vista, sem interacao. Os outros dois seguem menores, com
+ * o mesmo conteudo: prova medida nao sai da pagina para caber num argumento.
  */
 function CaseCard({ c, index }: { c: (typeof CASES)[number]; index: number }) {
   const tiltRef = usePointerTilt<HTMLElement>(4);
+  const isPrimeiro = index === 0;
   return (
     <m.div
       // Sem `opacity` na entrada: o motion serializa a variante inicial no SSR,
@@ -38,11 +44,13 @@ function CaseCard({ c, index }: { c: (typeof CASES)[number]; index: number }) {
       whileInView={{ y: 0 }}
       viewport={{ once: true, amount: 0.3 }}
       transition={{ delay: index * 0.08 }}
-      className="tilt-scene h-full"
+      className={`tilt-scene h-full${isPrimeiro ? ' md:col-span-2' : ''}`}
     >
       <article
         ref={tiltRef}
-        className="tilt-3d tilt-card glass-card glass-hover h-full rounded-2xl p-5 flex flex-col gap-2 text-left"
+        className={`tilt-3d tilt-card glass-card glass-hover h-full rounded-2xl flex flex-col gap-2 text-left ${
+          isPrimeiro ? 'p-6 md:p-8' : 'p-5'
+        }`}
       >
         <div className="flex items-center gap-1.5">
           {c.kind === 'entrega' ? (
@@ -55,9 +63,21 @@ function CaseCard({ c, index }: { c: (typeof CASES)[number]; index: number }) {
           </span>
         </div>
 
-        <p className="text-xl md:text-2xl font-serif text-slate-900 leading-tight">{c.headline}</p>
+        <p
+          className={`font-serif text-slate-900 leading-tight ${
+            isPrimeiro ? 'text-3xl md:text-5xl' : 'text-xl md:text-2xl'
+          }`}
+        >
+          {c.headline}
+        </p>
 
-        <dl className="text-xs text-slate-600 leading-relaxed flex flex-col gap-2 mt-1">
+        <dl
+          className={`text-slate-600 leading-relaxed mt-1 ${
+            isPrimeiro
+              ? 'text-sm md:text-base grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-6'
+              : 'text-xs flex flex-col gap-2'
+          }`}
+        >
           <div>
             <dt className="font-bold text-accent-dark uppercase text-[9px] tracking-wider">Antes</dt>
             <dd>{c.before}</dd>
@@ -92,9 +112,9 @@ export default function CredibilitySection() {
   return (
     <div className="w-full max-w-6xl mx-auto px-4 flex flex-col justify-center pointer-events-auto">
       <div className="text-center mb-6 md:mb-8">
-        {/* `flex w-fit mx-auto` e nao `inline-flex`: ver a nota em
-            FrontsSection. A etiqueta e o <h2> `inline-block` dividiam a mesma
-            linha, com a etiqueta jogada para a esquerda do titulo. */}
+        {/* `flex w-fit mx-auto` e nao `inline-flex`: a etiqueta e o <h2>
+            `inline-block` dividiam a mesma linha, com a etiqueta jogada para
+            a esquerda do titulo. */}
         <div className="glass-chip glass-accent flex w-fit mx-auto items-center gap-2 px-3.5 py-1.5 rounded-full mb-3">
           <LineChart size={14} className="text-accent" />
           <span className="text-accent-dark text-[10px] md:text-xs uppercase tracking-[0.2em] font-black">
@@ -102,9 +122,9 @@ export default function CredibilitySection() {
           </span>
         </div>
         {/*
-          O título já foi "Cada frente, com um caso atrás." e depois "Três
-          operações, o mesmo método." Os dois descreviam a seção para dentro —
-          contavam o que ELA é. Este aponta para fora: os cartões abaixo são
+          Os títulos anteriores ("Três operações, o mesmo método." entre eles)
+          descreviam a seção para dentro — contavam o que ELA é. Este aponta
+          para fora: os cartões abaixo são
           parcerias que deram fruto, e a única coisa que o visitante precisa
           fazer com essa informação é se ver no próximo cartão.
         */}
@@ -114,7 +134,7 @@ export default function CredibilitySection() {
         </h2>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-5 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-5 mb-8">
         {CASES.map((c, i) => (
           <CaseCard key={c.segment} c={c} index={i} />
         ))}
