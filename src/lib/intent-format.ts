@@ -1,5 +1,3 @@
-import type { Front } from '../content/fronts';
-
 /**
  * Lista legivel dentro de uma frase: "A, B e C".
  *
@@ -13,20 +11,28 @@ export function formatList(items: string[]): string {
   return `${items.slice(0, -1).join(', ')} e ${items[items.length - 1]}`;
 }
 
-/** As frentes ainda descobertas, na ordem do catalogo. */
-export function uncoveredFronts(fronts: Front[], checked: boolean[]): Front[] {
-  return fronts.filter((_, i) => !checked[i]);
-}
-
 /**
  * Leitura da nota do site em uma linha, sem ponto final.
  *
- * Os cortes (50 e 80) sao os mesmos que PotentialDiagnostic.tsx usa para
- * colorir a nota no resultado. Se um mudar, o outro muda junto — o lead nao
- * pode ver vermelho na tela e ler "sustenta" no chat.
+ * Os cortes (50 e 80) sao os mesmos que o cartao do laudo (GoogleReportCard)
+ * usa para colorir a nota. Se um mudar, o outro muda junto — o lead nao pode
+ * ver vermelho na tela e ler "sustenta" no chat.
  */
 export function scoreBand(score: number): string {
   if (score < 50) return 'Essa nota quer dizer que o site trava antes de convencer alguém';
   if (score < 80) return 'Essa nota quer dizer que o site funciona, mas não compete';
-  return 'Essa nota é boa — o site sustenta, e o gargalo está em outra frente';
+  return 'Essa nota é boa — o site sustenta, e o ajuste é fino';
+}
+
+/**
+ * Leitura da nota agentica, na mesma forma de scoreBand: uma linha, sem ponto
+ * final.
+ *
+ * A escala e a mesma 0-100 do Is Agentic. O texto fala de AGENTE, nunca de
+ * Google: sao dois instrumentos e o lead precisa saber qual esta falando.
+ */
+export function agenticBand(score: number): string {
+  if (score < 50) return 'os agentes de IA não conseguem ler nem citar o seu site';
+  if (score < 80) return 'os agentes chegam ao seu site, mas tropeçam no que encontram';
+  return 'os agentes conseguem ler e citar o seu site';
 }

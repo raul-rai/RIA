@@ -2,7 +2,6 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync, existsSync, readdirSync, statSync } from 'fs';
 import { resolve, join } from 'path';
 import { PRIVACY_SECTIONS } from '../src/content/privacy';
-import { AUTHORITIES } from '../src/content/authorities';
 import { EVIDENCE } from '../src/content/evidence';
 
 /**
@@ -24,6 +23,14 @@ import { EVIDENCE } from '../src/content/evidence';
  * Foram tratados de formas diferentes de propósito, e a diferença é o ponto:
  * o Fonts foi ELIMINADO (auto-hospedado), o YouTube foi DECLARADO e movido
  * para o domínio sem cookie. Eliminar é sempre melhor que divulgar.
+ *
+ * O desfecho do YouTube: a parede de vídeos saiu por decisão de posicionamento
+ * (docs/superpowers/specs/2026-09-28-foco-em-sites-duas-notas-design.md) e o
+ * player foi junto. Os casos que travavam o player sem cookie, o facade antes
+ * do clique e a ausência da IFrame API existiam só para ele e saíram com ele.
+ * O que os substitui é mais forte: o YouTube não pode aparecer em lugar
+ * nenhum do código nem da política (TERC-12 e POS-PRIV), e o Is Agentic — o
+ * terceiro que entrou no lugar — só fala com a nossa função de borda (TERC-14).
  */
 
 const root = (p: string) => resolve(process.cwd(), p);
@@ -41,7 +48,7 @@ function sourceFiles(dir = root('src')): string[] {
  *
  * A distinção que vale: LINK QUE O VISITANTE CLICA não é transferência de
  * dados — é navegação, e é ele quem decide. RECURSO QUE A PÁGINA BUSCA é
- * transferência, aconteça ele por clique (YouTube) ou sozinho (o Google Fonts
+ * transferência, aconteça ele por clique (o player que saiu) ou sozinho (o Google Fonts
  * que saiu daqui). Esta lista é de recursos; os links de citação entram por
  * EVIDENCE, logo abaixo.
  */
@@ -49,16 +56,16 @@ const PERMITIDOS = [
   'googleapis.com', // PageSpeed Insights — só o domínio que o visitante pediu
   'wa.me', // WhatsApp — sempre por clique, mensagem visível antes
   'googletagmanager.com', // gtag — só com consentimento explícito
-  'youtube-nocookie.com', // player, só depois do clique
+  'is-agentic.com', // laudo de prontidão para agentes — só a função de borda o chama (TERC-14)
   'schema.org', // @context do JSON-LD, não é requisição
   'w3.org', // namespace de SVG, não é requisição
 ];
 
 /**
- * As fontes das evidências são links de saída, e são o produto daquela dobra:
- * é por poder conferir cada estudo que o argumento pesa. Ler daqui, e não de
- * uma lista fixa, faz uma evidência nova ser aceita sozinha — e mantém a trava
- * fechada para qualquer OUTRO domínio que apareça no código.
+ * As fontes das evidências são links de saída, hoje na faixa de fontes do
+ * rodapé: é por poder conferir cada estudo que o argumento pesa. Ler daqui, e
+ * não de uma lista fixa, faz uma evidência nova ser aceita sozinha — e mantém a
+ * trava fechada para qualquer OUTRO domínio que apareça no código.
  */
 const CITACOES = EVIDENCE.map((e) => e.url);
 
@@ -117,62 +124,6 @@ describe('Terceiros — nada carrega sem ação do visitante', () => {
     expect(css).toContain('"Playfair Display Variable"');
   });
 
-  it('TERC-03: o player de vídeo usa o domínio sem cookie', () => {
-    const modal = semComentarios(readFileSync(root('src/components/VideoModal.tsx'), 'utf-8'));
-    expect(modal, 'o iframe do player não aponta para o domínio sem cookie').toContain(
-      'https://www.youtube-nocookie.com/embed/'
-    );
-    expect(modal, 'sobrou um embed no domínio com cookie').not.toMatch(
-      /https:\/\/www\.youtube\.com\/embed/
-    );
-
-    for (const a of AUTHORITIES) {
-      expect(a.videoUrl, `${a.name} aponta para o domínio com cookie`).toContain(
-        'youtube-nocookie.com'
-      );
-    }
-  });
-
-  it('TERC-04: nada do YouTube carrega antes do clique', () => {
-    /**
-     * O padrão facade. A miniatura da lista é um .webp deste domínio, e o
-     * iframe do player só é montado quando `isOpen` é verdadeiro. Sem essa
-     * guarda, abrir a home já bastaria para o YouTube saber quem é você — e aí
-     * o aviso na tela do player chegaria tarde demais.
-     *
-     * O que este teste protege é a PRECEDÊNCIA, não a forma da guarda: nada do
-     * YouTube pode ser montado antes dela. Ver DIAL-07 para por que a guarda é
-     * um `return null` e não um `{isOpen && …}` dentro do AnimatePresence.
-     */
-    const modal = readFileSync(root('src/components/VideoModal.tsx'), 'utf-8');
-    const corpo = modal.slice(modal.indexOf('export default function VideoModal'));
-
-    const guarda = corpo.indexOf('if (!isOpen) return null;');
-    expect(guarda, 'não achei a guarda de isOpen').toBeGreaterThan(-1);
-    expect(guarda, 'o iframe é montado antes da guarda de isOpen').toBeLessThan(
-      corpo.indexOf('<iframe')
-    );
-
-    for (const a of AUTHORITIES) {
-      expect(a.thumbnail, 'miniatura vinda de fora').toMatch(/^\//);
-    }
-  });
-
-  it('TERC-11: o player não usa a IFrame API, que só existe em www.youtube.com', () => {
-    /**
-     * O `-nocookie` do player não fecha o buraco sozinho: o SCRIPT da IFrame
-     * API é servido apenas por www.youtube.com, e essa requisição revela o IP
-     * — levando junto os cookies de quem estiver logado no YouTube.
-     *
-     * `start` e `end` são parâmetros nativos do embed, então o recorte do
-     * trecho não precisa de JavaScript de terceiro nenhum.
-     */
-    const codigo = semComentarios(readFileSync(root('src/components/VideoModal.tsx'), 'utf-8'));
-    expect(codigo, 'a IFrame API voltou').not.toContain('iframe_api');
-    expect(codigo, 'YT.Player voltou').not.toContain('YT.Player');
-    expect(codigo).toContain('youtube-nocookie.com/embed/');
-  });
-
   it('TERC-05: nenhum host de terceiro no código fora da lista declarada', () => {
     const infratores: string[] = [];
     for (const file of sourceFiles()) {
@@ -198,14 +149,22 @@ describe('Terceiros — a política declara o que de fato acontece', () => {
     .toLowerCase();
 
   it('TERC-06: todo serviço que recebe dado do visitante está na política', () => {
-    for (const servico of ['n8n', 'pagespeed', 'cal.com', 'google analytics', 'whatsapp', 'youtube', 'vercel']) {
+    for (const servico of ['n8n', 'pagespeed', 'cal.com', 'google analytics', 'whatsapp', 'is-agentic', 'vercel']) {
       expect(texto, `a política não menciona: ${servico}`).toContain(servico);
     }
   });
 
-  it('TERC-07: a política diz que o YouTube só entra por clique e sem cookie', () => {
-    expect(texto).toContain('youtube-nocookie.com');
-    expect(texto).toMatch(/nada do youtube é carregado antes desse clique/);
+  it('TERC-07: a política diz que o Is Agentic recebe só o endereço, e por pedido seu', () => {
+    // O que api/agentic-scan.ts de fato manda: o endereço digitado, por uma
+    // função nossa, só depois de o visitante pedir a medição.
+    expect(texto).toContain('quando você pede a medição');
+    expect(texto).toMatch(/é enviado o endereço do site — nenhum dado seu/);
+  });
+
+  it('TERC-12: a política não descreve um YouTube que a página já não carrega', () => {
+    // O oposto do TERC-06 para o terceiro que saiu. O código também não pode
+    // trazê-lo de volta às escondidas: ver o teste seguinte.
+    expect(texto).not.toContain('youtube');
   });
 
   it('TERC-08: a política não promete um Google Fonts que não existe mais', () => {
@@ -216,16 +175,42 @@ describe('Terceiros — a política declara o que de fato acontece', () => {
   });
 });
 
+describe('Terceiros — a página não fala com ninguém sem passar por nós', () => {
+  it('TERC-13: nada no código de src/ carrega YouTube', () => {
+    const infratores = sourceFiles().filter((f) =>
+      /youtube/i.test(semComentarios(readFileSync(f, 'utf-8')))
+    );
+    expect(infratores, 'o YouTube voltou ao código').toEqual([]);
+  });
+
+  it('TERC-14: o site fala com o Is Agentic só pela nossa função de borda', () => {
+    // Sem comentários: src/config.ts cita o domínio de propósito para explicar
+    // por que a rota é relativa. O que não pode existir é o domínio no CÓDIGO
+    // do navegador — ele só pode aparecer em api/agentic-scan.ts.
+    // A política de privacidade é a outra exceção, e é a que deve existir: ela
+    // NOMEIA o serviço para o visitante. É texto, não requisição.
+    const infratores = sourceFiles()
+      .filter((f) => !f.replace(/\\/g, '/').endsWith('src/content/privacy.ts'))
+      .filter((f) => semComentarios(readFileSync(f, 'utf-8')).includes('is-agentic.com'));
+    expect(infratores, 'o domínio deles só pode aparecer em api/agentic-scan.ts').toEqual([]);
+
+    const funcao = readFileSync(root('api/agentic-scan.ts'), 'utf-8');
+    expect(funcao, 'a função de borda deixou de ser o ponto de contato').toContain(
+      "const BASE = 'https://is-agentic.com'"
+    );
+  });
+});
+
 describe.skipIf(!existsSync(root('dist/index.html')))('Terceiros — o que foi PUBLICADO', () => {
   const home = readFileSync(root('dist/index.html'), 'utf-8');
 
   it('TERC-09: o HTML publicado não BUSCA nada de fora', () => {
     /**
-     * Só tags de recurso. Os <a> para McKinsey, MIT, Cetic.br, HBR e wa.me são
-     * links de saída — o visitante decide clicar, e as citações são o produto
-     * da dobra de evidências. O que não pode existir é um <link>, <script>,
-     * <img> ou <iframe> apontando para fora: esses o navegador busca sozinho,
-     * sem o visitante saber.
+     * Só tags de recurso. Os <a> para McKinsey, MIT, Cetic.br, HBR (na faixa
+     * de fontes do rodapé) e wa.me são links de saída — o visitante decide
+     * clicar, e as citações são o que torna a página citável. O que não pode
+     * existir é um <link>, <script>, <img> ou <iframe> apontando para fora:
+     * esses o navegador busca sozinho, sem o visitante saber.
      */
     const externos = recursosExternos(home).filter((u) => !u.includes('raulvieira.vercel.app'));
     expect(externos, `o build publica requisição externa: ${externos.join(', ')}`).toEqual([]);
@@ -238,5 +223,36 @@ describe.skipIf(!existsSync(root('dist/index.html')))('Terceiros — o que foi P
     expect(css).toContain('@font-face');
     expect(css).not.toContain('fonts.gstatic.com');
     expect(css).toMatch(/url\(\/assets\/inter-[^)]+\.woff2\)/);
+  });
+});
+
+describe('Terceiros — a política não afirma o que o código desmente', () => {
+  const itens = PRIVACY_SECTIONS.flatMap((s) => [...s.paragraphs, ...(s.bullets ?? [])]);
+  const pageSpeed = itens.find((i) => i.startsWith('Google PageSpeed Insights')) ?? '';
+  const isAgentic = itens.find((i) => i.startsWith('Is Agentic')) ?? '';
+
+  it('TERC-15: o PageSpeed não é descrito como "nenhum dado seu vai junto"', () => {
+    // O fetch do PageSpeed sai do NAVEGADOR do visitante (src/hooks/useSiteScan.tsx):
+    // IP, User-Agent e Referer dele chegam ao Google em toda medição.
+    expect(pageSpeed, 'a política perdeu a linha do PageSpeed').not.toBe('');
+    expect(pageSpeed.toLowerCase()).not.toMatch(/nenhum dado seu/);
+    expect(pageSpeed).toMatch(/parte do seu navegador/);
+    expect(pageSpeed).toMatch(/endereço IP/);
+    expect(pageSpeed).toMatch(/User-Agent/);
+  });
+
+  it('TERC-16: o contraste entre os dois instrumentos é o verdadeiro', () => {
+    // No Is Agentic a consulta parte do NOSSO servidor: o IP não chega a eles.
+    expect(isAgentic).toMatch(/servidor deste site/);
+    expect(isAgentic).toMatch(/seu IP não chega a eles/);
+    // E a política diz que no Google é diferente — não deixa o leitor concluir o oposto.
+    expect(isAgentic).toMatch(/ao contrário da medição do Google/);
+  });
+
+  it('TERC-17: o código de fato busca o PageSpeed no navegador (a premissa do TERC-15)', () => {
+    const hook = semComentarios(readFileSync(root('src/hooks/useSiteScan.tsx'), 'utf-8'));
+    expect(hook).toMatch(/fetch\(pageSpeedUrl\(/);
+    // Se isto mudar para uma função de borda, a política volta a poder dizer
+    // que o IP não chega ao Google — e este teste avisa que ela precisa mudar.
   });
 });

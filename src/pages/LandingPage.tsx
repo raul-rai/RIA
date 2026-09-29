@@ -1,59 +1,32 @@
 import { Fragment, useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react';
-import { m, useScroll, useMotionValue, useSpring } from 'motion/react';
-import { ArrowRight, Target, ChevronDown } from 'lucide-react';
+import { useScroll } from 'motion/react';
+import { Target } from 'lucide-react';
 import DataWave3D from '../components/DataWave3D';
 import ChapterSection from '../components/ChapterSection';
 import { useActiveChapter } from '../hooks/useActiveChapter';
 import EliteHUD from '../components/EliteHUD';
 import BrandMark from '../components/BrandMark';
 import AIChatAgent from '../components/AIChatAgent';
-import PotentialDiagnostic from '../components/PotentialDiagnostic';
-import MarketEvidenceSection from '../components/MarketEvidenceSection';
-import SocialProofSection from '../components/SocialProofSection';
+import ScannerForm from '../components/ScannerForm';
+import ReportSection from '../components/ReportSection';
+import PathsSection from '../components/PathsSection';
 import WhatsAppFab from '../components/WhatsAppFab';
 import { prefersReducedMotion } from '../lib/canvas-quality';
 import { track } from '../lib/analytics';
-import { VulnerabilityProvider } from '../context/VulnerabilityContext';
-import { AgentIntentProvider, useAgentIntent } from '../context/AgentIntentContext';
+import { SiteScoreProvider } from '../context/SiteScoreContext';
+import { ScanProvider } from '../hooks/useSiteScan';
+import { AgentIntentProvider } from '../context/AgentIntentContext';
 import { REF_LABEL } from '../content/intents';
-import FrontsSection from '../components/FrontsSection';
 import CredibilitySection from '../components/CredibilitySection';
+import OfferFaqSection from '../components/OfferFaqSection';
 import SiteFooter from '../components/SiteFooter';
 import { metaFor } from '../content/meta';
 import { SESSION_MINUTES } from '../content/offer';
 
 /** Capitulo que concentra a oferta e o agente. Todo CTA aponta para ca. */
-const CTA_CHAPTER = 5;
+const CTA_CHAPTER = 4;
 
-function MagneticButton({ children, onClick, className }: { children: React.ReactNode, onClick: () => void, className?: string }) {
-  const x = useMotionValue(0);
-  const y = useMotionValue(0);
-
-  const mouseXSpring = useSpring(x, { stiffness: 150, damping: 15, mass: 0.1 });
-  const mouseYSpring = useSpring(y, { stiffness: 150, damping: 15, mass: 0.1 });
-
-  function handleMouseMove(e: React.MouseEvent<HTMLButtonElement>) {
-    const rect = e.currentTarget.getBoundingClientRect();
-    x.set((e.clientX - rect.left - rect.width / 2) * 0.2);
-    y.set((e.clientY - rect.top - rect.height / 2) * 0.2);
-  }
-
-  return (
-    <m.button
-      style={{ x: mouseXSpring, y: mouseYSpring }}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={() => { x.set(0); y.set(0); }}
-      onClick={onClick}
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95 }}
-      className={className}
-    >
-      {children}
-    </m.button>
-  );
-}
-
-// ─── Capitulo 0: A AMEACA ────────────────────────────────────────────────────
+// ─── Capitulo 0: MEDIR O SITE ─────────────────────────────────────────────────
 
 /**
  * As manchetes, por segmento de campanha.
@@ -65,10 +38,10 @@ function MagneticButton({ children, onClick, className }: { children: React.Reac
  * contagem na segunda.
  */
 const HEADLINES: Record<string, readonly [string, string]> = {
-  default: ['Sua empresa está preparada para enfrentar', 'a maior mudança de mercado da história?'],
-  industria: ['Qual etapa da sua produção', 'custa mais hora do que deveria?'],
-  servicos: ['Quantas horas da sua equipe', 'vão para o que não é o serviço?'],
-  varejo: ['Quanto do seu atendimento', 'acontece depois que você fecha?'],
+  default: ['Quando alguém pergunta ao ChatGPT o que você vende,', 'o seu site aparece?'],
+  industria: ['Quem procura o que sua indústria produz', 'encontra você ou o concorrente?'],
+  servicos: ['Quando buscam o serviço que você presta,', 'o seu site é o que a IA cita?'],
+  varejo: ['Quem procura o que sua loja vende', 'chega até você pela busca de IA?'],
 };
 
 /**
@@ -111,8 +84,7 @@ function HeroLine({
   );
 }
 
-function SceneHero({ onUnderstandMore }: { onUnderstandMore: () => void }) {
-  const { requestIntent } = useAgentIntent();
+function SceneHero({ onMeasured }: { onMeasured: () => void }) {
   const [ref, setRef] = useState<string | undefined>(undefined);
   useEffect(() => {
     setRef(new URLSearchParams(window.location.search).get('ref')?.toLowerCase());
@@ -139,7 +111,7 @@ function SceneHero({ onUnderstandMore }: { onUnderstandMore: () => void }) {
       <div className="hero-rise glass-chip inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-5 md:mb-6">
         <Target className="text-accent animate-pulse motion-reduce:animate-none" size={16} />
         <span className="text-slate-900 font-sans tracking-[0.1em] md:tracking-[0.15em] uppercase text-[10px] md:text-xs font-black whitespace-nowrap">
-          {ref && REF_LABEL[ref] ? `Estratégia para ${REF_LABEL[ref]}` : 'Conhecimento relevante para todo empresário'}
+          {ref && REF_LABEL[ref] ? `Estratégia para ${REF_LABEL[ref]}` : 'Sobrevivência é questão de adaptação'}
         </span>
       </div>
 
@@ -158,47 +130,31 @@ function SceneHero({ onUnderstandMore }: { onUnderstandMore: () => void }) {
         style={enterAt(0.3)}
         className="hero-rise glass text-[15px] md:text-xl text-slate-800 max-w-2xl mb-6 md:mb-10 font-sans font-medium leading-relaxed px-4 py-3 rounded-2xl"
       >
-        A Inteligência Artificial não é coisa do futuro, é <strong className="font-bold text-slate-950">necessidade atual</strong> de empresários que se adaptam, para continuar prosperando.
+        A Inteligência Artificial não é coisa do futuro, é <strong className="font-bold text-slate-950">necessidade do presente</strong> para continuar prosperando.
       </p>
 
-      {/* Os dois CTAs entravam com `delay: 0.8` no motion — ou seja, só depois
-          de o bundle inteiro hidratar E de mais 800 ms. Eram os últimos
-          elementos da primeira dobra a existir, sendo os únicos que convertem. */}
+      {/* O formulario do scanner entra no mesmo passo dos antigos CTAs. Ele e o
+          unico que converte nesta dobra, e nao pode ser o ultimo a existir: a
+          entrada e CSS (`.hero-rise`), nao motion, entao nao espera o bundle
+          hidratar. */}
       <div
         style={enterAt(0.42)}
-        className="hero-rise flex flex-col sm:flex-row items-center justify-center gap-3.5 md:gap-4 w-full sm:w-auto pointer-events-auto"
+        className="hero-rise w-full pointer-events-auto"
       >
-        <MagneticButton
-          onClick={() => {
-            track('cta_click', { location: 'hero' });
-            requestIntent('hero-cold');
-          }}
-          className="w-full sm:w-auto group px-7 py-4 bg-slate-950 text-white rounded-xl font-black text-xs uppercase tracking-widest transition-all duration-300 hover:bg-accent shadow-2xl flex items-center justify-center gap-2.5 min-h-[52px]"
-        >
-          <span>Pare de rasgar dinheiro</span>
-          <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform duration-300" />
-        </MagneticButton>
-
-        <MagneticButton
-          onClick={onUnderstandMore}
-          className="glass glass-hover w-full sm:w-auto group px-7 py-4 text-slate-900 hover:text-accent rounded-xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2.5 min-h-[52px]"
-        >
-          <span>Entenda melhor</span>
-          <ChevronDown size={16} className="group-hover:translate-y-0.5 transition-transform duration-300" />
-        </MagneticButton>
+        <ScannerForm onMeasured={onMeasured} />
       </div>
       </div>
     </div>
   );
 }
 
-// ─── Capitulo 5: O AGENTE ─────────────────────────────────────────────────────
+// ─── Capitulo 4: O AGENTE ─────────────────────────────────────────────────────
 function SceneCTA() {
   return (
     <div className="w-full max-w-4xl mx-auto px-2 md:px-4 flex flex-col justify-center items-center text-center pointer-events-auto">
       <h2 className="reading-surface inline-block px-4 py-2 mb-3 md:mb-4 max-w-2xl font-sans text-[13px] md:text-lg text-slate-700 leading-relaxed">
-        Converse com o agente para agendar seu{' '}
-        <span className="font-semibold text-slate-900">Diagnóstico de Gargalo</span> e uma reunião de {SESSION_MINUTES} minutos com o especialista.
+        Converse com o agente para ler o seu laudo e agendar{' '}
+        <span className="font-semibold text-slate-900">{SESSION_MINUTES} minutos</span> com o especialista.
       </h2>
 
       <div className="w-full h-[calc(100svh-280px)] min-h-[380px] lg:h-[calc(100svh-290px)] lg:min-h-[420px] lg:max-h-[680px]">
@@ -222,10 +178,9 @@ function SceneCTA() {
  * <section> e o rótulo do evento de analytics.
  */
 const CHAPTERS = [
-  { label: 'A ameaça silenciosa' },
-  { label: 'Vozes do mercado' },
-  { label: 'Diagnóstico de saúde digital' },
-  { label: 'As três frentes' },
+  { label: 'Meça seu site' },
+  { label: 'O laudo' },
+  { label: 'Criar ou otimizar' },
   { label: 'Prova e quem executa' },
   { label: 'O agente e a agenda' },
 ];
@@ -258,22 +213,23 @@ export default function LandingPage() {
   }, []);
 
   const goToCta = useCallback(() => goToChapter(CTA_CHAPTER), [goToChapter]);
-  const goToSocialProof = useCallback(() => goToChapter(1), [goToChapter]);
+  const goToReport = useCallback(() => goToChapter(1), [goToChapter]);
 
   const chapterContent = useMemo(() => [
-    <SceneHero onUnderstandMore={goToSocialProof} />,
-    <div className="w-full flex flex-col gap-8 md:gap-16">
-      <MarketEvidenceSection />
-      <SocialProofSection />
-    </div>,
-    <PotentialDiagnostic />,
-    <FrontsSection />,
+    <SceneHero onMeasured={goToReport} />,
+    <ReportSection />,
+    <PathsSection />,
     <CredibilitySection />,
     <SceneCTA />,
-  ], [goToSocialProof]);
+  ], [goToReport]);
 
+  // A ordem dos provedores importa: o ScanProvider le o contexto das notas
+  // (useSiteScore) para publicar cada medicao, entao mora DENTRO do
+  // SiteScoreProvider; o AgentIntentProvider le as duas coisas para a
+  // telemetria, entao mora dentro dos dois.
   return (
-    <VulnerabilityProvider>
+    <SiteScoreProvider>
+      <ScanProvider>
       <AgentIntentProvider onReachAgent={goToCta}>
         <div className="bg-white text-slate-900 font-sans selection:bg-accent/20 selection:text-slate-900">
         <a
@@ -292,6 +248,11 @@ export default function LandingPage() {
               {chapterContent[i]}
             </ChapterSection>
           ))}
+
+          {/* Fora de CHAPTERS de propósito: é consulta de fundo de página, não
+              uma dobra de conversão. Vem depois do agente para nunca empurrá-lo
+              para fora da tela. Ver OfferFaqSection. */}
+          <OfferFaqSection />
         </main>
 
         <SiteFooter />
@@ -301,7 +262,8 @@ export default function LandingPage() {
         <WhatsAppFab hideOnChapter={CTA_CHAPTER} />
         </div>
       </AgentIntentProvider>
-    </VulnerabilityProvider>
+      </ScanProvider>
+    </SiteScoreProvider>
   );
 }
 

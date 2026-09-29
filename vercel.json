@@ -1,6 +1,24 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "cleanUrls": true,
   "rewrites": [
-    { "source": "/((?!agent-context[.]json).*)", "destination": "/index.html" }
+    { "source": "/onda", "destination": "/index.html" }
+  ],
+  "redirects": [
+    { "source": "/about", "destination": "/sobre", "permanent": true },
+    { "source": "/contact", "destination": "/contato", "permanent": true },
+    { "source": "/privacy", "destination": "/privacidade", "permanent": true }
+  ],
+  "headers": [
+    { "source": "/", "headers": [{ "key": "Vary", "value": "Accept, Accept-Encoding" }] },
+    { "source": "/sobre", "headers": [{ "key": "Vary", "value": "Accept, Accept-Encoding" }] },
+    { "source": "/contato", "headers": [{ "key": "Vary", "value": "Accept, Accept-Encoding" }] },
+    { "source": "/privacidade", "headers": [{ "key": "Vary", "value": "Accept, Accept-Encoding" }] },
+    { "source": "/index.md", "headers": [{ "key": "Content-Type", "value": "text/markdown; charset=utf-8" }, { "key": "Vary", "value": "Accept, Accept-Encoding" }] },
+    { "source": "/sobre.md", "headers": [{ "key": "Content-Type", "value": "text/markdown; charset=utf-8" }, { "key": "Vary", "value": "Accept, Accept-Encoding" }] },
+    { "source": "/contato.md", "headers": [{ "key": "Content-Type", "value": "text/markdown; charset=utf-8" }, { "key": "Vary", "value": "Accept, Accept-Encoding" }] },
+    { "source": "/privacidade.md", "headers": [{ "key": "Content-Type", "value": "text/markdown; charset=utf-8" }, { "key": "Vary", "value": "Accept, Accept-Encoding" }] },
+    { "source": "/404.md", "headers": [{ "key": "Content-Type", "value": "text/markdown; charset=utf-8" }] },
+    { "source": "/.well-known/mcp", "headers": [{ "key": "Content-Type", "value": "application/json; charset=utf-8" }] }
   ]
 }

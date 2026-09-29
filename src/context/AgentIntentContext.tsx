@@ -1,24 +1,25 @@
 import React, { createContext, useCallback, useContext, useMemo, useRef, useState } from 'react';
 import type { IntentId } from '../content/intents';
-import type { FrontId } from '../content/fronts';
-import { useVulnerability } from './VulnerabilityContext';
+import type { PathId } from '../content/paths';
+import { useSiteScore } from './SiteScoreContext';
 import { track } from '../lib/analytics';
 
 /**
  * O canal entre o botao e o agente.
  *
- * Os CTAs vivem nas dobras 0, 2, 3 e 4; o agente vive na dobra 5 e esta sempre
+ * Os CTAs vivem nas dobras 0, 2 e 3; o agente vive na dobra 4 e esta sempre
  * montado. Este contexto carrega a intencao do clique de um lado ao outro.
  *
- * Nao mora no VulnerabilityContext de proposito: aquele responde "quao exposta
- * esta esta empresa", este responde "de onde veio este clique". Misturar faria
- * o provider do indice virar despachante de UI, e todo teste de vulnerabilidade
+ * Nao mora no SiteScoreContext de proposito: aquele responde "o que foi
+ * medido neste site", este responde "de onde veio este clique". Misturar faria
+ * o provider das notas virar despachante de UI, e todo teste das notas
  * passaria a arrastar estado de chat.
  */
 
 export interface AgentIntentRequest {
   id: IntentId;
-  frontId?: FrontId;
+  /** O caminho clicado, quando o pedido nasce de um cartao de caminho. */
+  pathId?: PathId;
   /**
    * Incrementa a cada pedido. Sem ele, pedir a mesma intencao duas vezes
    * produziria um objeto equivalente e o efeito do agente nao dispararia de
@@ -30,7 +31,7 @@ export interface AgentIntentRequest {
 
 export interface AgentIntentState {
   pending: AgentIntentRequest | null;
-  requestIntent: (id: IntentId, frontId?: FrontId) => void;
+  requestIntent: (id: IntentId, pathId?: PathId) => void;
   consume: () => void;
 }
 
@@ -44,23 +45,29 @@ export function AgentIntentProvider({
   onReachAgent: () => void;
   children: React.ReactNode;
 }) {
-  const { frontsChecked, websiteScore } = useVulnerability();
+  const { google, agentic, hasNoWebsite, path } = useSiteScore();
+  const googleScore = google?.score;
+  const agenticScore = agentic?.score;
   const [pending, setPending] = useState<AgentIntentRequest | null>(null);
   const nonce = useRef(0);
 
   const requestIntent = useCallback(
-    (id: IntentId, frontId?: FrontId) => {
+    (id: IntentId, pathId?: PathId) => {
       nonce.current += 1;
+      // As duas notas seguem separadas tambem na telemetria: dois campos, nunca
+      // um terceiro. Ausencia vai como undefined (o parametro some do evento),
+      // nunca como 0.
       track('agent_intent', {
         intent_id: id,
-        front_id: frontId,
-        fronts_covered: frontsChecked.filter(Boolean).length,
-        website_score: websiteScore ?? undefined,
+        path_id: pathId ?? path ?? undefined,
+        google_score: googleScore,
+        agentic_score: agenticScore,
+        has_no_website: hasNoWebsite,
       });
-      setPending({ id, frontId, nonce: nonce.current });
+      setPending({ id, pathId, nonce: nonce.current });
       onReachAgent();
     },
-    [frontsChecked, websiteScore, onReachAgent]
+    [googleScore, agenticScore, hasNoWebsite, path, onReachAgent]
   );
 
   const consume = useCallback(() => setPending(null), []);

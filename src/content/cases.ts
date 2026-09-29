@@ -16,8 +16,6 @@
 // ausência em silêncio (que era o comportamento antigo, e o mais perigoso: dava
 // ao leitor a impressão de rigor que a seção não tinha).
 
-import type { FrontId } from './fronts';
-
 export type CaseKind =
   /** Resultado de negócio medido no sistema do cliente. */
   | 'resultado'
@@ -27,11 +25,11 @@ export type CaseKind =
 export interface CaseStudy {
   kind: CaseKind;
   /**
-   * Qual das frentes este caso prova. Opcional: casos do tipo 'entrega' podem
-   * não mapear em nenhuma frente vendida hoje — e forçar um mapa falso só para
-   * preencher a etiqueta é o mesmo pecado de fabricar número.
+   * O campo `front` saiu com as três frentes (set/2026). Não foi substituído
+   * por um `path`: um caso é prova do que foi feito, e forçá-lo a apontar para
+   * um dos dois caminhos comerciais seria a mesma fabricação de etiqueta que
+   * este arquivo proíbe para números.
    */
-  front?: FrontId;
   /** Segmento + contexto curto. Sem nome de cliente até haver autorização escrita. */
   segment: string;
   /** A afirmação principal do cartão. */
@@ -49,10 +47,12 @@ export interface CaseStudy {
   measurement?: string;
 }
 
+// A ORDEM É UM ARGUMENTO. O primeiro caso é o de site — o que a página vende
+// hoje. Os outros dois ficam porque são resultado medido e auditável, e prova
+// real não sai da página por conveniência de posicionamento.
 export const CASES: CaseStudy[] = [
   {
     kind: 'resultado',
-    front: 1,
     segment: 'Design de interiores',
     headline: 'Da inauguração a R$ 200 mil/mês',
     before: 'Operação recém-inaugurada, sem presença digital e sem canal de atendimento estruturado.',
@@ -64,7 +64,6 @@ export const CASES: CaseStudy[] = [
   },
   {
     kind: 'resultado',
-    front: 2,
     segment: 'Crédito',
     headline: 'Recorde de qualificação no primeiro mês',
     before: 'Qualificação de leads dependente de abordagem manual pelo time comercial.',
@@ -75,10 +74,9 @@ export const CASES: CaseStudy[] = [
     // o melhor mês do histórico anterior." Trocar pelo que de fato foi medido.
   },
   {
-    // Sem `front`: este caso provava a antiga frente 4 (Sistema sob medida),
-    // que saiu do site no reposicionamento de ago/2026. Continua sendo prova
-    // de capacidade de execução, mas não prova nenhuma frente vendida hoje —
-    // e o cartão diz isso, em vez de fingir que prova.
+    // Este caso provava a antiga frente 4 (Sistema sob medida), que saiu do
+    // site no reposicionamento de ago/2026. Continua sendo prova de capacidade
+    // de execução, e o cartão não finge que prova mais do que isso.
     kind: 'entrega',
     segment: 'Produto digital de decoração',
     headline: 'Do protótipo ao produto final',

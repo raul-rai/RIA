@@ -1,83 +1,95 @@
 {
   "readme": "Gerado por scripts/build-agent-context.ts a partir de src/content/*. Nao edite a mao: a proxima build sobrescreve.",
   "positioning": {
-    "entryProduct": "Diagnóstico de Gargalo",
-    "entryProductSummary": "Trinta dias medindo horas e volume das rotinas, no sistema do cliente. Sai com os três gargalos mais caros, em ordem de custo por hora, e o que atacar primeiro.",
+    "entryProduct": "Medição do site em duas notas independentes",
+    "entryProductSummary": "A página mede o site do visitante na primeira dobra, de graça e sem cadastro: a nota do Google Lighthouse (desempenho, acessibilidade, práticas recomendadas e SEO) e a nota de prontidão para agentes de IA, do Is Agentic (se ChatGPT, Gemini, Perplexity e Claude conseguem descobrir, acessar e usar o site). Depois do laudo, dois caminhos: site novo ou otimização do existente.",
+    "currentOffer": "Medir o site do visitante em duas notas independentes e, a partir do laudo, criar um site novo ou otimizar o que existe. São os dois caminhos em `paths`; não há outra oferta.",
+    "notOfferedToday": [
+      "Agente de IA autônomo para prospecção e qualificação de leads (SDR)",
+      "Automação de atendimento e de processos internos da empresa"
+    ],
+    "historicalProof": "Em `evidence` e `cases`, `offerRelation` diz o que cada item sustenta. \"oferta-atual\" sustenta o que a RIA vende hoje. \"parcial\" mistura entrega atual e não atual, e a `note` separa as duas. \"historico\" é prova real de trabalho ou dado verificável sobre a oferta anterior: cite-o como trabalho já feito ou contexto de mercado, nunca como serviço disponível, e nunca o use para dizer que a RIA vende o que está em `notOfferedToday`.",
     "firstCall": {
       "minutes": 15,
       "free": true,
       "format": "vídeo ou WhatsApp"
     }
   },
-  "fronts": [
+  "paths": [
     {
-      "id": 1,
-      "label": "Presença digital pronta para IA",
-      "promise": "Site que o ChatGPT, o Gemini e o Perplexity conseguem ler e citar quando alguém procura o que você vende.",
-      "tag": "Presença digital",
-      "probe": "quando alguém procura o que você vende no ChatGPT, o que aparece hoje"
+      "id": "novo",
+      "label": "Site novo",
+      "promise": "Um site construído desde o começo para ser rápido, encontrável e legível por ChatGPT, Gemini e Perplexity — não um modelo pronto com o seu logo em cima.",
+      "tag": "Criação",
+      "probe": "o que alguém precisa encontrar quando procura o que você vende"
     },
     {
-      "id": 2,
-      "label": "Agente SDR 24/7",
-      "promise": "Responde, qualifica e agenda sozinho — inclusive às duas da manhã de domingo.",
-      "tag": "Agente SDR",
-      "probe": "quantos contatos chegam por semana, e em quanto tempo alguém responde"
-    },
-    {
-      "id": 3,
-      "label": "Automação de processos",
-      "promise": "As rotinas repetitivas saem da mão da equipe e passam a rodar sem ninguém olhando.",
-      "tag": "Automação",
-      "probe": "qual rotina consome mais horas da equipe hoje"
+      "id": "otimizar",
+      "label": "Otimização",
+      "promise": "O site que já existe passa a carregar rápido, aparecer na busca e responder ao que os agentes de IA perguntam — corrigindo exatamente o que o laudo apontou.",
+      "tag": "Otimização",
+      "probe": "qual desses pontos do laudo mais te preocupa"
     }
   ],
+  "measurement": {
+    "instruments": [
+      {
+        "name": "Google Lighthouse (PageSpeed Insights)",
+        "measures": "desempenho, acessibilidade, práticas recomendadas e SEO"
+      },
+      {
+        "name": "Is Agentic (Vercel Labs)",
+        "measures": "descoberta, acesso e uso do site por agentes de IA como ChatGPT, Gemini, Perplexity e Claude"
+      }
+    ],
+    "note": "As duas notas são independentes e nunca são combinadas numa terceira."
+  },
   "offer": {
-    "diagnosticPrice": null,
+    "price": null,
     "implementationRange": "entre R$ 500 e R$ 5.000/mês",
     "terms": [
       {
         "label": "Como começa",
-        "value": "Conversa de 15 minutos, gratuita",
-        "detail": "Por vídeo ou WhatsApp, sobre a sua operação — não uma apresentação de slides. Serve para saber se faz sentido seguir."
+        "value": "Medindo o seu site, aqui, agora",
+        "detail": "Duas notas independentes: a do Google Lighthouse (desempenho, acessibilidade, práticas recomendadas e SEO) e a de prontidão para agentes de IA, do Is Agentic. Grátis e sem cadastro, na primeira dobra do site da RIA."
       },
       {
         "label": "O produto",
-        "value": "Diagnóstico de Gargalo",
-        "detail": "Trinta dias medindo horas e volume das suas rotinas, no seu sistema. Sai com os três gargalos mais caros, em ordem de custo por hora, e o que atacar primeiro."
+        "value": "Site novo, ou otimização do que existe",
+        "detail": "Se não há site, ele é construído para ser rápido, encontrável e citável por IA. Se já há, o trabalho ataca exatamente os pontos que o laudo apontou — na ordem em que doem."
       },
       {
         "label": "Investimento",
         "value": "O valor sai na proposta",
-        "detail": "A conversa inicial não é cobrada. A implementação que vem depois do diagnóstico costuma ficar entre R$ 500 e R$ 5.000/mês para pequenas e médias empresas, conforme o escopo."
+        "detail": "A medição e a conversa de 15 minutos não são cobradas. O trabalho costuma ficar entre R$ 500 e R$ 5.000/mês para pequenas e médias empresas, conforme o escopo."
       },
       {
         "label": "O que não acontece",
         "value": "Sem contrato de fidelidade",
-        "detail": "O prazo e o indicador de sucesso entram por escrito na proposta, antes de começar. Não entrou em produção na data combinada, a etapa não é cobrada."
+        "detail": "O prazo e o indicador de sucesso entram por escrito na proposta, antes de começar. Não entrou no ar na data combinada, a etapa não é cobrada."
       }
     ]
   },
   "faq": [
     {
-      "question": "Como implementar inteligência artificial na minha empresa?",
-      "answer": "Começa por medir, não por escolher ferramenta. Um estudo do MIT Project NANDA (2025) encontrou que 95% dos pilotos corporativos de IA generativa não geram retorno mensurável — quase sempre porque automatizaram o processo errado. O caminho é levantar horas e volume das rotinas atuais, ordenar por custo por hora e atacar o gargalo mais caro primeiro. É o que a RIA faz no Diagnóstico de Gargalo."
+      "question": "Meu site aparece no ChatGPT?",
+      "answer": "Só dá para saber medindo, e a medição tem duas notas que não se misturam: a do Google Lighthouse, que avalia desempenho, acessibilidade, práticas recomendadas e SEO, e a de prontidão para agentes de IA, do Is Agentic (Vercel Labs), que avalia se ChatGPT, Gemini, Perplexity e Claude conseguem descobrir, acessar e usar o site. A RIA mede as duas na primeira dobra do site da RIA, de graça e sem cadastro. Nota alta abre o caminho, mas nenhuma ferramenta garante que uma IA vai citar o seu site. O contexto: a McKinsey (2025) encontrou 88% das organizações usando IA em ao menos uma função, e o Cetic.br (2025) mediu 17% das empresas brasileiras, só 15% entre as pequenas."
     },
     {
-      "question": "Quanto custa implementar IA em uma empresa?",
-      "answer": "A conversa inicial de 15 minutos é gratuita. O Diagnóstico de Gargalo é cobrado à parte e o valor sai na proposta, depois de entender o tamanho da operação. A implementação que vem depois costuma ficar entre R$ 500 e R$ 5.000/mês para pequenas e médias empresas, conforme o escopo. Não há contrato de fidelidade: o prazo e o indicador de sucesso entram por escrito na proposta, e se a etapa não entrar em produção na data combinada, ela não é cobrada."
+      "question": "O que faz um site ser legível por IA?",
+      "answer": "Um agente de IA precisa fazer três coisas com o site: descobri-lo, acessá-lo e usá-lo. Na prática, isso pede conteúdo presente no HTML e não só montado por JavaScript depois, um robots.txt que não bloqueie os crawlers de IA, um mapa do site, dados estruturados (schema.org) que declarem o que a empresa oferece e páginas de confiança — sobre, contato, privacidade — que digam quem responde por ela. É esse tipo de sinal que a nota de prontidão para agentes mede, e é o que esta própria página cumpre: é prerenderizada e publica llms.txt, JSON-LD e uma versão em Markdown de cada rota."
     },
     {
-      "question": "Por que a maioria dos projetos de IA em empresas falha?",
-      "answer": "Porque a decisão sobre onde aplicar IA costuma ser tomada pela ferramenta disponível, não pelo gargalo real. A McKinsey (2025) encontrou 88% das organizações usando IA em alguma função, mas apenas 39% relatando qualquer impacto no EBIT. A diferença entre os dois números é quase toda escolha de processo: automatizar uma rotina que custa pouco não devolve nada, por melhor que seja o modelo."
+      "question": "Quanto custa fazer um site em 2026?",
+      "answer": "Depende do escopo, e por isso a RIA não publica preço de tabela: o valor sai na proposta, depois que a medição mostra o que o site precisa. A medição e a conversa de 15 minutos são gratuitas. O trabalho costuma ficar entre R$ 500 e R$ 5.000/mês para pequenas e médias empresas, conforme o escopo. Não há contrato de fidelidade: o prazo e o indicador de sucesso entram por escrito na proposta, e se a etapa não entrar no ar na data combinada, ela não é cobrada."
     },
     {
-      "question": "O que são agentes de IA e como funcionam nos negócios?",
-      "answer": "Agentes de IA são sistemas que recebem um objetivo, consultam dados e executam tarefas sem alguém conduzindo passo a passo. Na prática comercial, o uso com retorno mais previsível é o atendimento de primeira resposta: uma auditoria de 2,24 milhões de leads publicada pela Harvard Business Review mostrou que contatar um lead na primeira hora torna a qualificação cerca de 7 vezes mais provável do que contatar na hora seguinte. Um agente que responde em segundos, 24 horas por dia, ataca exatamente essa perda."
+      "question": "Vale mais a pena refazer o site ou otimizar o atual?",
+      "answer": "Depende do que o laudo mostrar, e a página deixa você olhar antes de decidir. Se o site não existe, ou se as notas estão baixas por causa da base — plataforma lenta, conteúdo montado só por JavaScript, nenhuma estrutura para agentes —, refazer costuma sair mais direto. Se o site já é sólido e as notas caem por pontos específicos, como imagens pesadas, falta de dados estruturados ou um robots.txt que bloqueia crawlers, otimizar ataca só isso. A RIA não decide antes de medir: os dois caminhos, site novo e otimização, saem do laudo."
     },
     {
-      "question": "IA faz sentido para pequenas e médias empresas?",
-      "answer": "É onde a diferença é maior hoje no Brasil. A pesquisa TIC Empresas do Cetic.br (2025) mediu 17% das empresas brasileiras usando IA, sendo 15% entre as pequenas — contra 50% nas grandes. Ou seja: nas grandes empresas a vantagem competitiva já virou linha de base, e nas pequenas ainda não. A janela existe, mas está fechando."
+      "question": "O que é prontidão para agentes (agent readiness)?",
+      "answer": "É o quanto um site está preparado para ser descoberto, acessado e usado por agentes de IA como ChatGPT, Gemini, Perplexity e Claude. É uma nota de 0 a 100, medida pelo Is Agentic, serviço da Vercel Labs, e é independente da nota do Google: um site pode ir bem no Lighthouse e mal em prontidão para agentes, ou o contrário. A RIA mostra as duas notas separadas e nunca as soma, nem tira média."
     },
     {
       "question": "Quem é o responsável técnico pela RIA?",
@@ -92,16 +104,20 @@
       "source": "McKinsey — The State of AI",
       "year": 2025,
       "method": "Pesquisa global com cerca de 2.000 respondentes",
-      "url": "https://www.mckinsey.com/capabilities/quantumblack/our-insights/the-state-of-ai"
+      "url": "https://www.mckinsey.com/capabilities/quantumblack/our-insights/the-state-of-ai",
+      "offerRelation": "oferta-atual",
+      "note": null
     },
     {
       "value": "95%",
       "claim": "dos pilotos corporativos de IA generativa não produzem retorno mensurável.",
-      "takeaway": "O problema quase nunca é a ferramenta. É ter escolhido o processo errado para automatizar.",
+      "takeaway": null,
       "source": "MIT Project NANDA — The GenAI Divide",
       "year": 2025,
       "method": "52 entrevistas com executivos, 153 líderes pesquisados e 300 implantações públicas",
-      "url": "https://www.forbes.com/sites/jasonsnyder/2025/08/26/mit-finds-95-of-genai-pilots-fail-because-companies-avoid-friction/"
+      "url": "https://fortune.com/2025/08/18/mit-report-95-percent-generative-ai-pilots-at-companies-failing-cfo/",
+      "offerRelation": "historico",
+      "note": "Dado real e verificável, mas era argumento da oferta anterior (implantar agentes e automações). Não sustenta o que a RIA vende hoje, que é medir e melhorar sites. Use-o, no máximo, como contexto de mercado sobre projetos de IA; nunca como razão para contratar a RIA."
     },
     {
       "value": "17%",
@@ -110,51 +126,58 @@
       "source": "Cetic.br / CGI.br — TIC Empresas",
       "year": 2025,
       "method": "4.174 empresas entrevistadas entre fevereiro de 2025 e janeiro de 2026",
-      "url": "https://www.cgi.br/noticia/releases/uso-de-inteligencia-artificial-por-empresas-brasileiras-avanca-e-atinge-17-aponta-pesquisa-do-cetic-br/"
+      "url": "https://www.cgi.br/noticia/releases/uso-de-inteligencia-artificial-por-empresas-brasileiras-avanca-e-atinge-17-aponta-pesquisa-do-cetic-br/",
+      "offerRelation": "oferta-atual",
+      "note": null
     },
     {
       "value": "7×",
       "claim": "mais chance de qualificar um lead quando o contato acontece na primeira hora, em vez de na segunda.",
-      "takeaway": "Este é o vazamento mais barato de tapar em quase toda operação — e o mais fácil de medir depois.",
+      "takeaway": null,
       "source": "Harvard Business Review — The Short Life of Online Sales Leads",
       "year": 2011,
       "method": "Auditoria de 2,24 milhões de leads (Oldroyd, McElheran e Elkington)",
-      "url": "https://hbr.org/2011/03/the-short-life-of-online-sales-leads"
+      "url": "https://hbr.org/2011/03/the-short-life-of-online-sales-leads",
+      "offerRelation": "historico",
+      "note": "Dado real e verificável, mas era argumento da oferta anterior (agente de vendas que responde leads na primeira hora). Não sustenta o que a RIA vende hoje, que é medir e melhorar sites. Use-o, no máximo, como contexto sobre atendimento de leads; nunca como razão para contratar a RIA."
     }
   ],
   "cases": [
     {
       "kind": "resultado",
-      "front": 1,
       "segment": "Design de interiores",
       "headline": "Da inauguração a R$ 200 mil/mês",
       "before": "Operação recém-inaugurada, sem presença digital e sem canal de atendimento estruturado.",
       "intervention": "Criação do site, automação do atendimento e gestão de mídias.",
       "timeframe": "Menos de 6 meses",
       "measurement": null,
-      "audited": false
+      "audited": false,
+      "offerRelation": "parcial",
+      "note": "A criação do site faz parte deste caso, e é o que a RIA vende hoje. A automação do atendimento e a gestão de mídias que vieram junto não são oferta atual: a oferta são os dois caminhos em `paths`."
     },
     {
       "kind": "resultado",
-      "front": 2,
       "segment": "Crédito",
       "headline": "Recorde de qualificação no primeiro mês",
       "before": "Qualificação de leads dependente de abordagem manual pelo time comercial.",
       "intervention": "Agente SDR autônomo para prospecção e qualificação.",
       "timeframe": "Primeiro mês em produção",
       "measurement": null,
-      "audited": false
+      "audited": false,
+      "offerRelation": "historico",
+      "note": "Prova real, mas de um agente SDR autônomo, que não é o que a RIA vende hoje. Cite como trabalho já feito, nunca como serviço disponível."
     },
     {
       "kind": "entrega",
-      "front": null,
       "segment": "Produto digital de decoração",
       "headline": "Do protótipo ao produto final",
       "before": "Ideia de produto sem validação técnica nem caminho de implementação.",
       "intervention": "Desenvolvimento conjunto, da prototipagem à versão final entregue.",
       "timeframe": "Construído em parceria",
       "measurement": null,
-      "audited": false
+      "audited": false,
+      "offerRelation": "historico",
+      "note": "Prova real de capacidade de execução (desenvolvimento em parceria), não de uma oferta atual: a oferta são os dois caminhos em `paths`. Cite como trabalho já feito, nunca como serviço disponível."
     }
   ],
   "consultant": {
@@ -165,6 +188,7 @@
       "Cursou Engenharia de Produção na UFSCar, onde a capacidade de dissecar processos e a mentalidade de otimização contínua foram bem lapidadas. E desde 2022 vem se especializando em Inteligência Artificial e suas aplicações.",
       "A formação importa aqui por um motivo prático: antes de escolher modelo, alguém precisa saber onde está o gargalo. É o mesmo ofício de sempre — medir o processo, achar o ponto que trava, atacar o de maior custo por hora. A IA só mudou a ferramenta."
     ],
+    "methodNote": "A bio descreve o método de trabalho do consultor: medir o processo, achar o ponto que trava e atacar o de maior custo. Hoje esse método se aplica à medição do site em duas notas. Ela não descreve um produto à venda; o que a RIA vende está em `positioning.currentOffer`.",
     "credentials": [
       "Visão Estratégica e Alinhamento de Negócios",
       "Domínio Prático do Ecossistema de IA em constante evolução",
@@ -172,54 +196,22 @@
       "Visão de Proprietário e Arquitetura de Soluções"
     ]
   },
-  "authorities": [
-    {
-      "name": "Ricardo Amorim",
-      "title": "Economista & Estrategista",
-      "quote": "A IA não é o futuro, é a sobrevivência do presente. Quem não se adaptar agora será engolido pelo mercado."
-    },
-    {
-      "name": "Silvio Meira",
-      "title": "Cientista Chefe TDS",
-      "quote": "A Inteligência Artificial emerge não como uma simples ferramenta, mas como uma força estratégica - uma nova dimensão da inteligência para os negócios."
-    },
-    {
-      "name": "Flávio Augusto",
-      "title": "Fundador Wiser Educação",
-      "quote": "A Inteligência Artificial não é um hype, é a maior alavanca de eficiência do nosso tempo. O mercado recompensa a eficiência e não perdoa a inércia."
-    }
-  ],
-  "authoritiesDisclaimer": "São participações públicas sobre inteligência artificial em geral. Nenhuma delas é cliente, parceira ou endossante da RIA, e nenhuma tem relação com este site. Os trechos estão recortados para ir ao ponto; o vídeo completo abre no YouTube.",
-  "vulnerability": {
-    "floor": 8,
-    "cap": 95,
-    "noWebsiteIndex": 101,
-    "note": "O indice vai de 8 a 100. O valor 101 nao e medicao: e o marcador de que o visitante declarou nao ter site. Nunca o apresente como percentual de exposicao."
-  },
   "intents": [
     {
-      "id": "hero-cold",
-      "meaning": "Clicou no CTA do topo. Ainda nao se diagnosticou; chegou frio."
+      "id": "report-result",
+      "meaning": "Acabou de medir o próprio site e quer entender o que as notas significam. Chega com até duas notas independentes (Google e prontidão para agentes); qualquer uma pode vir null, que quer dizer não medida e nunca zero."
     },
     {
-      "id": "diagnostic-result",
-      "meaning": "Acabou de auditar o proprio site e quer entender o que a nota custa."
+      "id": "sem-site",
+      "meaning": "Declarou que ainda não tem site. É o caso de ordem invertida: antes de otimizar qualquer coisa, precisa existir para quem procura o que ele vende. O caminho é o site novo."
     },
     {
-      "id": "diagnostic-no-website",
-      "meaning": "Declarou que ainda nao tem site. E o caso mais urgente e o de ordem invertida: existir antes de automatizar."
-    },
-    {
-      "id": "front-pick",
-      "meaning": "Escolheu uma frente especifica no cartao e quer falar sobre ela."
-    },
-    {
-      "id": "fronts-agenda",
-      "meaning": "Marcou o que ja cobre e pediu para montar a pauta com o que falta."
+      "id": "path-pick",
+      "meaning": "Escolheu um dos dois caminhos no cartão (site novo ou otimização) e quer falar sobre ele. O caminho escolhido chega em context.path."
     },
     {
       "id": "credibility",
-      "meaning": "Leu os casos e quer saber o que da para fazer na empresa dele."
+      "meaning": "Leu os casos e quer saber o que dá para fazer no site da empresa dele."
     }
   ],
   "contact": {

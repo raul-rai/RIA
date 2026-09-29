@@ -1,6 +1,6 @@
-import type { Front } from './fronts';
-import { FRONTS } from './fronts';
-import { formatList, scoreBand, uncoveredFronts } from '../lib/intent-format';
+import type { SitePath } from './paths';
+import { PATHS } from './paths';
+import { scoreBand, agenticBand } from '../lib/intent-format';
 
 /**
  * As intencoes contextuais do agente.
@@ -9,30 +9,24 @@ import { formatList, scoreBand, uncoveredFronts } from '../lib/intent-format';
  * lead "diz" ao chegar e o que o agente responde na hora. As duas sao locais —
  * o n8n recebe as duas para memoria, mas nao responde a primeira. Ver
  * docs/superpowers/specs/2026-08-19-intencoes-contextuais-do-agente-design.md.
+ *
+ * As falas do agente comentam AS DUAS notas, cada uma na sua voz: a do Google
+ * fala do site, a dos agentes fala de agente. Nenhuma fala junta as duas num
+ * numero so — e nenhuma inventa nota que nao foi medida.
  */
 
 export type IntentId =
-  | 'hero-cold'
-  | 'diagnostic-result'
-  | 'diagnostic-no-website'
-  | 'front-pick'
-  | 'fronts-agenda'
+  | 'report-result'
+  | 'sem-site'
+  | 'path-pick'
   | 'credibility';
 
-/** Segmentos aceitos em ?ref=. Fonte unica: o hero le daqui para a etiqueta,
- *  a intencao le daqui para a mensagem. */
+/** Segmentos aceitos em ?ref=. Fonte unica: o hero le daqui para a etiqueta e
+ *  readCampaignRef valida o valor da URL contra estas chaves. */
 export const REF_LABEL: Record<string, string> = {
   industria: 'Indústria',
   servicos: 'Serviços',
   varejo: 'Varejo',
-};
-
-/** Como o segmento abre a fala do lead. Nao da para derivar de REF_LABEL:
- *  "Tenho uma Serviços" nao e portugues. */
-const REF_PHRASE: Record<string, string> = {
-  industria: 'Tenho uma indústria',
-  servicos: 'Tenho uma empresa de serviços',
-  varejo: 'Tenho um varejo',
 };
 
 /** Le o ?ref da campanha. Valor desconhecido vira null — a intencao degrada
@@ -43,19 +37,23 @@ export function readCampaignRef(search: string): string | null {
 }
 
 export const GREETING =
-  'Olá. Sou o Agente de Inteligência da RIA. Me conte em uma frase o que sua empresa faz e onde o tempo da equipe está indo — eu volto com onde a IA paga mais rápido.';
+  'Olá. Sou o Agente de Inteligência da RIA. Me diga em uma frase o que sua empresa faz — eu volto com o que precisa mudar no seu site para ele ser encontrado, lido e citado.';
 
 export const NO_WEBSITE_GREETING =
-  'Você ainda nem tem um site para surfar a era da inteligência artificial. Por isso eu marco seu índice fora da escala, em 101% — não é uma medição, é a forma de dizer que não existe página para o ChatGPT, o Gemini ou o Perplexity citarem quando alguém procura o que você vende. Me diga em uma frase o que sua empresa faz — eu volto com o que precisa estar no ar primeiro.';
+  'Sem site, não existe página para o ChatGPT, o Gemini ou o Perplexity citarem quando alguém procura o que você vende. Me diga em uma frase o que sua empresa faz — eu volto com o que precisa estar no ar primeiro.';
 
 export interface IntentContext {
-  /** Segmento da campanha, ja validado por readCampaignRef. */
+  /** Segmento da campanha, ja validado por readCampaignRef. Nenhuma intencao le
+   *  este campo hoje: a unica que o lia, a hero-cold, saiu com o botao que a
+   *  disparava (set/2026). */
   ref: string | null;
-  websiteScore: number | null;
+  /** Nota do Google (Lighthouse). null = nao medida — nunca 0. */
+  googleScore: number | null;
+  /** Nota de prontidao para agentes (Is Agentic). null = nao medida — nunca 0. */
+  agenticScore: number | null;
   hasNoWebsite: boolean;
-  frontsChecked: boolean[];
-  /** Presente so em front-pick. */
-  front?: Front;
+  /** Presente so em path-pick. */
+  path?: SitePath;
 }
 
 export interface IntentDefinition {
@@ -66,98 +64,62 @@ export interface IntentDefinition {
   agentReply: (ctx: IntentContext) => string;
 }
 
-/** front-pick sem frente e um estado impossivel pela UI, mas o tipo permite.
- *  Cair na frente 1 e melhor do que renderizar "undefined" no chat do lead. */
-function pickedFront(ctx: IntentContext): Front {
-  return ctx.front ?? FRONTS[0];
+/** path-pick sem caminho e um estado impossivel pela UI, mas o tipo permite.
+ *  Cair no primeiro caminho e melhor do que renderizar "undefined" no chat. */
+function pickedPath(ctx: IntentContext): SitePath {
+  return ctx.path ?? PATHS[0];
 }
 
 export const INTENTS: Record<IntentId, IntentDefinition> = {
-  'hero-cold': {
-    id: 'hero-cold',
+  'report-result': {
+    id: 'report-result',
     userMessage: (ctx) => {
-      const abertura = ctx.ref ? REF_PHRASE[ctx.ref] : undefined;
-      // A frase ecoa o texto LITERAL do botao e so entao se completa. E essa
-      // repeticao que faz o chat parecer continuacao do clique, e nao um
-      // formulario novo. Se o rotulo do CTA do hero mudar, esta string muda
-      // junto — e ja ficou dessincronizada uma vez: o botao virou "Pare de
-      // rasgar dinheiro" e aqui continuou "quero achar o meu gargalo", entao o
-      // lead abria a conversa dizendo algo que nunca leu na tela.
-      return abertura
-        ? `${abertura} e quero parar de rasgar dinheiro. Por onde eu começo?`
-        : 'Quero parar de rasgar dinheiro. Por onde eu começo?';
+      const partes: string[] = [];
+      if (ctx.googleScore !== null) partes.push(`${ctx.googleScore}/100 no Google`);
+      if (ctx.agenticScore !== null) partes.push(`${ctx.agenticScore}/100 em prontidão para agentes`);
+      if (partes.length === 0) return 'Medi meu site e quero entender o que o resultado significa.';
+      return `Meu site tirou ${partes.join(' e ')}. Quero entender o que isso me custa.`;
     },
+    agentReply: (ctx) => {
+      if (ctx.googleScore === null && ctx.agenticScore === null)
+        return 'Sem as notas eu não chuto o tamanho do buraco. Roda a medição aqui em cima que eu leio o resultado com você — e me diz o que sua empresa vende e para quem.';
+      // Uma frase por instrumento, na voz de cada um. A que nao foi medida diz
+      // que nao foi medida: calar sobre ela deixaria o lead achar que a
+      // conversa ja cobriu as duas.
+      const google =
+        ctx.googleScore === null
+          ? 'A nota do Google não foi medida.'
+          : `${ctx.googleScore}/100 no Google. ${scoreBand(ctx.googleScore)}.`;
+      const agentes =
+        ctx.agenticScore === null
+          ? 'A nota de prontidão para agentes não foi medida.'
+          : `${ctx.agenticScore}/100 em prontidão para agentes: ${agenticBand(ctx.agenticScore)}.`;
+      return `${google} ${agentes} Me diz o que sua empresa vende e para quem — eu volto com o que consertar primeiro e o que isso muda em quem chega até você.`;
+    },
+  },
+
+  'sem-site': {
+    id: 'sem-site',
+    userMessage: () => 'Ainda não tenho site. Quero saber o que preciso para existir na era da IA.',
     agentReply: () =>
-      'Começa por saber onde está o vazamento. Na maioria das operações ele está em três lugares: lead que não é respondido, rotina que consome hora de gente cara, e decisão tomada no achismo. Me diz o que sua empresa faz — eu volto com qual dos três está te custando mais.',
+      'Então a ordem é outra: antes de otimizar qualquer coisa, você precisa existir para quem procura o que vende. Me diz o que sua empresa faz e para quem — eu volto com o que precisa estar no ar primeiro, e em quanto tempo.',
   },
 
-  'diagnostic-result': {
-    id: 'diagnostic-result',
-    userMessage: (ctx) =>
-      ctx.websiteScore === null
-        ? 'Fiz o diagnóstico do meu site e quero entender o que ele me custa.'
-        : `Meu site tirou ${ctx.websiteScore}/100 no diagnóstico. Quero entender o que isso me custa.`,
+  'path-pick': {
+    id: 'path-pick',
+    // "o caminho Site novo", e nao "sobre Site novo": o rotulo entra com
+    // maiuscula e, solto no meio da frase, le como titulo colado.
+    userMessage: (ctx) => `Quero falar sobre o caminho ${pickedPath(ctx).label}.`,
     agentReply: (ctx) => {
-      if (ctx.websiteScore === null)
-        return 'Sem a nota eu não chuto o tamanho do buraco. Me diz o que sua empresa vende e pra quem — e, se puder, roda a auditoria do site aqui em cima que eu leio o resultado com você.';
-      const cauda =
-        ctx.websiteScore >= 80
-          ? 'Então o gargalo não está na vitrine: está no que acontece depois que o lead chega. Me diz o que sua empresa vende e pra quem.'
-          : 'A nota é sintoma — o custo está nas buscas e nas citações de IA que passam longe de você. Me diz o que sua empresa vende e pra quem.';
-      return `${scoreBand(ctx.websiteScore)}. ${cauda}`;
-    },
-  },
-
-  'diagnostic-no-website': {
-    id: 'diagnostic-no-website',
-    userMessage: () =>
-      'Ainda não tenho site. Quero saber o que preciso pra existir na era da IA.',
-    agentReply: () =>
-      'Isso muda a ordem das coisas: antes de automatizar qualquer processo, você precisa existir para quem procura o que você vende. Me diz o que sua empresa faz e para quem — eu volto com o que precisa estar no ar primeiro, e em quanto tempo.',
-  },
-
-  'front-pick': {
-    id: 'front-pick',
-    userMessage: (ctx) => {
-      const front = pickedFront(ctx);
-      return `Quero falar sobre a frente ${front.id}: ${front.label}.`;
-    },
-    agentReply: (ctx) => {
-      const front = pickedFront(ctx);
-      return `${front.promise} Pra dimensionar isso na sua operação: o que sua empresa faz, e ${front.probe}?`;
-    },
-  },
-
-  'fronts-agenda': {
-    id: 'fronts-agenda',
-    userMessage: (ctx) => {
-      const faltando = uncoveredFronts(FRONTS, ctx.frontsChecked);
-      const marcadas = FRONTS.length - faltando.length;
-      if (marcadas === 0) return 'Não cubro nenhuma das três frentes. Quero montar minha pauta.';
-      if (faltando.length === 0)
-        return 'Marquei as três frentes. Quero saber o que ainda dá pra melhorar.';
-      const verbo = faltando.length === 1 ? 'Falta' : 'Faltam';
-      return `Marquei ${marcadas} de 3. ${verbo} ${formatList(
-        faltando.map((f) => f.tag)
-      )}. Quero montar minha pauta.`;
-    },
-    agentReply: (ctx) => {
-      const faltando = uncoveredFronts(FRONTS, ctx.frontsChecked);
-      if (faltando.length === 0)
-        return 'Três de três é raro. Então a conversa deixa de ser sobre o que falta e passa a ser sobre o que está rodando abaixo do que poderia. Me diz o que sua empresa faz e qual dessas três te dá mais trabalho hoje.';
-      const primeira = faltando[0];
-      const fecho =
-        faltando.length === 1
-          ? 'Me diz o que sua empresa faz que eu dimensiono essa e já abro a agenda.'
-          : `Me diz o que sua empresa faz que eu ordeno as ${faltando.length} por retorno e já abro a agenda.`;
-      return `Pauta anotada. Começo pela ${primeira.label} — ${primeira.promise} ${fecho}`;
+      const path = pickedPath(ctx);
+      return `${path.promise} Pra dimensionar isso: o que sua empresa faz, e ${path.probe}?`;
     },
   },
 
   credibility: {
     id: 'credibility',
-    userMessage: () => 'Vi os casos. Quero saber o que dá pra fazer na minha empresa.',
+    userMessage: () => 'Vi os casos. Quero saber o que dá pra fazer no meu site.',
     agentReply: () =>
-      'Operações diferentes, método igual. Me conta o que sua empresa faz e onde dói mais — eu volto com qual dos casos se parece com o seu.',
+      'Operações diferentes, método igual. Me conta o que sua empresa faz e como as pessoas te encontram hoje — eu volto com qual dos casos se parece com o seu.',
   },
 };

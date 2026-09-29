@@ -45,6 +45,8 @@ export function render(url: string): string {
  */
 export const ROUTES = [
   { path: '/', changefreq: 'weekly', priority: '1.0' },
+  { path: '/sobre', changefreq: 'monthly', priority: '0.6' },
+  { path: '/contato', changefreq: 'monthly', priority: '0.6' },
   { path: '/privacidade', changefreq: 'yearly', priority: '0.3' },
 ] as const;
 
@@ -80,14 +82,30 @@ export { ROUTE_META, metaFor } from './content/meta';
  * divergir ali faria o schema afirmar um cargo que a tela não mostra. Não
  * precisa ser manual: `CONSULTANT` atravessa por aqui como todo o resto.
  *
- * `FRONTS` entra porque cada frente agora vira um `Service` próprio no schema.
- * São as MESMAS três que os cartões renderizam — uma frente cortada do catálogo
- * some do schema no mesmo build, em vez de continuar sendo oferecida a um motor
- * de busca depois de deixar de ser oferecida ao visitante.
+ * `PATHS` entra porque cada caminho agora vira um `Service` próprio no schema.
+ * São os MESMOS dois que os cartões renderizam — um caminho cortado do catálogo
+ * some do schema no mesmo build, em vez de continuar sendo oferecido a um motor
+ * de busca depois de deixar de ser oferecido ao visitante.
  *
  * `SOCIAL_PROFILES` e `PHONE_E164` fecham o bloco de contato. Ver a nota em
  * constants/links.ts sobre por que o primeiro está vazio de propósito.
  */
-export { FRONTS } from './content/fronts';
+export { PATHS } from './content/paths';
 export { CONSULTANT } from './content/consultant';
-export { SOCIAL_PROFILES, PHONE_E164 } from './constants/links';
+export { SOCIAL_PROFILES, PHONE_E164, WHATSAPP_URL } from './constants/links';
+
+/**
+ * Atravessam pela mesma ponte, e pelo mesmo motivo, para o prerender montar as
+ * variantes em Markdown (`/index.md`, `/sobre.md`, ...) e o `llms.txt` a partir
+ * das MESMAS fontes que a página renderiza. O agente que pede `Accept:
+ * text/markdown` recebe o mesmo conteúdo que o humano vê — não uma segunda
+ * cópia mantida à mão, que divergiria no primeiro deploy.
+ */
+export { EVIDENCE } from './content/evidence';
+export {
+  PRICE,
+  MEASUREMENT,
+  IMPLEMENTATION_RANGE,
+  SESSION_MINUTES,
+} from './content/offer';
+export { PRIVACY_SECTIONS, CONTROLLER, LAST_UPDATED } from './content/privacy';

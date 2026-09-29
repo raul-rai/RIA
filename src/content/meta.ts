@@ -39,14 +39,24 @@ export interface RouteMeta {
 
 export const ROUTE_META: Record<string, RouteMeta> = {
   '/': {
-    title: 'RIA — Antes de escolher a ferramenta de IA, alguém precisa achar o gargalo',
+    title: 'RIA — Seu site aparece quando perguntam ao ChatGPT o que você vende?',
     description:
-      '95% dos projetos de IA em empresas não devolvem nada — quase sempre por automatizar a rotina errada. Diagnóstico de gargalo por engenheiro de produção.',
+      'Meça seu site em duas notas independentes: Google Lighthouse e prontidão para agentes de IA. Grátis, sem cadastro. Depois, site novo ou otimização.',
   },
   '/privacidade': {
     title: 'RIA — Política de Privacidade',
     description:
       'Como a RIA trata os dados coletados no site: o que é coletado, para onde vai, com que base legal e como pedir exclusão.',
+  },
+  '/sobre': {
+    title: 'RIA — Sobre a consultoria e quem conduz',
+    description:
+      'A RIA mede o site da sua empresa em duas notas (Google e agentes de IA) e cria ou otimiza o que o laudo apontar. Quem conduz e como começa.',
+  },
+  '/contato': {
+    title: 'RIA — Contato e como falar com a consultoria',
+    description:
+      'Fale com a RIA por WhatsApp: conversa de 15 minutos, gratuita, sobre o seu site e o que a medição mostrou. Atende empresas em todo o Brasil, de forma remota.',
   },
 };
 
