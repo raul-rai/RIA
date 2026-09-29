@@ -56,6 +56,13 @@ export function hasAnyMeasurement(input: {
   return input.hasNoWebsite || input.google !== null || input.agentic !== null;
 }
 
+/** Puro e exportado para o teste — a regra de escolha ao declarar "sem site". */
+export function deriveChosenOnNoWebsite(value: boolean): PathId | null | undefined {
+  // Quando o visitante declara que não tem site, descarta a escolha anterior
+  // para que o caminho volte a ser derivado de hasNoWebsite (que será 'novo')
+  return value ? null : undefined;
+}
+
 const SiteScore = createContext<SiteScoreState | undefined>(undefined);
 
 export function SiteScoreProvider({ children }: { children: React.ReactNode }) {
@@ -81,6 +88,10 @@ export function SiteScoreProvider({ children }: { children: React.ReactNode }) {
       setGoogleState(null);
       setAgenticState(null);
       setTarget(null);
+    }
+    const newChosen = deriveChosenOnNoWebsite(value);
+    if (newChosen !== undefined) {
+      setChosen(newChosen);
     }
   };
 

@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync, readdirSync, statSync } from 'fs';
 import { resolve, join } from 'path';
-import { derivePath, hasAnyMeasurement } from '../src/context/SiteScoreContext';
+import { derivePath, hasAnyMeasurement, deriveChosenOnNoWebsite } from '../src/context/SiteScoreContext';
 
 const root = (p: string) => resolve(process.cwd(), p);
 
@@ -27,6 +27,14 @@ describe('SS: estado das duas notas', () => {
     expect(hasAnyMeasurement({ google: null, agentic: null, hasNoWebsite: true })).toBe(true);
     expect(hasAnyMeasurement({ google: { score: 50 }, agentic: null, hasNoWebsite: false })).toBe(true);
     expect(hasAnyMeasurement({ google: null, agentic: { score: 72 }, hasNoWebsite: false })).toBe(true);
+  });
+
+  it('SS-05: setNoWebsite(true) descarta a escolha anterior', () => {
+    expect(deriveChosenOnNoWebsite(true)).toBeNull();
+  });
+
+  it('SS-06: setNoWebsite(false) não altera a escolha anterior', () => {
+    expect(deriveChosenOnNoWebsite(false)).toBeUndefined();
   });
 });
 
