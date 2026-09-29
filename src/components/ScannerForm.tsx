@@ -17,7 +17,7 @@ export default function ScannerForm({ onMeasured }: { onMeasured: () => void }) 
   const [url, setUrl] = useState('');
   const { setNoWebsite } = useSiteScore();
   const { requestIntent } = useAgentIntent();
-  const { start, phase, googleFailure } = useScan();
+  const { start, phase, googleFailure, cancel } = useScan();
 
   const invalido = googleFailure === 'invalid-url';
 
@@ -35,6 +35,7 @@ export default function ScannerForm({ onMeasured }: { onMeasured: () => void }) 
   };
 
   const semSite = () => {
+    cancel();
     setNoWebsite(true);
     track('diagnostic_no_website');
     // O id atual; a virada da página o renomeia para 'sem-site'.

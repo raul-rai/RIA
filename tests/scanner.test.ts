@@ -42,4 +42,32 @@ describe('SCN: o scanner mede o site em duas notas independentes', () => {
     expect(corpo).not.toContain('useSiteScanState');
     expect(semComentarios(hook)).toMatch(/export function ScanProvider/);
   });
+
+  it('SCN-09: clicar em "não tenho site" cancela a medição em curso antes de declarar', () => {
+    // O bug: se o visitante clica em "não tenho site" enquanto a medição está
+    // rodando, ela não é cancelada. Quando termina, publica o resultado e desfaz
+    // a declaração. Correção: semSite deve chamar cancel() antes de setNoWebsite(true).
+    const corpo = semComentarios(form);
+    // Deve extrair cancel de useScan()
+    const temDesestruturacaoDeCancel = /const\s*\{\s*[^}]*cancel[^}]*\}\s*=\s*useScan\(\)/.test(
+      corpo
+    );
+    expect(temDesestruturacaoDeCancel).toBe(true);
+    expect(temDesestruturacaoDeCancel, 'semSite precisa consumir cancel de useScan()').toBe(
+      true
+    );
+    // Dentro de semSite, cancel() deve ser chamado antes de setNoWebsite
+    const semSiteMatch = corpo.match(
+      /const semSite\s*=\s*(?:\(\)|async\s*\(\))\s*=>\s*\{[\s\S]*?^\s*\}/m
+    );
+    expect(semSiteMatch).toBeTruthy();
+    const semSiteCorpo = semSiteMatch![0];
+    const temCancelCall = /cancel\s*\(\s*\)/.test(semSiteCorpo);
+    expect(temCancelCall).toBe(true);
+    const indexCancel = semSiteCorpo.indexOf('cancel()');
+    const indexSetNoWebsite = semSiteCorpo.indexOf('setNoWebsite');
+    expect(indexCancel).toBeGreaterThan(-1);
+    expect(indexSetNoWebsite).toBeGreaterThan(-1);
+    expect(indexCancel).toBeLessThan(indexSetNoWebsite);
+  });
 });
