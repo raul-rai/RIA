@@ -18,6 +18,7 @@ import { ScanProvider } from '../hooks/useSiteScan';
 import { AgentIntentProvider } from '../context/AgentIntentContext';
 import { REF_LABEL } from '../content/intents';
 import CredibilitySection from '../components/CredibilitySection';
+import OfferFaqSection from '../components/OfferFaqSection';
 import SiteFooter from '../components/SiteFooter';
 import { metaFor } from '../content/meta';
 import { SESSION_MINUTES } from '../content/offer';
@@ -247,6 +248,11 @@ export default function LandingPage() {
               {chapterContent[i]}
             </ChapterSection>
           ))}
+
+          {/* Fora de CHAPTERS de propósito: é consulta de fundo de página, não
+              uma dobra de conversão. Vem depois do agente para nunca empurrá-lo
+              para fora da tela. Ver OfferFaqSection. */}
+          <OfferFaqSection />
         </main>
 
         <SiteFooter />

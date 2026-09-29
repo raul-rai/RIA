@@ -3,7 +3,7 @@ import { readFileSync, existsSync } from 'fs';
 import { resolve } from 'path';
 import { ROUTE_META, metaFor } from '../src/content/meta';
 import { PATHS } from '../src/content/paths';
-import { FAQ, PRICE } from '../src/content/offer';
+import { FAQ, OFFER_TERMS, PRICE } from '../src/content/offer';
 import { CONSULTANT } from '../src/content/consultant';
 import { SOCIAL_PROFILES } from '../src/constants/links';
 
@@ -30,8 +30,57 @@ function visibleText(html: string): string {
   return body
     .replace(/<script[\s\S]*?<\/script>/g, ' ')
     .replace(/<[^>]+>/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#x27;|&#39;/g, "'")
     .replace(/\s+/g, ' ')
     .trim();
+}
+
+/**
+ * O bloco "Condições e perguntas frequentes" no HTML publicado, do <section>
+ * ao </section>. Vazio se o bloco não existe — e é exatamente isso que os
+ * testes abaixo precisam enxergar como falha, não como pulo.
+ */
+function blocoDeCondicoes(html: string): string {
+  const start = html.indexOf('<section id="condicoes-e-perguntas"');
+  if (start < 0) return '';
+  const end = html.indexOf('</section>', start);
+  return end < 0 ? '' : html.slice(start, end + '</section>'.length);
+}
+
+/**
+ * Valores em dinheiro escritos num texto: `R$ 500`, `R$ 5.000/mês`, `US$ 30`,
+ * `500 reais`. Um número solto (`88%`, `15 minutos`) não é dinheiro — os
+ * percentuais têm o EVID-06, a duração tem o CONV-01.
+ */
+const DINHEIRO = /(?:R\$|US\$|€)\s*\d[\d.,]*|\d[\d.,]*\s*(?:mil\s+)?reais\b/gi;
+
+function valoresEmDinheiro(texto: string): string[] {
+  return [...texto.matchAll(DINHEIRO)].map((m) =>
+    m[0].replace(/\s+/g, ' ').replace(/[.,]+$/, '').trim()
+  );
+}
+
+/**
+ * Todo texto de dentro dos blocos JSON-LD, sem os nomes de chave. É o que um
+ * motor de busca lê como afirmação, e é onde um valor escondido numa resposta
+ * do FAQ mora — o teste antigo só olhava os nomes.
+ */
+function textoDoSchema(html: string): string {
+  const blocos = [...html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map(
+    (b) => JSON.parse(b[1])
+  );
+  const textos: string[] = [];
+  const colher = (no: unknown) => {
+    if (typeof no === 'string') textos.push(no);
+    else if (Array.isArray(no)) no.forEach(colher);
+    else if (no && typeof no === 'object') Object.values(no).forEach(colher);
+  };
+  colher(blocos);
+  return textos.join('\n');
 }
 
 describe.skipIf(!built)('GEO — a página é legível sem JavaScript', () => {
@@ -138,12 +187,30 @@ describe.skipIf(!built)('GEO — a página é legível sem JavaScript', () => {
 
     // Preço em dado estruturado fica no cache do Google por semanas. Enquanto o
     // valor for uma decisão em aberto (PRICE === null), nenhum bloco declara
-    // preço nem oferta comercial.
+    // preço nem oferta comercial — nem como CHAVE do schema...
     if (PRICE === null) {
       expect(
         JSON.stringify(blocks),
         'o schema declara preço enquanto PRICE é null'
       ).not.toMatch(/"(offers|price|priceCurrency|lowPrice|highPrice|priceSpecification)"/);
+    }
+
+    // ...nem escrito DENTRO DO TEXTO de uma resposta. Este era o buraco: a faixa
+    // "entre R$ 500 e R$ 5.000/mês" morava na resposta de "Quanto custa", que o
+    // teste de chaves não enxerga, e chegava ao schema sem estar em lugar
+    // nenhum da tela.
+    //
+    // Cada valor em dinheiro do schema tem de existir no HTML visível — e SEM
+    // clique. Uma faixa de valores atrás de um acordeão fechado é um valor que o
+    // comprador não vê, então o texto fora dos <details> é o que conta.
+    const doSchema = valoresEmDinheiro(textoDoSchema(home));
+    const semClique = visibleText(home.replace(/<details[\s\S]*?<\/details>/g, ' '));
+    for (const valor of new Set(doSchema)) {
+      expect(texto, `"${valor}" está no schema mas não na tela`).toContain(valor);
+      expect(
+        semClique,
+        `"${valor}" só aparece dentro de um <details> fechado — o comprador não o vê sem clicar`
+      ).toContain(valor);
     }
 
     // O FAQPage sai do MESMO array que a fonte (content/offer.ts).
@@ -152,14 +219,90 @@ describe.skipIf(!built)('GEO — a página é legível sem JavaScript', () => {
     expect(faq.mainEntity.every((q: any) => q.acceptedAnswer?.text)).toBe(true);
   });
 
-  // ACHADO DA TASK 11, NÃO RESOLVIDO AQUI: nenhum componente renderiza o FAQ. As
-  // seis respostas vão para o FAQPage JSON-LD e para o agent-context.json, mas
-  // não para a tela — que é exatamente a regressão que o GEO-06 nasceu para
-  // impedir, e a orientação do Google para marcação de FAQ exige o conteúdo
-  // visível. Adicionar o bloco visível é mudança de interface (capítulos,
-  // hierarquia de títulos), fora do escopo da tarefa de conteúdo; fica registrado
-  // como pendência, e não como asserção afrouxada.
-  it.todo('GEO-06b: toda resposta do FAQPage também existe na página visível');
+  it('GEO-06a: o varredor de valores lê o schema — nada se aprova por ele não ver', () => {
+    // O GEO-06 só vale se `valoresEmDinheiro(textoDoSchema(...))` de fato
+    // enxerga o dinheiro que a fonte escreve. Sem esta âncora, um regex que
+    // parasse de casar (ou um schema que passasse a serializar de outro jeito)
+    // deixaria a varredura vazia e o teste verde, para sempre.
+    const daFonte = new Set(FAQ.flatMap((q) => valoresEmDinheiro(q.answer)));
+    const doSchema = new Set(valoresEmDinheiro(textoDoSchema(home)));
+    expect([...doSchema].sort()).toEqual([...daFonte].sort());
+  });
+
+  it('GEO-06b: o bloco de condições e o FAQ estão na tela, inteiros e à mostra', () => {
+    // Era um it.todo: o FAQ e as condições só existiam para o robô (JSON-LD,
+    // Markdown, contexto do agente), e um todo é verde para sempre. Agora
+    // components/OfferFaqSection.tsx desenha os dois, do MESMO array, e este
+    // teste tranca o que o comprador de fato lê.
+    const bloco = blocoDeCondicoes(home);
+    expect(bloco, 'o bloco condicoes-e-perguntas não existe no HTML publicado').not.toBe('');
+
+    // Dentro de <main>, e não só em algum canto do documento.
+    const main = home.slice(home.indexOf('<main'), home.indexOf('</main>'));
+    expect(main, 'o bloco está fora do <main>').toContain('id="condicoes-e-perguntas"');
+
+    // Nada de esconder: um bloco presente no HTML mas invisível cumpre a letra
+    // e trai a regra. Só o que o comprador vê conta como "na tela".
+    expect(bloco, 'o bloco está oculto por classe').not.toMatch(
+      /class="(?:[^"]*\s)?(?:hidden|sr-only|invisible|opacity-0)(?:\s|")/
+    );
+    expect(bloco, 'o bloco está oculto por estilo').not.toMatch(/display:\s*none|visibility:\s*hidden/);
+
+    const textoBloco = visibleText('<body>' + bloco);
+
+    // Toda pergunta e toda resposta do FAQPage, palavra por palavra.
+    const faq = [...home.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)]
+      .map((b) => JSON.parse(b[1]))
+      .find((b) => b['@type'] === 'FAQPage');
+    expect(faq.mainEntity.length).toBe(FAQ.length);
+    for (const q of faq.mainEntity) {
+      expect(textoBloco, `a pergunta "${q.name}" está no schema mas não na tela`).toContain(q.name);
+      expect(
+        textoBloco,
+        `a resposta de "${q.name}" está no schema mas não na tela`
+      ).toContain(q.acceptedAnswer.text);
+    }
+
+    // As condições da oferta: rótulo, resposta e detalhe.
+    for (const t of OFFER_TERMS) {
+      expect(textoBloco, `o termo "${t.label}" não está na tela`).toContain(t.label);
+      expect(textoBloco, `a resposta de "${t.label}" não está na tela`).toContain(t.value);
+      expect(textoBloco, `o detalhe de "${t.label}" não está na tela`).toContain(t.detail);
+    }
+
+    // As condições ficam sempre abertas: nenhuma delas dentro de <details>.
+    const semDetails = visibleText('<body>' + bloco.replace(/<details[\s\S]*?<\/details>/g, ' '));
+    for (const t of OFFER_TERMS) {
+      expect(semDetails, `o termo "${t.label}" ficou atrás de um clique`).toContain(t.detail);
+    }
+  });
+
+  it('GEO-06c: o bloco lê de content/offer.ts e entra depois do agente, fora dos capítulos', () => {
+    const src = (p: string) => readFileSync(resolve(process.cwd(), p), 'utf-8');
+    const componente = src('src/components/OfferFaqSection.tsx');
+    const semComentarios = componente.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+
+    // Uma fonte só, nunca uma segunda cópia à mão.
+    expect(semComentarios).toMatch(/from '\.\.\/content\/offer'/);
+    expect(semComentarios).toContain('OFFER_TERMS.map(');
+    expect(semComentarios).toContain('FAQ.map(');
+    expect(semComentarios, 'valor em reais escrito à mão no componente').not.toMatch(/R\$/);
+
+    // Fora de CHAPTERS: não vira dobra de conversão, não ganha índice no HUD e
+    // não desloca o capítulo do agente (o último, alvo de todo CTA).
+    const landing = src('src/pages/LandingPage.tsx');
+    const chapters = landing.slice(landing.indexOf('const CHAPTERS'), landing.indexOf('export default'));
+    expect(chapters).not.toContain('Condições');
+    expect(chapters).not.toContain('OfferFaqSection');
+
+    // E vem DEPOIS do mapa de capítulos, dentro do <main>.
+    const mapa = landing.indexOf('CHAPTERS.map(');
+    const bloco = landing.indexOf('<OfferFaqSection />');
+    const fimMain = landing.indexOf('</main>');
+    expect(mapa).toBeGreaterThan(0);
+    expect(bloco, 'OfferFaqSection não está montado na landing').toBeGreaterThan(mapa);
+    expect(bloco).toBeLessThan(fimMain);
+  });
 });
 
 describe.skipIf(!built)('SEO — metadados por rota', () => {

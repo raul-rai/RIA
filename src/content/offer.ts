@@ -57,6 +57,12 @@ export const SESSION_MINUTES = 15;
  * piso de R$ 500/mês não cobre o custo real de um agente em produção, e que
  * essa âncora atrai o pior perfil de cliente. Falta o Raul confirmar que a
  * faixa vale para criar ou otimizar um site. Revisar antes da próxima campanha.
+ *
+ * ONDE A FAIXA APARECE: no termo "Investimento" e na resposta "Quanto custa" —
+ * e ambos agora são desenhados na página (OfferFaqSection), não só publicados
+ * no schema e no contexto do agente. Mudar o valor aqui muda a tela e o robô
+ * juntos; era a assimetria de antes (só o robô sabia) que tornava a faixa
+ * perigosa. Continua não validada.
  */
 export const IMPLEMENTATION_RANGE = 'entre R$ 500 e R$ 5.000/mês';
 
@@ -69,6 +75,13 @@ export interface OfferTerm {
   detail: string;
 }
 
+/**
+ * As condições da oferta — o que decide a compra, em quatro linhas.
+ *
+ * Desenhadas em components/OfferFaqSection.tsx (sempre abertas, sem clique) e
+ * republicadas no index.md, no agent-context.json e no MCP. Um termo aqui é
+ * uma promessa comercial: se ele mudar, mudou a tela.
+ */
 export const OFFER_TERMS: OfferTerm[] = [
   {
     label: 'Como começa',
@@ -121,9 +134,17 @@ export const MEASUREMENT = {
 /**
  * FAQ.
  *
- * Fonte única: alimenta o FAQPage JSON-LD (via scripts/prerender.js) E o bloco
- * visível da página. A regra que isto existe para impedir: nunca mais o
- * crawler saber algo que o comprador não vê na tela.
+ * Fonte única: alimenta o FAQPage JSON-LD (via scripts/prerender.js), as
+ * variantes em Markdown, o agent-context.json e o servidor MCP — e o bloco
+ * visível "Condições e perguntas frequentes" (components/OfferFaqSection.tsx),
+ * no fim da página. A regra que isto existe para impedir: nunca o crawler
+ * saber algo que o comprador não vê na tela.
+ *
+ * Isto já foi falso: por uma versão, nenhum componente lia este array, e o
+ * FAQ (com a faixa de valores e a garantia de prazo) só existia para o robô.
+ * O bloco visível voltou, e tests/seo.test.ts (GEO-06 e GEO-06b) tranca dos
+ * dois lados sobre o HTML publicado: cada resposta do schema está na tela, e
+ * nenhum valor em reais está no schema sem estar também na tela.
  *
  * Formato pensado para GEO — pergunta na forma que a pessoa realmente digita,
  * resposta autossuficiente no primeiro parágrafo.
