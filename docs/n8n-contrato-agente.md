@@ -32,6 +32,12 @@ O workflow responde normalmente. A resposta é lida de `output`, `response`,
 `message` ou `text` — na raiz do objeto ou no primeiro item de um array.
 Resposta vazia conta como falha e o lead recebe o desvio para o WhatsApp.
 
+Opcionalmente a resposta traz `data: { "roi": <número> }`. O site então mostra um
+cartão rotulado como **estimativa do agente** (é saída de um modelo de linguagem,
+não medição). `roi` precisa ser um **número JSON**: `null`, `""`, `false`, `[]`,
+string numérica ou campo ausente não produzem cartão — o site nunca converte
+ausência em "R$ 0".
+
 O mesmo objeto `context` acompanha os três payloads (`sendMessage`, `intent` e
 `qualification`), com estes campos:
 

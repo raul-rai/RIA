@@ -20,6 +20,7 @@ import {
 } from '../content/intents';
 import { useAgentIntent } from '../context/AgentIntentContext';
 import { shouldInject } from '../lib/agent-intent';
+import { numero } from '../lib/agentic-report';
 
 interface RoiData {
   roi: number;
@@ -58,17 +59,25 @@ const NO_WEBSITE_SUGGESTIONS = [
 /**
  * O n8n pode devolver qualquer coisa. Um payload sem `roi` numerico nao pode
  * chegar ao render — `toLocaleString()` num undefined derruba a tela inteira.
+ *
+ * E ausencia nao vira zero: Number(null), Number(''), Number(false) e
+ * Number([]) sao todos 0, e 0 passa em Number.isFinite. Coagir aqui imprimiria
+ * "R$ 0 /ano" para um `{ "roi": null }` — um numero que ninguem estimou. Por isso
+ * a checagem e de TIPO (`numero`, a mesma do laudo agentico): so um `number`
+ * finito vira valor; qualquer outra coisa nao produz cartao.
+ *
+ * Exportada para o teste, que roda sem DOM.
  */
-function parseRoiData(raw: unknown): RoiData | undefined {
+export function parseRoiData(raw: unknown): RoiData | undefined {
   if (!raw || typeof raw !== 'object') return undefined;
   const candidate = raw as Record<string, unknown>;
-  const roi = Number(candidate.roi);
-  if (!Number.isFinite(roi)) return undefined;
+  const roi = numero(candidate.roi);
+  if (roi === null) return undefined;
   return {
     roi,
     name: typeof candidate.name === 'string' ? candidate.name : undefined,
-    revenue: Number.isFinite(Number(candidate.revenue)) ? Number(candidate.revenue) : undefined,
-    efficiency: Number.isFinite(Number(candidate.efficiency)) ? Number(candidate.efficiency) : undefined,
+    revenue: numero(candidate.revenue) ?? undefined,
+    efficiency: numero(candidate.efficiency) ?? undefined,
   };
 }
 
@@ -416,12 +425,16 @@ export default function AIChatAgent({ webhookUrl = config.chatWebhook }: AIChatA
                       <div className="flex items-center gap-2 mb-2">
                         <TrendingUp size={14} className="text-accent" />
                         <span className="text-xs uppercase font-bold tracking-widest text-slate-600">
-                          ROI Detectado
+                          Estimativa do agente
                         </span>
                       </div>
-                      <div className="text-2xl font-serif text-slate-900 mb-2">
+                      <div className="text-2xl font-serif text-slate-900 mb-1">
                         R$ {msg.data.roi.toLocaleString('pt-BR')} /ano
                       </div>
+                      <p className="text-xs leading-relaxed text-slate-600 mb-3">
+                        Uma estimativa do agente de IA a partir do que você contou na conversa. Não é uma
+                        medição do seu negócio nem uma promessa de resultado.
+                      </p>
                       <button
                         onClick={() => {
                           track('cta_click', { location: 'agent_roi_card' });
