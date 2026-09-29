@@ -224,6 +224,15 @@ describe.skipIf(!built)('GEO — a página é legível sem JavaScript', () => {
     // enxerga o dinheiro que a fonte escreve. Sem esta âncora, um regex que
     // parasse de casar (ou um schema que passasse a serializar de outro jeito)
     // deixaria a varredura vazia e o teste verde, para sempre.
+    //
+    // A primeira parte é a âncora que não depende de nenhum conteúdo: o varredor
+    // lê uma amostra fixa e tem de devolver exatamente o que se espera. Sem ela,
+    // a comparação de baixo seria circular — o mesmo varredor cego dos dois
+    // lados, os dois vazios, os dois iguais.
+    expect(
+      valoresEmDinheiro('entre R$ 500 e R$ 5.000/mês, US$ 30 ou 200 reais. Sem R$ nem 15 minutos.')
+    ).toEqual(['R$ 500', 'R$ 5.000', 'US$ 30', '200 reais']);
+
     const daFonte = new Set(FAQ.flatMap((q) => valoresEmDinheiro(q.answer)));
     const doSchema = new Set(valoresEmDinheiro(textoDoSchema(home)));
     expect([...doSchema].sort()).toEqual([...daFonte].sort());
