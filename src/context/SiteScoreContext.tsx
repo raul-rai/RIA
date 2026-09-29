@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useMemo, useState } from 'react';
+import React, { createContext, useCallback, useContext, useMemo, useReducer } from 'react';
 import type { AgenticReport } from '../lib/agentic-report';
 import type { GoogleReport } from '../lib/lighthouse-report';
 import type { PathId } from '../content/paths';
@@ -63,45 +63,81 @@ export function deriveChosenOnNoWebsite(value: boolean): PathId | null | undefin
   return value ? null : undefined;
 }
 
+/** O que o provedor guarda. `chosen` é a escolha explícita do cartão de caminhos. */
+export interface SiteScoreData {
+  google: GoogleReport | null;
+  agentic: AgenticReport | null;
+  hasNoWebsite: boolean;
+  target: string | null;
+  chosen: PathId | null;
+}
+
+export const INITIAL_SITE_SCORE: SiteScoreData = {
+  google: null,
+  agentic: null,
+  hasNoWebsite: false,
+  target: null,
+  chosen: null,
+};
+
+export type SiteScoreAction =
+  | { type: 'setGoogle'; report: GoogleReport | null }
+  | { type: 'setAgentic'; report: AgenticReport | null }
+  | { type: 'setNoWebsite'; value: boolean }
+  | { type: 'setTarget'; target: string | null }
+  | { type: 'choosePath'; path: PathId }
+  | { type: 'reset' };
+
+/**
+ * As transições do estado, puras: estado + ação -> estado.
+ *
+ * Existe separado do provedor porque o defeito que motivou a extração morava na
+ * SEQUÊNCIA, não em nenhuma função isolada: `setNoWebsite(true)`, depois medir
+ * uma URL, deixava `hasNoWebsite` preso em `true` ao lado de um `target`
+ * medido. As funções puras acima passavam; a sequência nunca era exercitada.
+ *
+ * REGRAS: declarar "não tenho site" limpa notas e alvo e descarta a escolha de
+ * caminho; declarar o contrário só desliga a declaração e não mexe em mais nada;
+ * uma nota que chega prova que há site e também desliga a declaração.
+ */
+export function scoreReducer(state: SiteScoreData, action: SiteScoreAction): SiteScoreData {
+  switch (action.type) {
+    case 'setGoogle':
+      return { ...state, google: action.report, hasNoWebsite: action.report ? false : state.hasNoWebsite };
+    case 'setAgentic':
+      return { ...state, agentic: action.report, hasNoWebsite: action.report ? false : state.hasNoWebsite };
+    case 'setNoWebsite': {
+      const chosen = deriveChosenOnNoWebsite(action.value);
+      return {
+        ...state,
+        hasNoWebsite: action.value,
+        ...(action.value ? { google: null, agentic: null, target: null } : {}),
+        chosen: chosen !== undefined ? chosen : state.chosen,
+      };
+    }
+    case 'setTarget':
+      return { ...state, target: action.target };
+    case 'choosePath':
+      return { ...state, chosen: action.path };
+    case 'reset':
+      return INITIAL_SITE_SCORE;
+  }
+}
+
 const SiteScore = createContext<SiteScoreState | undefined>(undefined);
 
 export function SiteScoreProvider({ children }: { children: React.ReactNode }) {
-  const [google, setGoogleState] = useState<GoogleReport | null>(null);
-  const [agentic, setAgenticState] = useState<AgenticReport | null>(null);
-  const [hasNoWebsite, setHasNoWebsite] = useState(false);
-  const [target, setTarget] = useState<string | null>(null);
-  const [chosen, setChosen] = useState<PathId | null>(null);
+  const [{ google, agentic, hasNoWebsite, target, chosen }, dispatch] = useReducer(
+    scoreReducer,
+    INITIAL_SITE_SCORE
+  );
 
-  const setGoogle = (report: GoogleReport | null) => {
-    setGoogleState(report);
-    if (report) setHasNoWebsite(false);
-  };
-
-  const setAgentic = (report: AgenticReport | null) => {
-    setAgenticState(report);
-    if (report) setHasNoWebsite(false);
-  };
-
-  const setNoWebsite = (value: boolean) => {
-    setHasNoWebsite(value);
-    if (value) {
-      setGoogleState(null);
-      setAgenticState(null);
-      setTarget(null);
-    }
-    const newChosen = deriveChosenOnNoWebsite(value);
-    if (newChosen !== undefined) {
-      setChosen(newChosen);
-    }
-  };
-
-  const reset = () => {
-    setGoogleState(null);
-    setAgenticState(null);
-    setHasNoWebsite(false);
-    setTarget(null);
-    setChosen(null);
-  };
+  const setGoogle = useCallback((report: GoogleReport | null) => dispatch({ type: 'setGoogle', report }), []);
+  const setAgentic = useCallback((report: AgenticReport | null) => dispatch({ type: 'setAgentic', report }), []);
+  const setNoWebsite = useCallback((value: boolean) => dispatch({ type: 'setNoWebsite', value }), []);
+  const setTarget = useCallback((next: string | null) => dispatch({ type: 'setTarget', target: next }), []);
+  const choosePath = useCallback((path: PathId) => dispatch({ type: 'choosePath', path }), []);
+  const reset = useCallback(() => dispatch({ type: 'reset' }), []);
 
   const sugerido = useMemo(
     () => derivePath({ hasNoWebsite, googleScore: google?.score ?? null }),
@@ -121,7 +157,7 @@ export function SiteScoreProvider({ children }: { children: React.ReactNode }) {
     setAgentic,
     setNoWebsite,
     setTarget,
-    choosePath: setChosen,
+    choosePath,
     reset,
   };
 

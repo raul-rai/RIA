@@ -35,7 +35,7 @@ export interface SiteScanState {
 }
 
 function useSiteScanState(): SiteScanState {
-  const { setGoogle, setAgentic, setTarget } = useSiteScore();
+  const { setGoogle, setAgentic, setTarget, setNoWebsite } = useSiteScore();
   const [phase, setPhase] = useState<ScanPhase>('idle');
   const [googleFailure, setGoogleFailure] = useState<GoogleFailure | null>(null);
   const [agenticFailure, setAgenticFailure] = useState<AgenticFailure | null>(null);
@@ -69,6 +69,11 @@ function useSiteScanState(): SiteScanState {
       setAgenticFailure(null);
       setGoogle(null);
       setAgentic(null);
+      // Medir uma URL é, por definição, a retratação de "ainda não tenho site".
+      // Sem esta linha a declaração sobrevivia à medição: o capítulo do laudo
+      // dizia "sem site não há o que medir" durante a varredura, e, se as duas
+      // medições falhassem, o agente abria com a saudação de quem não tem site.
+      setNoWebsite(false);
       setTarget(target);
       track('scan_started');
 
@@ -133,7 +138,7 @@ function useSiteScanState(): SiteScanState {
         track('scan_finished');
       });
     },
-    [setGoogle, setAgentic, setTarget]
+    [setGoogle, setAgentic, setTarget, setNoWebsite]
   );
 
   return { phase, googleFailure, agenticFailure, progress, start, cancel };
