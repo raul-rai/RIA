@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { formatList, uncoveredFronts, scoreBand } from '../src/lib/intent-format';
+import { formatList, uncoveredFronts, scoreBand, agenticBand } from '../src/lib/intent-format';
 import { FRONTS } from '../src/content/fronts';
 
 describe('formatList: lista que cabe dentro de uma frase', () => {
@@ -57,5 +57,17 @@ describe('scoreBand: a leitura da nota do site', () => {
     expect(scoreBand(30)).toBe('Essa nota quer dizer que o site trava antes de convencer alguém');
     expect(scoreBand(63)).toBe('Essa nota quer dizer que o site funciona, mas não compete');
     expect(scoreBand(90)).toBe('Essa nota é boa — o site sustenta, e o gargalo está em outra frente');
+  });
+});
+
+describe('agenticBand: a leitura da nota agêntica', () => {
+  it('IF-10: fala de agentes, nunca de Google', () => {
+    for (const nota of [10, 60, 95]) {
+      expect(agenticBand(nota).toLowerCase()).not.toContain('google');
+    }
+  });
+
+  it('IF-11: as três faixas são distintas', () => {
+    expect(new Set([agenticBand(10), agenticBand(60), agenticBand(95)]).size).toBe(3);
   });
 });

@@ -30,3 +30,16 @@ export function scoreBand(score: number): string {
   if (score < 80) return 'Essa nota quer dizer que o site funciona, mas não compete';
   return 'Essa nota é boa — o site sustenta, e o gargalo está em outra frente';
 }
+
+/**
+ * Leitura da nota agentica, na mesma forma de scoreBand: uma linha, sem ponto
+ * final.
+ *
+ * A escala e a mesma 0-100 do Is Agentic. O texto fala de AGENTE, nunca de
+ * Google: sao dois instrumentos e o lead precisa saber qual esta falando.
+ */
+export function agenticBand(score: number): string {
+  if (score < 50) return 'os agentes de IA não conseguem ler nem citar o seu site';
+  if (score < 80) return 'os agentes chegam ao seu site, mas tropeçam no que encontram';
+  return 'os agentes conseguem ler e citar o seu site';
+}
