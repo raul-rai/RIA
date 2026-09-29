@@ -129,6 +129,20 @@ O contexto que o workflow baixa a cada conversa (`GET /agent-context.json`) mudo
 
 As ferramentas MCP (`/api/mcp`) acompanharam: `get_fronts` virou `get_paths`.
 
+### O que entrou depois: a prova histórica vem marcada
+
+O contexto é lido como descrição **atual** da empresa, e parte da prova (dois estudos, dois casos, a bio) sustentava a oferta anterior — agentes de vendas e automação. Nada foi removido: a página continua mostrando os três casos e as quatro fontes, e o agente precisa conhecer o mesmo conjunto que o lead vê. O que mudou é que cada item diz o que sustenta. **Um prompt que cite `evidence` e `cases` sem ler estes campos volta a vender o produto antigo.**
+
+| Campo | Significado |
+| --- | --- |
+| `evidence[].offerRelation`, `cases[].offerRelation` | `"oferta-atual"`, `"parcial"` ou `"historico"`. Só `"oferta-atual"` pode ser usado como razão para contratar a RIA. |
+| `evidence[].note`, `cases[].note` | O que o item não sustenta. `null` só em `"oferta-atual"`. |
+| `evidence[].takeaway` | Agora `string \| null`. É `null` nas evidências históricas (MIT e HBR): a leitura delas era a ponte para a oferta anterior. O número, a fonte, o ano, o método e o link seguem íntegros. |
+| `positioning.currentOffer` | O que se vende hoje, em uma frase. |
+| `positioning.notOfferedToday` | O que aparece na prova mas não se vende (agente SDR; automação de atendimento e de processos). |
+| `positioning.historicalProof` | Como ler `offerRelation`. |
+| `consultant.methodNote` | A bio descreve o método de trabalho, não um produto à venda. |
+
 ## Falhas
 
 Falha em `sendMessage` vira desvio visível para o WhatsApp. Falha em `intent`

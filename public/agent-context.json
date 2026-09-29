@@ -3,6 +3,12 @@
   "positioning": {
     "entryProduct": "Medição do site em duas notas independentes",
     "entryProductSummary": "A página mede o site do visitante na primeira dobra, de graça e sem cadastro: a nota do Google Lighthouse (desempenho, acessibilidade, práticas recomendadas e SEO) e a nota de prontidão para agentes de IA, do Is Agentic (se ChatGPT, Gemini, Perplexity e Claude conseguem descobrir, acessar e usar o site). Depois do laudo, dois caminhos: site novo ou otimização do existente.",
+    "currentOffer": "Medir o site do visitante em duas notas independentes e, a partir do laudo, criar um site novo ou otimizar o que existe. São os dois caminhos em `paths`; não há outra oferta.",
+    "notOfferedToday": [
+      "Agente de IA autônomo para prospecção e qualificação de leads (SDR)",
+      "Automação de atendimento e de processos internos da empresa"
+    ],
+    "historicalProof": "Em `evidence` e `cases`, `offerRelation` diz o que cada item sustenta. \"oferta-atual\" sustenta o que a RIA vende hoje. \"parcial\" mistura entrega atual e não atual, e a `note` separa as duas. \"historico\" é prova real de trabalho ou dado verificável sobre a oferta anterior: cite-o como trabalho já feito ou contexto de mercado, nunca como serviço disponível, e nunca o use para dizer que a RIA vende o que está em `notOfferedToday`.",
     "firstCall": {
       "minutes": 15,
       "free": true,
@@ -98,16 +104,20 @@
       "source": "McKinsey — The State of AI",
       "year": 2025,
       "method": "Pesquisa global com cerca de 2.000 respondentes",
-      "url": "https://www.mckinsey.com/capabilities/quantumblack/our-insights/the-state-of-ai"
+      "url": "https://www.mckinsey.com/capabilities/quantumblack/our-insights/the-state-of-ai",
+      "offerRelation": "oferta-atual",
+      "note": null
     },
     {
       "value": "95%",
       "claim": "dos pilotos corporativos de IA generativa não produzem retorno mensurável.",
-      "takeaway": "O problema quase nunca é a ferramenta. É ter escolhido o processo errado para automatizar.",
+      "takeaway": null,
       "source": "MIT Project NANDA — The GenAI Divide",
       "year": 2025,
       "method": "52 entrevistas com executivos, 153 líderes pesquisados e 300 implantações públicas",
-      "url": "https://fortune.com/2025/08/18/mit-report-95-percent-generative-ai-pilots-at-companies-failing-cfo/"
+      "url": "https://fortune.com/2025/08/18/mit-report-95-percent-generative-ai-pilots-at-companies-failing-cfo/",
+      "offerRelation": "historico",
+      "note": "Dado real e verificável, mas era argumento da oferta anterior (implantar agentes e automações). Não sustenta o que a RIA vende hoje, que é medir e melhorar sites. Use-o, no máximo, como contexto de mercado sobre projetos de IA; nunca como razão para contratar a RIA."
     },
     {
       "value": "17%",
@@ -116,16 +126,20 @@
       "source": "Cetic.br / CGI.br — TIC Empresas",
       "year": 2025,
       "method": "4.174 empresas entrevistadas entre fevereiro de 2025 e janeiro de 2026",
-      "url": "https://www.cgi.br/noticia/releases/uso-de-inteligencia-artificial-por-empresas-brasileiras-avanca-e-atinge-17-aponta-pesquisa-do-cetic-br/"
+      "url": "https://www.cgi.br/noticia/releases/uso-de-inteligencia-artificial-por-empresas-brasileiras-avanca-e-atinge-17-aponta-pesquisa-do-cetic-br/",
+      "offerRelation": "oferta-atual",
+      "note": null
     },
     {
       "value": "7×",
       "claim": "mais chance de qualificar um lead quando o contato acontece na primeira hora, em vez de na segunda.",
-      "takeaway": "Este é o vazamento mais barato de tapar em quase toda operação — e o mais fácil de medir depois.",
+      "takeaway": null,
       "source": "Harvard Business Review — The Short Life of Online Sales Leads",
       "year": 2011,
       "method": "Auditoria de 2,24 milhões de leads (Oldroyd, McElheran e Elkington)",
-      "url": "https://hbr.org/2011/03/the-short-life-of-online-sales-leads"
+      "url": "https://hbr.org/2011/03/the-short-life-of-online-sales-leads",
+      "offerRelation": "historico",
+      "note": "Dado real e verificável, mas era argumento da oferta anterior (agente de vendas que responde leads na primeira hora). Não sustenta o que a RIA vende hoje, que é medir e melhorar sites. Use-o, no máximo, como contexto sobre atendimento de leads; nunca como razão para contratar a RIA."
     }
   ],
   "cases": [
@@ -137,7 +151,9 @@
       "intervention": "Criação do site, automação do atendimento e gestão de mídias.",
       "timeframe": "Menos de 6 meses",
       "measurement": null,
-      "audited": false
+      "audited": false,
+      "offerRelation": "parcial",
+      "note": "A criação do site faz parte deste caso, e é o que a RIA vende hoje. A automação do atendimento e a gestão de mídias que vieram junto não são oferta atual: a oferta são os dois caminhos em `paths`."
     },
     {
       "kind": "resultado",
@@ -147,7 +163,9 @@
       "intervention": "Agente SDR autônomo para prospecção e qualificação.",
       "timeframe": "Primeiro mês em produção",
       "measurement": null,
-      "audited": false
+      "audited": false,
+      "offerRelation": "historico",
+      "note": "Prova real, mas de um agente SDR autônomo, que não é o que a RIA vende hoje. Cite como trabalho já feito, nunca como serviço disponível."
     },
     {
       "kind": "entrega",
@@ -157,7 +175,9 @@
       "intervention": "Desenvolvimento conjunto, da prototipagem à versão final entregue.",
       "timeframe": "Construído em parceria",
       "measurement": null,
-      "audited": false
+      "audited": false,
+      "offerRelation": "historico",
+      "note": "Prova real de capacidade de execução (desenvolvimento em parceria), não de uma oferta atual: a oferta são os dois caminhos em `paths`. Cite como trabalho já feito, nunca como serviço disponível."
     }
   ],
   "consultant": {
@@ -168,6 +188,7 @@
       "Cursou Engenharia de Produção na UFSCar, onde a capacidade de dissecar processos e a mentalidade de otimização contínua foram bem lapidadas. E desde 2022 vem se especializando em Inteligência Artificial e suas aplicações.",
       "A formação importa aqui por um motivo prático: antes de escolher modelo, alguém precisa saber onde está o gargalo. É o mesmo ofício de sempre — medir o processo, achar o ponto que trava, atacar o de maior custo por hora. A IA só mudou a ferramenta."
     ],
+    "methodNote": "A bio descreve o método de trabalho do consultor: medir o processo, achar o ponto que trava e atacar o de maior custo. Hoje esse método se aplica à medição do site em duas notas. Ela não descreve um produto à venda; o que a RIA vende está em `positioning.currentOffer`.",
     "credentials": [
       "Visão Estratégica e Alinhamento de Negócios",
       "Domínio Prático do Ecossistema de IA em constante evolução",

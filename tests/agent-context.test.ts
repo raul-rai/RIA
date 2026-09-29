@@ -4,6 +4,8 @@ import { resolve } from 'node:path';
 import { buildAgentContext } from '../scripts/build-agent-context';
 import { PATHS } from '../src/content/paths';
 import { INTENTS } from '../src/content/intents';
+import { EVIDENCE } from '../src/content/evidence';
+import { CASES } from '../src/content/cases';
 
 const publicado = JSON.parse(
   readFileSync(resolve(process.cwd(), 'public/agent-context.json'), 'utf-8')
@@ -107,6 +109,141 @@ describe('agent-context: o contexto que o agente le', () => {
     expect(publicado.offer).toHaveProperty('price');
     expect(publicado.offer).not.toHaveProperty('diagnosticPrice');
     expect(publicado.offer.price).toBeNull();
+  });
+});
+
+/**
+ * O que é histórico chega marcado como histórico.
+ *
+ * O agent-context.json é lido por agentes de IA como descrição verdadeira e
+ * ATUAL da empresa, e três blocos ainda falavam do produto que saiu: as
+ * evidências do MIT e da HBR (takeaways de "processo errado para automatizar" e
+ * de SDR), os casos de agente SDR e de automação do atendimento, e a bio ("onde
+ * está o gargalo"). O CTX-03 só procurava cinco expressões e não pegava isso.
+ *
+ * A decisão foi MARCAR, não filtrar (ver o cabeçalho de
+ * scripts/build-agent-context.ts): a página continua mostrando os três casos e
+ * as quatro fontes, então filtrar do contexto recriaria a assimetria entre
+ * robô e comprador, ao contrário. Estes testes travam a decisão.
+ */
+describe('agent-context: o histórico chega marcado, e nada some', () => {
+  const RELACOES = ['oferta-atual', 'parcial', 'historico'];
+
+  const porFonte = (fonte: string) => publicado.evidence.find((e: any) => e.source.startsWith(fonte));
+  const porSegmento = (seg: string) => publicado.cases.find((c: any) => c.segment === seg);
+
+  it('CTX-14: nenhuma evidência e nenhum caso saiu do contexto — só ganharam marca', () => {
+    // Filtrar seria a saída fácil e a errada: prova real de cliente não sai da
+    // página por mudança de posicionamento, e a página segue mostrando tudo.
+    expect(publicado.evidence.map((e: any) => e.source)).toEqual(EVIDENCE.map((e) => e.source));
+    expect(publicado.cases.map((c: any) => c.segment)).toEqual(CASES.map((c) => c.segment));
+
+    // E o dado em si segue íntegro: número, fonte, ano, link; título e trajeto do caso.
+    publicado.evidence.forEach((e: any, i: number) => {
+      expect(e.value).toBe(EVIDENCE[i].value);
+      expect(e.claim).toBe(EVIDENCE[i].claim);
+      expect(e.year).toBe(EVIDENCE[i].year);
+      expect(e.method).toBe(EVIDENCE[i].method);
+      expect(e.url).toBe(EVIDENCE[i].url);
+    });
+    publicado.cases.forEach((c: any, i: number) => {
+      expect(c.headline).toBe(CASES[i].headline);
+      expect(c.before).toBe(CASES[i].before);
+      expect(c.intervention).toBe(CASES[i].intervention);
+      expect(c.timeframe).toBe(CASES[i].timeframe);
+    });
+  });
+
+  it('CTX-15: toda prova diz o que sustenta, e o que não é oferta atual explica por quê', () => {
+    for (const item of [...publicado.evidence, ...publicado.cases]) {
+      const nome = item.source ?? item.segment;
+      expect(RELACOES, `"${nome}" sem offerRelation válido`).toContain(item.offerRelation);
+      if (item.offerRelation === 'oferta-atual') {
+        expect(item.note, `"${nome}" é oferta atual e não precisa de nota`).toBeNull();
+      } else {
+        expect(
+          (item.note ?? '').trim().length,
+          `"${nome}" não é oferta atual e chegou sem nota explicando`
+        ).toBeGreaterThan(60);
+      }
+    }
+  });
+
+  it('CTX-16: a classificação está travada — MIT, HBR e o caso SDR são históricos', () => {
+    // Os dois estudos que sustentavam a oferta anterior. A leitura de cada um
+    // ("processo errado para automatizar", "lead na primeira hora") era a ponte
+    // para essa oferta e não chega ao agente; o número, a fonte e o link chegam.
+    for (const fonte of ['MIT', 'Harvard']) {
+      const e = porFonte(fonte);
+      expect(e.offerRelation, `${fonte} deixou de ser histórico`).toBe('historico');
+      expect(e.takeaway, `${fonte}: o takeaway da oferta anterior voltou ao contexto`).toBeNull();
+      expect(e.note).toMatch(/oferta anterior/);
+      expect(e.note).toMatch(/não sustenta o que a RIA vende hoje/i);
+    }
+    // Os dois que seguem valendo para a oferta atual mantêm a leitura.
+    for (const fonte of ['McKinsey', 'Cetic']) {
+      const e = porFonte(fonte);
+      expect(e.offerRelation).toBe('oferta-atual');
+      expect(typeof e.takeaway).toBe('string');
+    }
+
+    // Os casos: o de site é atual só em parte; o de SDR e o produto digital, não.
+    expect(porSegmento('Design de interiores').offerRelation).toBe('parcial');
+    expect(porSegmento('Design de interiores').note).toMatch(/criação do site/);
+    expect(porSegmento('Crédito').offerRelation).toBe('historico');
+    expect(porSegmento('Crédito').note).toMatch(/SDR/);
+    expect(porSegmento('Produto digital de decoração').offerRelation).toBe('historico');
+  });
+
+  it('CTX-17: o vocabulário do produto anterior só aparece atrás de uma marca', () => {
+    // Tira do JSON tudo o que está marcado como histórico (e a própria lista de
+    // "não vendido hoje" e a legenda das marcas) e a bio, que é do consultor e
+    // tem o CTX-18. O que sobrar é o que o agente lê como a empresa de hoje —
+    // e não pode falar de SDR, automação, atendimento, gargalo ou piloto.
+    const ativo = JSON.parse(JSON.stringify(publicado));
+    ativo.evidence = ativo.evidence.filter((e: any) => e.offerRelation === 'oferta-atual');
+    ativo.cases = ativo.cases.filter((c: any) => c.offerRelation === 'oferta-atual');
+    delete ativo.positioning.notOfferedToday;
+    delete ativo.positioning.historicalProof;
+    delete ativo.consultant.bio;
+
+    const ANTIGO =
+      /\bSDR\b|automa[çc][ãa]o|atendimento|gargalo|pilotos?\b|qualifica[çc][ãa]o de leads?|processos? internos?/i;
+    const restante = JSON.stringify(ativo);
+    expect(restante, 'produto anterior descrito fora de um item marcado como histórico').not.toMatch(
+      ANTIGO
+    );
+
+    // O caso "parcial" mistura os dois: não pode sair do contexto sem a marca, e
+    // por isso ele NÃO entra no filtro acima — mas a nota tem de nomear o que
+    // não é oferta atual, para o agente não vender a automação junto com o site.
+    const parcial = publicado.cases.filter((c: any) => c.offerRelation === 'parcial');
+    expect(parcial.length).toBeGreaterThan(0);
+    for (const c of parcial) expect(c.note).toMatch(/não são oferta atual/);
+  });
+
+  it('CTX-18: o contexto diz o que se vende hoje e o que não se vende', () => {
+    const { currentOffer, notOfferedToday, historicalProof } = publicado.positioning;
+    expect(currentOffer).toMatch(/duas notas/);
+    expect(currentOffer).toMatch(/site novo/);
+    expect(currentOffer).toMatch(/otimizar/);
+
+    // O que aparece na prova mas não é vendido está dito com todas as letras.
+    const negado = notOfferedToday.join(' ');
+    expect(negado).toMatch(/SDR/);
+    expect(negado).toMatch(/[Aa]utomação/);
+    expect(historicalProof).toMatch(/offerRelation/);
+    expect(historicalProof).toMatch(/nunca como serviço disponível/);
+
+    // A bio é a mesma que a página mostra, então não é reescrita — e por isso
+    // "gargalo" só existe nela, com a nota dizendo que é método, não produto.
+    const semBio = JSON.parse(JSON.stringify(publicado));
+    delete semBio.consultant.bio;
+    expect(JSON.stringify(semBio), '"gargalo" fora da bio do consultor').not.toMatch(/gargalo/i);
+    expect(publicado.consultant.bio.join(' ')).toMatch(/gargalo/);
+    expect(publicado.consultant.methodNote).toMatch(/método/);
+    expect(publicado.consultant.methodNote).toMatch(/não descreve um produto à venda/);
+    expect(publicado.consultant.methodNote).toContain('positioning.currentOffer');
   });
 });
 
