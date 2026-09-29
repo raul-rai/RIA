@@ -11,9 +11,8 @@ export type RiaEvent =
   | 'cta_click'
   /** Um CTA levou o lead ao agente carregando intencao. Ver content/intents.ts. */
   | 'agent_intent'
-  | 'awareness_check'
   /** Visitante declarou que ainda nao tem site — caminho 'novo', rota curta ao agente. */
-  | 'diagnostic_no_website'
+  | 'no_website_declared'
   /** Visitante escolheu um dos dois caminhos (criar ou otimizar). */
   | 'path_pick'
   /** O scanner do hero disparou as duas medicoes (Lighthouse e Is Agentic). */

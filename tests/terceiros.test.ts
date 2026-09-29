@@ -127,15 +127,6 @@ describe('Terceiros — nada carrega sem ação do visitante', () => {
   it('TERC-05: nenhum host de terceiro no código fora da lista declarada', () => {
     const infratores: string[] = [];
     for (const file of sourceFiles()) {
-      /**
-       * Exceção estreita e datada: content/authorities.ts guarda as URLs dos
-       * vídeos da parede que saiu. Nada na página o lê — só o
-       * scripts/build-agent-context.ts, que extrai nome, cargo e fala para o
-       * contexto publicado aos agentes. Sai na Task 11, junto com esses campos.
-       * O host do YouTube NÃO volta à lista de permitidos: a exceção é deste
-       * arquivo, e qualquer outro que o cite reprova.
-       */
-      if (file.replace(/\\/g, '/').endsWith('src/content/authorities.ts')) continue;
       // Sem comentários: eles citam de propósito os hosts que saíram, e o
       // histórico do defeito não pode ser causa de falha.
       const texto = semComentarios(readFileSync(file, 'utf-8'));
@@ -185,11 +176,8 @@ describe('Terceiros — a política declara o que de fato acontece', () => {
 });
 
 describe('Terceiros — a página não fala com ninguém sem passar por nós', () => {
-  const semAuthorities = () =>
-    sourceFiles().filter((f) => !f.replace(/\\/g, '/').endsWith('src/content/authorities.ts'));
-
-  it('TERC-13: nada no código de src/ carrega YouTube (fora do arquivo de dados que sai na Task 11)', () => {
-    const infratores = semAuthorities().filter((f) =>
+  it('TERC-13: nada no código de src/ carrega YouTube', () => {
+    const infratores = sourceFiles().filter((f) =>
       /youtube/i.test(semComentarios(readFileSync(f, 'utf-8')))
     );
     expect(infratores, 'o YouTube voltou ao código').toEqual([]);

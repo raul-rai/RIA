@@ -1,5 +1,3 @@
-import type { Front } from '../content/fronts';
-
 /**
  * Lista legivel dentro de uma frase: "A, B e C".
  *
@@ -11,11 +9,6 @@ export function formatList(items: string[]): string {
   if (items.length === 0) return '';
   if (items.length === 1) return items[0];
   return `${items.slice(0, -1).join(', ')} e ${items[items.length - 1]}`;
-}
-
-/** As frentes ainda descobertas, na ordem do catalogo. */
-export function uncoveredFronts(fronts: Front[], checked: boolean[]): Front[] {
-  return fronts.filter((_, i) => !checked[i]);
 }
 
 /**

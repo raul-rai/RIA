@@ -37,7 +37,7 @@ export default function ScannerForm({ onMeasured }: { onMeasured: () => void }) 
   const semSite = () => {
     cancel();
     setNoWebsite(true);
-    track('diagnostic_no_website');
+    track('no_website_declared');
     // A intenção do agente para quem declara não ter site.
     requestIntent('sem-site');
   };
