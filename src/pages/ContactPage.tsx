@@ -46,9 +46,10 @@ export default function ContactPage() {
 
         <p className="text-base md:text-lg text-slate-700 leading-relaxed mb-4">
           O jeito mais rápido de começar é uma conversa de {SESSION_MINUTES} minutos, gratuita, por
-          vídeo ou WhatsApp. É sobre a sua operação — o que consome horas da equipe, onde os
-          contatos se perdem — e não uma apresentação comercial. Serve para saber se faz sentido
-          seguir.
+          vídeo ou WhatsApp. É sobre o seu site e a sua operação — o que o laudo mostrou, o que
+          falta para ser encontrado e citado por agentes de IA — e não uma apresentação
+          comercial. Serve para saber se faz sentido seguir. Sem contrato de fidelidade: prazo e
+          indicador de sucesso entram por escrito na proposta.
         </p>
         <p className="text-sm md:text-[15px] text-slate-600 leading-relaxed mb-10">
           Quem responde é {CONSULTANT.name}, {CONSULTANT.role.toLowerCase()} responsável pela RIA.
@@ -93,8 +94,8 @@ export default function ContactPage() {
               <li className="flex items-start gap-3 text-sm md:text-[15px] text-slate-700 leading-relaxed">
                 <MapPin size={16} className="text-accent shrink-0 mt-0.5" />
                 <span>
-                  Atende empresas em todo o Brasil, de forma remota. O diagnóstico é feito no próprio
-                  sistema do cliente, sem exigir deslocamento.
+                  Atende empresas em todo o Brasil, de forma remota. A medição do site roda na página
+                  inicial, sem cadastro, e o trabalho é feito de forma remota.
                 </span>
               </li>
               <li className="flex items-start gap-3 text-sm md:text-[15px] text-slate-700 leading-relaxed">
