@@ -3,7 +3,7 @@ import {
 } from 'vitest';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
-import { normalizeTarget } from '../src/lib/agentic-report';
+import { normalizeTarget, parseAgenticFailure } from '../src/lib/agentic-report';
 import { config } from '../src/config';
 import { parseSseFrames, sseData } from '../src/lib/sse';
 import { scanAgentic } from '../src/lib/agentic-scan-client';
@@ -226,5 +226,71 @@ describe('SCAN: cliente direto da medicao', () => {
     }, controller.signal);
 
     expect(eventos).toEqual([]);
+  });
+});
+
+describe('SCAN: o cliente valida o que a ponte manda', () => {
+  const fetchOriginal = globalThis.fetch;
+
+  afterEach(() => {
+    globalThis.fetch = fetchOriginal;
+  });
+
+  async function eventosDe(frames: unknown[]): Promise<Array<Record<string, unknown>>> {
+    const corpo = frames.map((f) => `data: ${JSON.stringify(f)}\n\n`).join('');
+    globalThis.fetch = (async () =>
+      new Response(corpo, { status: 200, headers: { 'Content-Type': 'text/event-stream' } })) as typeof fetch;
+    const eventos: Array<Record<string, unknown>> = [];
+    await scanAgentic('exemplo.com.br', (e) => eventos.push(e as unknown as Record<string, unknown>));
+    return eventos;
+  }
+
+  it('SCAN-14: progresso sem número não vira "0 de 0"', async () => {
+    const eventos = await eventosDe([
+      { type: 'progress', done: null, total: 3 },
+      { type: 'progress', done: 1, total: null },
+      { type: 'progress', done: '1', total: '3' },
+      { type: 'progress', done: undefined },
+      { type: 'progress', done: [], total: false },
+    ]);
+    expect(eventos).toEqual([]);
+  });
+
+  it('SCAN-15: progresso com números válidos passa intacto', async () => {
+    const eventos = await eventosDe([{ type: 'progress', done: 2, total: 5 }]);
+    expect(eventos).toEqual([{ type: 'progress', done: 2, total: 5 }]);
+  });
+
+  it('SCAN-16: motivo de falha desconhecido vira "unreachable", nunca "undefined"', async () => {
+    const eventos = await eventosDe([
+      { type: 'failure', reason: 'motivo-que-nao-existe' },
+      { type: 'failure' },
+      { type: 'failure', reason: null },
+      { type: 'failure', reason: 42 },
+    ]);
+    expect(eventos).toEqual([
+      { type: 'failure', reason: 'unreachable' },
+      { type: 'failure', reason: 'unreachable' },
+      { type: 'failure', reason: 'unreachable' },
+      { type: 'failure', reason: 'unreachable' },
+    ]);
+  });
+
+  it('SCAN-17: os motivos que a ponte de fato usa atravessam com o próprio nome', async () => {
+    const eventos = await eventosDe([
+      { type: 'failure', reason: 'rate-limited' },
+      { type: 'failure', reason: 'invalid-url' },
+      { type: 'failure', reason: 'unreachable' },
+    ]);
+    expect(eventos.map((e) => e.reason)).toEqual(['rate-limited', 'invalid-url', 'unreachable']);
+    expect(parseAgenticFailure('rate-limited')).toBe('rate-limited');
+    expect(parseAgenticFailure('quota'), "'quota' é do Google, não da ponte").toBe('unreachable');
+  });
+
+  it('SCAN-18: o cliente não coage nem faz cast do que recebe', () => {
+    const fonte = readFileSync(root('src/lib/agentic-scan-client.ts'), 'utf-8');
+    const codigo = fonte.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+    expect(codigo).not.toMatch(/\bNumber\(/);
+    expect(codigo).not.toMatch(/as AgenticFailure/);
   });
 });

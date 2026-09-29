@@ -6,7 +6,13 @@
 
 import { config } from '../config';
 import { parseSseFrames, sseData } from './sse';
-import { parseAgenticReport, type AgenticFailure, type AgenticReport } from './agentic-report';
+import {
+  numero,
+  parseAgenticFailure,
+  parseAgenticReport,
+  type AgenticFailure,
+  type AgenticReport,
+} from './agentic-report';
 
 export type ScanEvent =
   | { type: 'progress'; done: number; total: number }
@@ -55,13 +61,17 @@ export async function scanAgentic(
         if (!evento) continue;
 
         if (evento.type === 'progress') {
-          onEvent({ type: 'progress', done: Number(evento.done) || 0, total: Number(evento.total) || 0 });
+          // Number(null) e 0: coagir um progresso ausente publicaria "0 de 0"
+          // como se fosse leitura. Evento sem os dois numeros e ignorado.
+          const done = numero(evento.done);
+          const total = numero(evento.total);
+          if (done !== null && total !== null) onEvent({ type: 'progress', done, total });
         } else if (evento.type === 'report') {
           const report = parseAgenticReport(evento.report);
           // Laudo que nao parseia e ausencia de medicao, nao nota ruim.
           onEvent(report ? { type: 'report', report } : { type: 'failure', reason: 'unreachable' });
         } else if (evento.type === 'failure') {
-          onEvent({ type: 'failure', reason: evento.reason as AgenticFailure });
+          onEvent({ type: 'failure', reason: parseAgenticFailure(evento.reason) });
         }
       }
     }

@@ -48,6 +48,18 @@ export interface AgenticReport {
 
 export type AgenticFailure = 'rate-limited' | 'unreachable' | 'invalid-url';
 
+const AGENTIC_FAILURES: readonly AgenticFailure[] = ['rate-limited', 'unreachable', 'invalid-url'];
+
+/**
+ * O motivo de falha que a ponte mandou, validado. Um `as AgenticFailure` no
+ * cliente aceitaria qualquer coisa — motivo desconhecido chegaria ao cartao e
+ * imprimiria "nao medido — undefined". Motivo que nao e um dos tres nomes vira
+ * 'unreachable': continua sendo ausencia de medicao, com o nome mais generico.
+ */
+export function parseAgenticFailure(raw: unknown): AgenticFailure {
+  return AGENTIC_FAILURES.find((reason) => reason === raw) ?? 'unreachable';
+}
+
 function texto(value: unknown, fallback = ''): string {
   return typeof value === 'string' ? value : fallback;
 }
@@ -56,7 +68,7 @@ function texto(value: unknown, fallback = ''): string {
 // e 0, Number(undefined) e NaN que cairia no fallback — qualquer coercao cega
 // fabricaria um "zero medido" para um campo que so esta ausente. So aceitamos
 // um `number` finito que a API realmente mandou; o resto vira `null`.
-function numero(value: unknown): number | null {
+export function numero(value: unknown): number | null {
   return typeof value === 'number' && Number.isFinite(value) ? value : null;
 }
 
